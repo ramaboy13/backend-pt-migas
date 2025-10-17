@@ -1,61 +1,207 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🛠️ MIGAS FINANCE API — Backend (Laravel 12)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> **Versi:** 1.0.0  
+> **Dibangun dengan:** Laravel 12, MySQL, JWT, Spatie Roles, Swagger, Docker  
+> **Terakhir Diperbarui:** 17 October 2025
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📘 Deskripsi Proyek
+**MIGAS FINANCE API** adalah aplikasi backend berbasis **Laravel 12** yang dirancang untuk mendukung sistem pencatatan keuangan internal **PT Migas**.  
+Sistem ini berfungsi sebagai RESTful API yang akan diintegrasikan dengan frontend berbasis **Next.js**, serta dilengkapi dengan autentikasi JWT, manajemen peran (role-based access control), dan dokumentasi API otomatis menggunakan Swagger.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🧱 Fitur Utama
+- 🔐 **Autentikasi JWT Token** (dengan Refresh Token & TTL 3 hari)
+- 🧩 **Role Management** menggunakan `spatie/laravel-permission`
+- 🧾 **Manajemen Transaksi** (pemasukan, pengeluaran, kategori, laporan PDF)
+- ⚙️ **Rate Limiting** untuk mencegah spam request
+- 📄 **Swagger API Documentation**
+- 🧪 **Unit & Feature Test**
+- 🐳 **Docker & Docker Compose Setup**
+- 🧠 **Repository Pattern & Service Layer Architecture**
+- 💾 **Optimasi Database Connection Pooling**
+- 🔍 **Logging & Audit Trail** untuk aktivitas admin
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🧰 Teknologi yang Digunakan
+| Kategori | Teknologi |
+|:----------|:-----------|
+| **Framework** | Laravel 12 |
+| **Database** | MySQL 8+ |
+| **Auth** | JWT (php-open-source-saver/jwt-auth) |
+| **Role & Permission** | Spatie Laravel Permission |
+| **PDF Generator** | Barryvdh DomPDF |
+| **API Documentation** | L5 Swagger |
+| **Testing** | PHPUnit / PestPHP |
+| **Containerization** | Docker & Docker Compose |
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🏗️ Arsitektur Proyek
+```
+app/
+ ├── Http/
+ │    ├── Controllers/
+ │    ├── Middleware/
+ │    └── Requests/
+ ├── Models/
+ ├── Repositories/
+ ├── Services/
+ ├── Helpers/
+ └── Policies/
+config/
+database/
+ ├── migrations/
+ ├── seeders/
+routes/
+ ├── api.php
+ ├── admin.php
+ └── superadmin.php
+tests/
+ ├── Feature/
+ └── Unit/
+```
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## ⚙️ Instalasi & Setup
 
-### Premium Partners
+### 1️⃣ Clone Repository
+```bash
+git clone https://github.com/username/migas-finance-api.git
+cd migas-finance-api
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2️⃣ Install Dependencies
+```bash
+composer install
+npm install
+```
 
-## Contributing
+### 3️⃣ Salin & Konfigurasi `.env`
+```bash
+cp .env.example .env
+```
+Lalu atur konfigurasi database dan JWT:
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=migas_finance
+DB_USERNAME=root
+DB_PASSWORD=
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+JWT_TTL=4320
+JWT_REFRESH_TTL=10080
+```
 
-## Code of Conduct
+### 4️⃣ Generate Key & JWT Secret
+```bash
+php artisan key:generate
+php artisan jwt:secret
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 5️⃣ Jalankan Migrasi & Seeder
+```bash
+php artisan migrate --seed
+```
 
-## Security Vulnerabilities
+### 6️⃣ Jalankan Server Lokal
+```bash
+php artisan serve
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+API dapat diakses di:
+```
+http://localhost:8000/api
+```
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🔑 Role Management
+| Role | Deskripsi | Hak Akses |
+|:-----|:-----------|:----------|
+| **Super Admin (CEO)** | Akses penuh ke seluruh fitur sistem | Semua endpoint |
+| **Admin (Staff)** | Akses terbatas, tidak dapat melakukan registrasi | Endpoint admin saja |
+
+Middleware yang digunakan:
+```php
+'role:superadmin'
+'role:admin'
+```
+
+---
+
+## 🔐 Autentikasi JWT
+Token akan kedaluwarsa setelah **3 hari** dan dapat diperbarui dengan **refresh token**.  
+Semua endpoint dilindungi dengan middleware `auth:api`.
+
+Contoh Header:
+```
+Authorization: Bearer {token}
+```
+
+---
+
+## 🧪 Testing
+Menjalankan seluruh unit dan feature test:
+```bash
+php artisan test
+```
+Atau menggunakan **PestPHP**:
+```bash
+./vendor/bin/pest
+```
+
+---
+
+## 📘 Swagger API Documentation
+Generate dokumentasi API otomatis:
+```bash
+php artisan l5-swagger:generate
+```
+Akses dokumentasi di:
+```
+http://localhost:8000/api/documentation
+```
+
+---
+
+## 🐳 Docker Setup
+
+### 1️⃣ Build Container
+```bash
+docker-compose up -d --build
+```
+
+### 2️⃣ Service yang Disertakan
+| Service | Port | Keterangan |
+|:---------|:------|:------------|
+| `nginx` | 8000 | Reverse Proxy |
+| `app` | 9000 | Laravel Backend |
+| `db` | 3306 | MySQL Database |
+| `redis` | 6379 | Cache (opsional) |
+
+---
+
+## 📈 API Rate Limiting
+Setiap pengguna dibatasi:
+```
+60 request / menit per user/IP
+```
+Dikonfigurasi di `RouteServiceProvider`.
+
+---
+
+## 🧾 License
+MIT License © 2025 — **PT Migas Digital Finance System**
+
+---
+
+## 💡 Kontributor
+- 🧑‍💻 **Lead Backend Developer:** Ramaboy 
+
+> Dibangun dengan ❤️ menggunakan Laravel 12 dan arsitektur modern yang scalable.
