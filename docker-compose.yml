@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: pt-migas-app
+    ports:
+      - "8000:8000"
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    command: bash -c "sleep 15 && php artisan serve --host=0.0.0.0 --port=8000"
+    depends_on:
+      - mysql
+    networks:
+      - pt-migas-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: pt-migas-mysql
+    environment:
+      MYSQL_DATABASE: pt_migas_finance
+      MYSQL_ROOT_PASSWORD: admin1234
+    ports:
+      - "3307:3306" 
+    networks:
+      - pt-migas-network
+
+networks:
+  pt-migas-network:
+    driver: bridge
