@@ -1,13 +1,16 @@
 <?php
+// app/Services/AuthService.php
 
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\RefreshToken;
 use App\Exceptions\AuthenticationException;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class AuthService
 {
@@ -19,13 +22,15 @@ class AuthService
             throw new AuthenticationException('Invalid credentials');
         }
 
-         $user = Auth::user();
+        $user = Auth::user();
         
         if (!$user->is_active) {
             throw new AuthenticationException('Account is deactivated');
         }
 
-        return $this->respondWithToken($token);
+        $refreshToken = $this->generateRefreshToken($user->id);
+
+        return $this->respondWithToken($token, $refreshToken);
     }
 
     public function register(array $data): array
@@ -37,29 +42,71 @@ class AuthService
             'is_active' => true,
         ]);
 
-        // Assign role
+        // Kasih role
         try {
             $user->assignRole($data['role']);
         } catch (\Exception $e) {
-            // Log::error("Failed to assign role to user: {$user->email}");
             throw new AuthenticationException('Role not found');
         }
 
         $token = JWTAuth::fromUser($user);
+        $refreshToken = $this->generateRefreshToken($user->id);
 
-        return $this->respondWithToken($token);
+        return $this->respondWithToken($token, $refreshToken);
     }
 
     public function logout(): void
     {
+        $user = Auth::user();
+        
+        // Revoke all refresh tokens for this user
+        RefreshToken::where('user_id', $user->id)
+            ->update(['is_revoked' => true]);
+            
         JWTAuth::invalidate(JWTAuth::getToken());
     }
 
     public function refresh(): array
     {
         try {
-            $token = JWTAuth::refresh(JWTAuth::getToken());
-            return $this->respondWithToken($token);
+            // Ambil refresh token dari request
+            $refreshToken = request()->input('refresh_token');
+            
+            if (!$refreshToken) {
+                throw new AuthenticationException('Refresh token is required');
+            }
+
+            // Validasi refresh token
+            $storedToken = RefreshToken::where('token', $refreshToken)
+                ->where('expires_at', '>', now())
+                ->where('is_revoked', false)
+                ->first();
+
+            if (!$storedToken) {
+                throw new AuthenticationException('Invalid or expired refresh token');
+            }
+
+            $user = User::find($storedToken->user_id);
+            
+            if (!$user || !$user->is_active) {
+                throw new AuthenticationException('User not found or inactive');
+            }
+
+            // Generate new access token
+            $token = JWTAuth::fromUser($user);
+            
+            // Revoke old refresh token
+            $storedToken->update(['is_revoked' => true]);
+            
+            // Generate new refresh token
+            $newRefreshToken = $this->generateRefreshToken($user->id);
+
+            return $this->respondWithToken($token, $newRefreshToken);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            throw new AuthenticationException('Token has expired');
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            throw new AuthenticationException('Token is invalid');
         } catch (\Exception $e) {
             throw new AuthenticationException('Could not refresh token');
         }
@@ -67,13 +114,12 @@ class AuthService
 
     public function me(): array
     {
-         $user = Auth::user();
+        $user = Auth::user();
         
         if (!$user) {
             throw new AuthenticationException('User not found');
         }
 
-        // Load user with roles for response
         $userWithRoles = User::with('roles')->find($user->id);
 
         return [
@@ -85,18 +131,34 @@ class AuthService
         ];
     }
 
-    protected function respondWithToken(string $token): array
+    protected function generateRefreshToken(string $userId): string
     {
-         $user = Auth::user();
+        // Hapus token yang sudah expired
+        RefreshToken::where('expires_at', '<', now())->delete();
+
+        $refreshToken = Str::random(128);
         
-        // Load user with roles for response
+        RefreshToken::create([
+            'id' => Str::uuid()->toString(),
+            'user_id' => $userId,
+            'token' => $refreshToken,
+            'expires_at' => now()->addDays(14),
+            'is_revoked' => false
+        ]);
+
+        return $refreshToken;
+    }
+
+    protected function respondWithToken(string $token, string $refreshToken = null): array
+    {
+        $user = Auth::user();
         $userWithRoles = User::with('roles')->find($user->id);
 
-        return [
+        $response = [
             'access_token' => $token,
+            'refresh_token' => $refreshToken,
             'token_type' => 'bearer',
-            'expires_in' => config('jwt.ttl') * 60, // in seconds
-            'refresh_expires_in' => config('jwt.refresh_ttl') * 60, // in seconds
+            'expires_in' => config('jwt.ttl') * 60, 
             'user' => [
                 'id' => $userWithRoles->id,
                 'name' => $userWithRoles->name,
@@ -104,5 +166,7 @@ class AuthService
                 'roles' => $userWithRoles->getRoleNames(),
             ]
         ];
+
+        return $response;
     }
 }
