@@ -5,25 +5,27 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\AuthenticationException;
 
 class Handler extends ExceptionHandler
 {
     public function render($request, Throwable $exception)
     {
-        if ($request->expectsJson()) {
-            return $this->handleJsonException($exception);
+        // Handle API routes specifically (baik expectsJson maupun routes /api/*)
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return $this->handleJsonException($exception, $request);
         }
 
         return parent::render($request, $exception);
     }
 
-    private function handleJsonException(Throwable $exception)
+    private function handleJsonException(Throwable $exception, $request = null)
     {
-        // Handle Authentication Exception (Spatie Permission)
-        if ($exception instanceof \Illuminate\Auth\AuthenticationException) {
+        // Handle Authentication Exception - INI YANG HARUS DIPERBAIKI
+        if ($exception instanceof AuthenticationException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated',
+                'message' => 'Unauthenticated. Please login first.',
                 'data' => null
             ], 401);
         }
@@ -129,7 +131,7 @@ class Handler extends ExceptionHandler
             return 401;
         }
         return match (true) {
-            $exception instanceof \Illuminate\Auth\AuthenticationException => 401,
+            $exception instanceof AuthenticationException => 401,
             $exception instanceof \Illuminate\Auth\Access\AuthorizationException => 403,
             $exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException => 404,
             $exception instanceof ValidationException => 422,
