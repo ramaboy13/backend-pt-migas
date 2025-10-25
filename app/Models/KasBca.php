@@ -25,7 +25,9 @@ class KasBca extends Model
         'tanggal' => 'date',
         'debit' => 'decimal:2',
         'kredit' => 'decimal:2',
-        'saldo' => 'decimal:2'
+        'saldo' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     protected static function boot()

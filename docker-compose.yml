@@ -22,10 +22,15 @@ services:
       MYSQL_DATABASE: pt_migas_finance
       MYSQL_ROOT_PASSWORD: admin1234
     ports:
-      - "3307:3306" 
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql 
     networks:
       - pt-migas-network
 
 networks:
   pt-migas-network:
     driver: bridge
+
+volumes:
+  mysql_data:
