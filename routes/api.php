@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\KasBcaController;
 use Illuminate\Support\Facades\Route;
@@ -10,14 +11,6 @@ Route::prefix('auth')->group(function () {
     Route::post('refresh', [AuthController::class, 'refresh']);
 });
 
-// Simple login route untuk handle redirect (Laravel 11 requirement)
-Route::get('/login', function () {
-    return response()->json([
-        'success' => false,
-        'message' => 'Unauthenticated. Please login first.',
-        'data' => null
-    ], 401);
-})->name('login');
 
 
 Route::middleware(['auth:api'])->group(function () {
@@ -38,6 +31,15 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('/store', [KasBcaController::class, 'store']);
             Route::put('/update/{id}', [KasBcaController::class, 'update']);
             Route::delete('/delete/{id}', [KasBcaController::class, 'destroy']);
+        });
+    });
+    Route::prefix('assets')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [AssetController::class, 'index']);
+            Route::get('/{id}', [AssetController::class, 'show']);
+            Route::post('/store', [AssetController::class, 'store']);
+            Route::put('/update/{id}', [AssetController::class, 'update']);
+            Route::delete('/delete/{id}', [AssetController::class, 'destroy']);
         });
     });
 });

@@ -17,7 +17,9 @@ class Asset extends Model
     protected $fillable = [
         'name',
         'identity',
-        'qty'
+        'qty',
+        'note',
+        'its_rfu',
     ];
 
     protected static function boot()

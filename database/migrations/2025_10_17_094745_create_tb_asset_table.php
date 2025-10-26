@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('identity');
             $table->integer('qty')->default(0);
+            $table->string('note')->nullable();
+            $table->boolean('its_rfu')->default(true);
             $table->timestamps();
         });
     }
