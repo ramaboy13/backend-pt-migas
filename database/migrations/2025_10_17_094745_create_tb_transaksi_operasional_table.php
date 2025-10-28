@@ -21,21 +21,21 @@ return new class extends Migration
             $table->decimal('harga_satuan', 15, 2)->default(0);
             $table->decimal('debit', 15, 2)->default(0);
             $table->decimal('credit', 15, 2)->default(0);
-            $table->decimal('total_saldo', 15, 2)->storedAs('qty * harga_satuan');
-            
+            $table->decimal('total', 15, 2)->storedAs('qty * harga_satuan');
+
             $table->timestamps();
-            
+
             // Foreign keys
             $table->foreign('pangkalan_id')
-                  ->references('id')
-                  ->on('table_pangkalan')
-                  ->onDelete('cascade');
-                  
+                ->references('id')
+                ->on('tb_pangkalan')
+                ->onDelete('cascade');
+
             $table->foreign('tabung_id')
-                  ->references('id')
-                  ->on('tb_tabung')
-                  ->onDelete('cascade');
-            
+                ->references('id')
+                ->on('tb_tabung')
+                ->onDelete('cascade');
+
             // Indexes
             $table->index('tanggal');
             $table->index('no_ref');

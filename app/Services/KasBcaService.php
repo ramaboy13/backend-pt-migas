@@ -11,7 +11,7 @@ class KasBcaService
 {
     public function __construct(private KasBcaRepository $repository) {}
 
-    public function getAllKasBca(int $perPage = 15): LengthAwarePaginator
+    public function getAllKasBca(int $perPage = 10): LengthAwarePaginator
     {
         return $this->repository->getAllPaginated($perPage);
     }

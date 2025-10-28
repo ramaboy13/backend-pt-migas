@@ -9,7 +9,7 @@ class TabungService
 {
   public function __construct(private TabungRepository $repository) {}
 
-  public function getAllTabung(int $perPage = 15): LengthAwarePaginator
+  public function getAllTabung(int $perPage = 10): LengthAwarePaginator
   {
     return $this->repository->getAllPaginated($perPage);
   }

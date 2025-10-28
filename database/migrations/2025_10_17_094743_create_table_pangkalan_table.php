@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('table_pangkalan', function (Blueprint $table) {
+        Schema::create('tb_pangkalan', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('regist_id')->unique();
             $table->string('name');
             $table->string('no_ktp')->unique();
             $table->text('alamat')->nullable();
             $table->timestamps();
-            $table->decimal('harga_satuan', 10, 6)->nullable();
+            $table->decimal('harga_satuan', 10, 2)->default(0);
             $table->index('regist_id');
             $table->index('no_ktp');
         });
