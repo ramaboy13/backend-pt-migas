@@ -30,14 +30,14 @@ class KasBcaService
     {
         // Business logic validation
         $this->validateKasBcaData($data);
-        
+
         return $this->repository->create($data);
     }
 
     public function updateKasBca(string $id, array $data): ?array
     {
         $this->validateKasBcaData($data);
-        
+
         return $this->repository->update($id, $data);
     }
 
@@ -56,8 +56,10 @@ class KasBcaService
             throw new \InvalidArgumentException('Kredit cannot be negative');
         }
 
-        if (isset($data['debit']) && isset($data['kredit']) && 
-            $data['debit'] > 0 && $data['kredit'] > 0) {
+        if (
+            isset($data['debit']) && isset($data['kredit']) &&
+            $data['debit'] > 0 && $data['kredit'] > 0
+        ) {
             throw new \InvalidArgumentException('Either debit or kredit must be zero');
         }
     }

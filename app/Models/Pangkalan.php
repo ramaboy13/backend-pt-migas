@@ -21,11 +21,6 @@ class Pangkalan extends Model
         'alamat'
     ];
 
-    // Relationship dengan AlamatPangkalan
-    public function alamat()
-    {
-        return $this->hasOne(AlamatPangkalan::class, 'pangkalan_id');
-    }
 
     // Relationship dengan TransaksiOperasional
     public function transaksiOperasionals()

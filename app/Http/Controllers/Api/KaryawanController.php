@@ -3,38 +3,37 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\KasBcaRequest;
-use App\Services\KasBcaService;
+use App\Http\Requests\KaryawanRequest;
+use App\Services\KaryawanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class KasBcaController extends Controller
+class KaryawanController extends Controller
 {
-    public function __construct(private KasBcaService $kasBcaService) {}
+    public function __construct(private KaryawanService $service) {}
 
     public function index(Request $request): JsonResponse
     {
         try {
-            $perPage = $request->get('per_page', 10);
-            $kasBcas = $this->kasBcaService->getAllKasBca($perPage);
+            $perPage = $request->input('per_page', 10);
+            $filters = $request->only(['nik', 'nama', 'jabatan', 'is_active']);
+            $result = $this->service->getAllKaryawan($filters, $perPage);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Kas BCA records retrieved successfully',
-                'data' => $kasBcas->items(),
+                'data' => $result->items(),
                 'meta' => [
-                    'current_page' => $kasBcas->currentPage(),
-                    'per_page' => $kasBcas->perPage(),
-                    'total' => $kasBcas->total(),
-                    'last_page' => $kasBcas->lastPage(),
+                    'current_page' => $result->currentPage(),
+                    'total' => $result->total(),
+                    'per_page' => $result->perPage(),
+                    'last_page' => $result->lastPage()
                 ]
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve Kas BCA records',
+                'message' => 'Failed to retrieve karyawan',
                 'data' => null
             ], 500);
         }
@@ -43,74 +42,83 @@ class KasBcaController extends Controller
     public function show(string $id): JsonResponse
     {
         try {
-            $kasBca = $this->kasBcaService->getKasBcaById($id);
+            $karyawan = $this->service->getKaryawanById($id);
 
-            if (!$kasBca) {
+            if (!$karyawan) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Kas BCA record not found',
+                    'message' => 'Karyawan not found',
                     'data' => null
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Kas BCA record retrieved successfully',
-                'data' => $kasBca
+                'data' => $karyawan
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve Kas BCA record',
+                'message' => 'Failed to retrieve karyawan',
                 'data' => null
             ], 500);
         }
     }
 
-    public function store(KasBcaRequest $request): JsonResponse
+    public function store(KaryawanRequest $request): JsonResponse
     {
         try {
-            $kasBca = $this->kasBcaService->createKasBca($request->validated());
+
+            $validated = $request->validated();
+
+            $karyawan = $this->service->createKaryawan($validated);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Kas BCA record created successfully',
-                'data' => $kasBca
+                'message' => 'Karyawan successfully created',
+                'data' => $karyawan
             ], 201);
         } catch (\InvalidArgumentException $e) {
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
                 'data' => null
             ], 422);
         } catch (\Exception $e) {
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create Kas BCA record',
+                'message' => 'Failed to create karyawan',
                 'data' => null
             ], 500);
         }
     }
 
-    public function update(KasBcaRequest $request, string $id): JsonResponse
+    public function update(KaryawanRequest $request, string $id): JsonResponse
     {
         try {
-            $kasBca = $this->kasBcaService->updateKasBca($id, $request->validated());
 
-            if (!$kasBca) {
+
+            $validated = $request->validated();
+
+            $karyawan = $this->service->updateKaryawan($id, $validated);
+
+            if (!$karyawan) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Kas BCA record not found',
+                    'message' => 'Karyawan not found',
                     'data' => null
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Kas BCA record updated successfully',
-                'data' => $kasBca
+                'message' => 'Karyawan successfully updated',
+                'data' => $karyawan
             ], 200);
         } catch (\InvalidArgumentException $e) {
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -119,7 +127,7 @@ class KasBcaController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update Kas BCA record',
+                'message' => 'Failed to update karyawan',
                 'data' => null
             ], 500);
         }
@@ -128,23 +136,23 @@ class KasBcaController extends Controller
     public function destroy(string $id): JsonResponse
     {
         try {
-            $deleted = $this->kasBcaService->deleteKasBca($id);
+            $deleted = $this->service->deleteKaryawan($id);
 
             if (!$deleted) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Kas BCA record not found',
+                    'message' => 'Karyawan not found',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Kas BCA record deleted successfully',
+                'message' => 'Karyawan successfully deleted',
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete Kas BCA record',
+                'message' => 'Failed to delete karyawan',
             ], 500);
         }
     }

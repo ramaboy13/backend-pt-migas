@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('no_ktp')->unique();
             $table->text('alamat')->nullable();
             $table->timestamps();
-            
+            $table->decimal('harga_satuan', 10, 6)->nullable();
             $table->index('regist_id');
             $table->index('no_ktp');
         });

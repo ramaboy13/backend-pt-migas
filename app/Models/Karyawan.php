@@ -21,7 +21,8 @@ class Karyawan extends Model
         'bpjs_kesehatan',
         'bpjs_tenagakerja',
         'tgl_masuk',
-        'is_active'
+        'is_active',
+        'alamat'
     ];
 
     protected $casts = [
@@ -32,11 +33,6 @@ class Karyawan extends Model
         'is_active' => 'boolean'
     ];
 
-    // Relationship dengan AlamatKaryawan
-    public function alamat()
-    {
-        return $this->hasOne(AlamatKaryawan::class, 'karyawan_id');
-    }
 
     // Relationship dengan LemburKaryawan
     public function lemburKaryawans()

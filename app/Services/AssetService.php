@@ -3,16 +3,11 @@
 namespace App\Services;
 
 use App\Repositories\AssetRepository;
-
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AssetService
 {
-    protected $assetRepository;
-
-    public function __construct(AssetRepository $assetRepository)
-    {
-        $this->assetRepository = $assetRepository;
-    }
+    public function __construct(private AssetRepository $assetRepository) {}
 
     public function getAllAssets(array $filters = []): array
     {
@@ -21,24 +16,21 @@ class AssetService
             if (isset($filters['its_rfu'])) {
                 $filters['its_rfu'] = filter_var($filters['its_rfu'], FILTER_VALIDATE_BOOLEAN);
             }
-
             $assets = $this->assetRepository->getAll($filters);
-            
-            // Simpel response
-            $Response = [
+
+            $responseData = [
                 'items' => $assets->items(),
-                'pagination' => [
+                'meta' => [
                     'current_page' => $assets->currentPage(),
                     'per_page' => $assets->perPage(),
                     'total' => $assets->total(),
-                    'total_pages' => $assets->lastPage(),
-                    'has_more' => $assets->hasMorePages(),
+                    'last_pages' => $assets->lastPage(),
                 ]
             ];
-            
+
             return [
                 'success' => true,
-                'data' => $Response,
+                'data' => $responseData,
                 'message' => 'Assets retrieved successfully'
             ];
         } catch (\Exception $e) {
@@ -80,16 +72,7 @@ class AssetService
     public function createAsset(array $data): array
     {
         try {
-            // Check if identity already exists
-            if ($this->assetRepository->identityExists($data['identity'])) {
-                return [
-                    'success' => false,
-                    'data' => null,
-                    'message' => 'Asset identity already exists'
-                ];
-            }
 
-            // Panggil query create
             $asset = $this->assetRepository->create($data);
 
             return [
@@ -119,16 +102,6 @@ class AssetService
                 ];
             }
 
-            // Cek apakah identity sudah ada
-            if (isset($data['identity']) && $this->assetRepository->identityExists($data['identity'], $id)) {
-                return [
-                    'success' => false,
-                    'data' => null,
-                    'message' => 'Asset identity already exists'
-                ];
-            }
-
-            // Panggil query update
             $updated = $this->assetRepository->update($id, $data);
 
             if (!$updated) {
@@ -139,7 +112,6 @@ class AssetService
                 ];
             }
 
-            // panggil asset baru
             $updatedAsset = $this->assetRepository->findById($id);
 
             return [
@@ -159,7 +131,6 @@ class AssetService
     public function deleteAsset(string $id): array
     {
         try {
-            // Check if asset exists
             $asset = $this->assetRepository->findById($id);
             if (!$asset) {
                 return [
@@ -168,7 +139,6 @@ class AssetService
                 ];
             }
 
-            // Panggil query delete
             $deleted = $this->assetRepository->delete($id);
 
             if (!$deleted) {
