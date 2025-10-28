@@ -1,11 +1,10 @@
 <?php
-// app/Repositories/KasBcaRepository.php
 
 namespace App\Repositories;
 
 use App\Models\KasBca;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+
 
 class KasBcaRepository
 {
@@ -14,15 +13,14 @@ class KasBcaRepository
     public function findById(string $id): ?array
     {
         $kasBca = $this->model->find($id);
-        
+
         if (!$kasBca) {
             return null;
         }
-        
         return $this->formatItem($kasBca);
     }
 
-    public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
+    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
     {
         return $this->model
             ->orderBy('tanggal', 'desc')
@@ -53,11 +51,11 @@ class KasBcaRepository
     public function update(string $id, array $data): ?array
     {
         $kasBca = $this->model->find($id);
-        
+
         if (!$kasBca) {
             return null;
         }
-        
+
         $kasBca->update($data);
         return $this->formatItem($kasBca->fresh());
     }
@@ -65,11 +63,11 @@ class KasBcaRepository
     public function delete(string $id): bool
     {
         $kasBca = $this->model->find($id);
-        
+
         if (!$kasBca) {
             return false;
         }
-        
+
         return $kasBca->delete();
     }
 

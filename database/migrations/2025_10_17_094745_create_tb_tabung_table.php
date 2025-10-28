@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('tb_tabung', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
-            $table->integer('berat')->default(0); // dalam kg
+            $table->float('berat')->default(0);
             $table->timestamps();
         });
     }

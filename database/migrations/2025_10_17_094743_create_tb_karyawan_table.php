@@ -21,8 +21,8 @@ return new class extends Migration
             $table->decimal('bpjs_tenagakerja', 5, 2)->default(0); // percentage
             $table->date('tgl_masuk');
             $table->boolean('is_active')->default(true); // true = aktif, false = tidak
+            $table->longText('alamat')->nullable();
             $table->timestamps();
-            
             //Indexes
             $table->index('NIK');
             $table->index('is_active');

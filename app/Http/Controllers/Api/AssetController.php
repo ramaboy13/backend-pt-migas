@@ -7,64 +7,142 @@ use App\Http\Requests\AssetRequest;
 use App\Services\AssetService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AssetController extends Controller
 {
-    protected $assetService;
+    public function __construct(private AssetService $assetService) {}
 
-    public function __construct(AssetService $assetService)
-    {
-        $this->assetService = $assetService;
-    }
-
-    /**
-     * Get all assets
-     */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['its_rfu', 'search']);
-        $result = $this->assetService->getAllAssets($filters);
+        try {
+            $perPage = $request->input('per_page', 10);
+            $filters = $request->only(['its_rfu', 'search']);
+            $result = $this->assetService->getAllAssets($filters, $perPage);
 
-        return response()->json($result, $result['success'] ? 200 : 400);
+            return response()->json([
+                'success' => true,
+                'message' => 'Assets retrieved successfully',
+                'data' => $result['data'],
+                'meta' => $result['data']['pagination'] ?? null
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve assets',
+                'data' => null
+            ], 500);
+        }
     }
 
-    /**
-     * Get specific asset
-     */
     public function show(string $id): JsonResponse
     {
-        $result = $this->assetService->getAssetById($id);
+        try {
+            $result = $this->assetService->getAssetById($id);
 
-        return response()->json($result, $result['success'] ? 200 : 404);
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'data' => null
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Asset retrieved successfully',
+                'data' => $result['data']
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve asset',
+                'data' => null
+            ], 500);
+        }
     }
 
-    /**
-     * Create new asset
-     */
     public function store(AssetRequest $request): JsonResponse
     {
-        $result = $this->assetService->createAsset($request->validated());
+        try {
+            $validated = $request->validated();
 
-        return response()->json($result, $result['success'] ? 201 : 400);
+            $result = $this->assetService->createAsset($validated);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'data' => null
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Asset created successfully',
+                'data' => $result['data']
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create asset',
+                'data' => null
+            ], 500);
+        }
     }
 
-    /**
-     * Update asset
-     */
     public function update(AssetRequest $request, string $id): JsonResponse
     {
-        $result = $this->assetService->updateAsset($id, $request->validated());
+        try {
+            $validated = $request->validated();
 
-        return response()->json($result, $result['success'] ? 200 : 400);
+            $result = $this->assetService->updateAsset($id, $validated);
+
+            if (!$result['success']) {
+                $statusCode = $result['message'] === 'Asset not found' ? 404 : 422;
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'data' => null
+                ], $statusCode);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Asset updated successfully',
+                'data' => $result['data']
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update asset',
+                'data' => null
+            ], 500);
+        }
     }
 
-    /**
-     * Delete asset
-     */
     public function destroy(string $id): JsonResponse
     {
-        $result = $this->assetService->deleteAsset($id);
+        try {
 
-        return response()->json($result, $result['success'] ? 200 : 400);
+            $result = $this->assetService->deleteAsset($id);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Asset deleted successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete asset',
+            ], 500);
+        }
     }
 }
