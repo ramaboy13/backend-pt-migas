@@ -10,7 +10,7 @@ class TabungRepository
   public function __construct(private Tabung $model) {}
 
   // Ambil semua data tabung (dengan pagination)
-  public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
+  public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
   {
     return $this->model->newQuery()
       ->orderBy('created_at', 'desc')

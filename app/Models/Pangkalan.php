@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 
+
 class Pangkalan extends Model
 {
     use HasFactory;
 
-    protected $table = 'table_pangkalan';
+    protected $table = 'tb_pangkalan';
     protected $keyType = 'string';
     public $incrementing = false;
 
@@ -18,9 +19,13 @@ class Pangkalan extends Model
         'regist_id',
         'name',
         'no_ktp',
-        'alamat'
+        'alamat',
+        'harga_satuan'
     ];
 
+    protected $casts = [
+        'harga_satuan' => 'decimal:2',
+    ];
 
     // Relationship dengan TransaksiOperasional
     public function transaksiOperasionals()

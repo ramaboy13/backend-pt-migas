@@ -4,8 +4,8 @@ use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\KaryawanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\KasBcaController;
+use App\Http\Controllers\Api\PangkalanController;
 use App\Http\Controllers\Api\TabungController;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -67,6 +67,17 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/show/{id}', [TabungController::class, 'show']);
             Route::put('/update/{id}', [TabungController::class, 'update']);
             Route::delete('/delete/{id}', [TabungController::class, 'destroy']);
+        });
+    });
+
+    // Pangkalan Routes
+    Route::prefix('pangkalan')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [PangkalanController::class, 'index']);
+            Route::post('/create', [PangkalanController::class, 'store']);
+            Route::get('/show/{id}', [PangkalanController::class, 'show']);
+            Route::put('/update/{id}', [PangkalanController::class, 'update']);
+            Route::delete('/delete/{id}', [PangkalanController::class, 'destroy']);
         });
     });
 });
