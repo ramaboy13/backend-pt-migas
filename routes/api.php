@@ -4,7 +4,9 @@ use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\KaryawanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\KasBcaController;
+use App\Http\Controllers\Api\LemburKaryawanController;
 use App\Http\Controllers\Api\PangkalanController;
+use App\Http\Controllers\Api\PendapatanController;
 use App\Http\Controllers\Api\TabungController;
 use Illuminate\Support\Facades\Route;
 
@@ -78,6 +80,32 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/show/{id}', [PangkalanController::class, 'show']);
             Route::put('/update/{id}', [PangkalanController::class, 'update']);
             Route::delete('/delete/{id}', [PangkalanController::class, 'destroy']);
+        });
+    });
+
+    //Routes Lembur Karyawan
+    Route::prefix('lembur-karyawan')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [LemburKaryawanController::class, 'index']);
+            Route::post('/create', [LemburKaryawanController::class, 'store']);
+            Route::get('/show/{id}', [LemburKaryawanController::class, 'show']);
+            Route::put('/update/{id}', [LemburKaryawanController::class, 'update']);
+            Route::delete('/delete/{id}', [LemburKaryawanController::class, 'destroy']);
+            Route::get('/karyawan/{karyawanId}', [LemburKaryawanController::class, 'getByKaryawan']);
+        });
+    });
+
+    //Routes Pendapatan
+    Route::prefix('pendapatan')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [PendapatanController::class, 'index']);
+            Route::post('/create', [PendapatanController::class, 'store']);
+            Route::get('/show/{id}', [PendapatanController::class, 'show']);
+            Route::put('/update/{id}', [PendapatanController::class, 'update']);
+            Route::delete('/delete/{id}', [PendapatanController::class, 'destroy']);
+            Route::get('/karyawan/{karyawanId}', [PendapatanController::class, 'getByKaryawan']);
+            Route::get('/periode', [PendapatanController::class, 'getByPeriode']);
+            Route::post('/recalculate', [PendapatanController::class, 'recalculate']);
         });
     });
 });
