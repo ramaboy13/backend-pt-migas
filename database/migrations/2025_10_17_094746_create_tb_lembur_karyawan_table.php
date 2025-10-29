@@ -16,18 +16,17 @@ return new class extends Migration
             $table->decimal('jam_lembur', 5, 2)->default(0);
             $table->decimal('total_jam_lembur', 5, 2)->default(0);
             $table->decimal('upah_lembur_perjam', 15, 2);
-                //   ->storedAs('(SELECT gapok FROM tb_karyawan WHERE id = karyawan_id) / 173');  
-            $table->decimal('rupiah_lembur', 15, 2)
-                  ->storedAs('upah_lembur_perjam * total_jam_lembur');  
+            //   ->storedAs('(SELECT gapok FROM tb_karyawan WHERE id = karyawan_id) / 173');   INI TIDAK SUPPORT DI MYSQL JADI RUMUS DITARUH DI PayrollCalculationService.php
+            $table->decimal('rupiah_lembur', 15, 2);
             $table->string('keterangan')->nullable();
             $table->timestamps();
-            
+
             // Foreign key
             $table->foreign('karyawan_id')
-                  ->references('id')
-                  ->on('tb_karyawan')
-                  ->onDelete('cascade');
-            
+                ->references('id')
+                ->on('tb_karyawan')
+                ->onDelete('cascade');
+
             // Indexes
             $table->index('tanggal');
             $table->index('karyawan_id');
