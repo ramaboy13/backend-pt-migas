@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\GajiKaryawan;
 use App\Models\Karyawan;
 use App\Models\LemburKaryawan;
 use App\Models\Pendapatan;
+use App\Models\Potongan;
 use Illuminate\Support\Facades\DB;
 
 class PayrollCalculationService
@@ -133,43 +135,222 @@ class PayrollCalculationService
     }
   }
 
-  // /**
-  //  * Calculate potongan
-  //  */
-  // public function calculatePotongan($karyawanId)
-  // {
-  //   $karyawan = Karyawan::findOrFail($karyawanId);
+  /**
+   * Calculate potongan BPJS untuk suatu periode
+   */
+  public function calculatePotongan(string $karyawanId): array
+  {
+    $karyawan = Karyawan::findOrFail($karyawanId);
 
-  //   return [
-  //     'rp_bpjs_kesehatan' => ($karyawan->gapok * $karyawan->bpjs_kesehatan) / 100,
-  //     'rp_bpjs_tenagakerja' => ($karyawan->gapok * $karyawan->bpjs_tenagakerja) / 100
-  //   ];
-  // }
+    $rp_bpjs_kesehatan = ($karyawan->gapok * $karyawan->bpjs_kesehatan) / 100;
+    $rp_bpjs_tenagakerja = ($karyawan->gapok * $karyawan->bpjs_tenagakerja) / 100;
+    $total_potongan = $rp_bpjs_kesehatan + $rp_bpjs_tenagakerja;
 
-  // /**
-  //  * Process full payroll calculation
-  //  */
-  // public function processMonthlyPayroll($karyawanId, $periode, $tunjangan = 0)
-  // {
-  //   return DB::transaction(function () use ($karyawanId, $periode, $tunjangan) {
-  //     // 1. Calculate pendapatan
-  //     $totalPendapatan = $this->calculateTotalPendapatan($karyawanId, $periode, $tunjangan);
+    return [
+      'rp_bpjs_kesehatan' => round($rp_bpjs_kesehatan, 2),
+      'rp_bpjs_tenagakerja' => round($rp_bpjs_tenagakerja, 2),
+      'total_potongan' => round($total_potongan, 2),
+      'gapok' => $karyawan->gapok,
+      'persen_bpjs_kesehatan' => $karyawan->bpjs_kesehatan,
+      'persen_bpjs_tenagakerja' => $karyawan->bpjs_tenagakerja
+    ];
+  }
 
-  //     // 2. Calculate potongan
-  //     $potongan = $this->calculatePotongan($karyawanId);
-  //     $totalPotongan = $potongan['rp_bpjs_kesehatan'] + $potongan['rp_bpjs_tenagakerja'];
+  /**
+   * Process potongan calculation and create/update record
+   */
+  public function processPotonganCalculation(array $data): array
+  {
+    return DB::transaction(function () use ($data) {
+      $calculation = $this->calculatePotongan($data['karyawan_id']);
 
-  //     // 3. Calculate gaji bersih
-  //     $subtotal = $totalPendapatan - $totalPotongan;
-  //     $gajiBersih = $subtotal - $pph21; // PPH21 logic bisa ditambahkan
+      return array_merge($data, $calculation);
+    });
+  }
 
-  //     return [
-  //       'total_pendapatan' => $totalPendapatan,
-  //       'potongan' => $potongan,
-  //       'total_potongan' => $totalPotongan,
-  //       'subtotal' => $subtotal,
-  //       'gaji_bersih' => $gajiBersih
-  //     ];
-  //   });
-  // }
+  /**
+   * Recalculate all potongan for a specific periode (useful when karyawan data changes)
+   */
+  public function recalculatePotonganByPeriode(string $periode): void
+  {
+    $potongans = Potongan::where('periode', $periode)->get();
+
+    foreach ($potongans as $potongan) {
+      $calculation = $this->calculatePotongan($potongan->karyawan_id);
+
+      $potongan->update([
+        'rp_bpjs_kesehatan' => $calculation['rp_bpjs_kesehatan'],
+        'rp_bpjs_tenagakerja' => $calculation['rp_bpjs_tenagakerja'],
+        'total_potongan' => $calculation['total_potongan']
+      ]);
+    }
+  }
+
+  /**
+   * Recalculate potongan when karyawan data changes (gapok or BPJS percentages)
+   */
+  public function recalculatePotonganByKaryawan(string $karyawanId): void
+  {
+    $potongans = Potongan::where('karyawan_id', $karyawanId)->get();
+
+    foreach ($potongans as $potongan) {
+      $calculation = $this->calculatePotongan($karyawanId);
+
+      $potongan->update([
+        'rp_bpjs_kesehatan' => $calculation['rp_bpjs_kesehatan'],
+        'rp_bpjs_tenagakerja' => $calculation['rp_bpjs_tenagakerja'],
+        'total_potongan' => $calculation['total_potongan']
+      ]);
+    }
+  }
+
+  /**
+   * Calculate gaji karyawan (MAIN calculation)
+   */
+  public function calculateGajiKaryawan(string $pendapatanId, string $potonganId, float $pph21 = 0): array
+  {
+    $pendapatan = Pendapatan::findOrFail($pendapatanId);
+    $potongan = Potongan::findOrFail($potonganId);
+
+    // Validasi: pastikan pendapatan dan potongan untuk karyawan yang sama
+    if ($pendapatan->karyawan_id !== $potongan->karyawan_id) {
+      throw new \InvalidArgumentException('Pendapatan dan Potongan harus untuk karyawan yang sama');
+    }
+
+    // Validasi: pastikan pendapatan dan potongan untuk periode yang sama
+    // Gunakan date() untuk membandingkan hanya tanggalnya saja (ignore time)
+    $pendapatanPeriode = date('Y-m-d', strtotime($pendapatan->periode));
+    $potonganPeriode = date('Y-m-d', strtotime($potongan->periode));
+
+    if ($pendapatanPeriode !== $potonganPeriode) {
+      throw new \InvalidArgumentException('Pendapatan dan Potongan harus untuk periode yang sama. Pendapatan: ' . $pendapatanPeriode . ', Potongan: ' . $potonganPeriode);
+    }
+
+    $subtotal = $pendapatan->total_pendapatan - $potongan->total_potongan;
+    $gajiBersih = $subtotal - $pph21;
+
+    return [
+      'subtotal' => round($subtotal, 2),
+      'gaji_bersih' => round($gajiBersih, 2),
+      'total_pendapatan' => $pendapatan->total_pendapatan,
+      'total_potongan' => $potongan->total_potongan,
+      'pph21' => round($pph21, 2),
+      'karyawan_id' => $pendapatan->karyawan_id,
+      'periode' => $pendapatanPeriode // Gunakan format yang konsisten
+    ];
+  }
+
+  /**
+   * Process gaji karyawan calculation and create/update record
+   */
+  public function processGajiKaryawanCalculation(array $data): array
+  {
+    return DB::transaction(function () use ($data) {
+      $calculation = $this->calculateGajiKaryawan(
+        $data['pendapatan_id'],
+        $data['potongan_id'],
+        $data['pph21'] ?? 0
+      );
+
+      return array_merge($data, $calculation);
+    });
+  }
+
+  /**
+   * Recalculate all gaji for a specific periode (useful when pendapatan/potongan changes)
+   */
+  public function recalculateGajiByPeriode(string $periode): void
+  {
+    $gajiKaryawans = GajiKaryawan::where('periode', $periode)->get();
+
+    foreach ($gajiKaryawans as $gaji) {
+      $calculation = $this->calculateGajiKaryawan(
+        $gaji->pendapatan_id,
+        $gaji->potongan_id,
+        $gaji->pph21
+      );
+
+      $gaji->update([
+        'subtotal' => $calculation['subtotal'],
+        'gaji_bersih' => $calculation['gaji_bersih']
+      ]);
+    }
+  }
+
+  /**
+   * Recalculate gaji when pendapatan changes
+   */
+  public function recalculateGajiByPendapatan(string $pendapatanId): void
+  {
+    $gajiKaryawans = GajiKaryawan::where('pendapatan_id', $pendapatanId)->get();
+
+    foreach ($gajiKaryawans as $gaji) {
+      $calculation = $this->calculateGajiKaryawan(
+        $gaji->pendapatan_id,
+        $gaji->potongan_id,
+        $gaji->pph21
+      );
+
+      $gaji->update([
+        'subtotal' => $calculation['subtotal'],
+        'gaji_bersih' => $calculation['gaji_bersih']
+      ]);
+    }
+  }
+
+  /**
+   * Recalculate gaji when potongan changes
+   */
+  public function recalculateGajiByPotongan(string $potonganId): void
+  {
+    $gajiKaryawans = GajiKaryawan::where('potongan_id', $potonganId)->get();
+
+    foreach ($gajiKaryawans as $gaji) {
+      $calculation = $this->calculateGajiKaryawan(
+        $gaji->pendapatan_id,
+        $gaji->potongan_id,
+        $gaji->pph21
+      );
+
+      $gaji->update([
+        'subtotal' => $calculation['subtotal'],
+        'gaji_bersih' => $calculation['gaji_bersih']
+      ]);
+    }
+  }
+
+  /**
+   * Generate slip gaji data for PDF/export
+   */
+  public function generateSlipGaji(string $gajiKaryawanId): array
+  {
+    $gaji = GajiKaryawan::with(['karyawan', 'pendapatan', 'potongan'])->findOrFail($gajiKaryawanId);
+
+    return [
+      'slip_data' => [
+        'periode' => $gaji->periode,
+        'karyawan' => [
+          'nik' => $gaji->karyawan->NIK,
+          'nama' => $gaji->karyawan->nama,
+          'jabatan' => $gaji->karyawan->jabatan
+        ],
+        'pendapatan' => [
+          'gapok' => $gaji->karyawan->gapok,
+          'tunjangan' => $gaji->pendapatan->tunjangan,
+          'total_lembur' => $gaji->pendapatan->total_pendapatan - $gaji->karyawan->gapok - $gaji->pendapatan->tunjangan,
+          'total_pendapatan' => $gaji->pendapatan->total_pendapatan
+        ],
+        'potongan' => [
+          'bpjs_kesehatan' => $gaji->potongan->rp_bpjs_kesehatan,
+          'bpjs_tenagakerja' => $gaji->potongan->rp_bpjs_tenagakerja,
+          'total_potongan' => $gaji->potongan->total_potongan
+        ],
+        'rincian_gaji' => [
+          'subtotal' => $gaji->subtotal,
+          'pph21' => $gaji->pph21,
+          'gaji_bersih' => $gaji->gaji_bersih
+        ]
+      ]
+    ];
+  }
 }

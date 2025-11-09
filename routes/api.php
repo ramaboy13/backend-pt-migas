@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Api\AssetController;
+use App\Http\Controllers\Api\GajiKaryawanController;
 use App\Http\Controllers\Api\KaryawanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\KasBcaController;
 use App\Http\Controllers\Api\LemburKaryawanController;
 use App\Http\Controllers\Api\PangkalanController;
 use App\Http\Controllers\Api\PendapatanController;
+use App\Http\Controllers\Api\PotonganController;
 use App\Http\Controllers\Api\TabungController;
 use Illuminate\Support\Facades\Route;
 
@@ -104,8 +106,33 @@ Route::middleware(['auth:api'])->group(function () {
             Route::put('/update/{id}', [PendapatanController::class, 'update']);
             Route::delete('/delete/{id}', [PendapatanController::class, 'destroy']);
             Route::get('/karyawan/{karyawanId}', [PendapatanController::class, 'getByKaryawan']);
-            Route::get('/periode', [PendapatanController::class, 'getByPeriode']);
             Route::post('/recalculate', [PendapatanController::class, 'recalculate']);
+        });
+    });
+
+    // Potongan Routes
+    Route::prefix('potongan')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [PotonganController::class, 'index']);
+            Route::post('/create', [PotonganController::class, 'store']);
+            Route::get('/show/{id}', [PotonganController::class, 'show']);
+            Route::put('/update/{id}', [PotonganController::class, 'update']);
+            Route::delete('/delete/{id}', [PotonganController::class, 'destroy']);
+            Route::get('/karyawan/{karyawanId}', [PotonganController::class, 'getByKaryawan']);
+            Route::post('/recalculate', [PotonganController::class, 'recalculate']);
+        });
+    });
+
+    // Gaji Karyawan Routes
+    Route::prefix('gaji-karyawan')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [GajiKaryawanController::class, 'index']);
+            Route::post('/create', [GajiKaryawanController::class, 'store']);
+            Route::get('/show/{id}', [GajiKaryawanController::class, 'show']);
+            Route::put('/update/{id}', [GajiKaryawanController::class, 'update']);
+            Route::delete('/delete/{id}', [GajiKaryawanController::class, 'destroy']);
+            Route::get('/karyawan/{karyawanId}', [GajiKaryawanController::class, 'getByKaryawan']);
+            Route::post('/recalculate', [GajiKaryawanController::class, 'recalculate']);
         });
     });
 });

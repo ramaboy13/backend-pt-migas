@@ -3,22 +3,22 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\PendapatanRequest;
-use App\Services\PendapatanService;
+use App\Http\Requests\GajiKaryawanRequest;
+use App\Services\GajiKaryawanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class PendapatanController extends Controller
+class GajiKaryawanController extends Controller
 {
-  public function __construct(private PendapatanService $service) {}
+  public function __construct(private GajiKaryawanService $service) {}
 
   public function index(Request $request): JsonResponse
   {
     try {
       $perPage = $request->input('per_page', 10);
-      $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id', 'nama_karyawan']);
+      $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id', 'nama_karyawan', 'is_active']);
 
-      $result = $this->service->getAllPendapatan($filters, $perPage);
+      $result = $this->service->getAllGaji($filters, $perPage);
 
       return response()->json([
         'success' => true,
@@ -33,7 +33,7 @@ class PendapatanController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal mengambil data pendapatan',
+        'message' => 'Gagal mengambil data gaji karyawan',
         'data' => null
       ], 500);
     }
@@ -42,39 +42,39 @@ class PendapatanController extends Controller
   public function show(string $id): JsonResponse
   {
     try {
-      $pendapatan = $this->service->getPendapatanById($id);
+      $gaji = $this->service->getGajiById($id);
 
-      if (!$pendapatan) {
+      if (!$gaji) {
         return response()->json([
           'success' => false,
-          'message' => 'Data pendapatan tidak ditemukan',
+          'message' => 'Data gaji karyawan tidak ditemukan',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'data' => $pendapatan
+        'data' => $gaji
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal mengambil data pendapatan',
+        'message' => 'Gagal mengambil data gaji karyawan',
         'data' => null
       ], 500);
     }
   }
 
-  public function store(PendapatanRequest $request): JsonResponse
+  public function store(GajiKaryawanRequest $request): JsonResponse
   {
     try {
       $validated = $request->validated();
-      $pendapatan = $this->service->createPendapatan($validated);
+      $gaji = $this->service->createGaji($validated);
 
       return response()->json([
         'success' => true,
-        'message' => 'Data pendapatan berhasil dibuat',
-        'data' => $pendapatan
+        'message' => 'Data gaji karyawan berhasil dibuat',
+        'data' => $gaji
       ], 201);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -85,30 +85,30 @@ class PendapatanController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal membuat data pendapatan',
+        'message' => 'Gagal membuat data gaji karyawan',
         'data' => null
       ], 500);
     }
   }
 
-  public function update(PendapatanRequest $request, string $id): JsonResponse
+  public function update(GajiKaryawanRequest $request, string $id): JsonResponse
   {
     try {
       $validated = $request->validated();
-      $pendapatan = $this->service->updatePendapatan($id, $validated);
+      $gaji = $this->service->updateGaji($id, $validated);
 
-      if (!$pendapatan) {
+      if (!$gaji) {
         return response()->json([
           'success' => false,
-          'message' => 'Data pendapatan tidak ditemukan',
+          'message' => 'Data gaji karyawan tidak ditemukan',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Data pendapatan berhasil diupdate',
-        'data' => $pendapatan
+        'message' => 'Data gaji karyawan berhasil diupdate',
+        'data' => $gaji
       ], 200);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -119,7 +119,7 @@ class PendapatanController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal mengupdate data pendapatan',
+        'message' => 'Gagal mengupdate data gaji karyawan',
         'data' => null
       ], 500);
     }
@@ -128,23 +128,23 @@ class PendapatanController extends Controller
   public function destroy(string $id): JsonResponse
   {
     try {
-      $deleted = $this->service->deletePendapatan($id);
+      $deleted = $this->service->deleteGaji($id);
 
       if (!$deleted) {
         return response()->json([
           'success' => false,
-          'message' => 'Data pendapatan tidak ditemukan',
+          'message' => 'Data gaji karyawan tidak ditemukan',
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Data pendapatan berhasil dihapus',
+        'message' => 'Data gaji karyawan berhasil dihapus',
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal menghapus data pendapatan',
+        'message' => 'Gagal menghapus data gaji karyawan',
       ], 500);
     }
   }
@@ -155,7 +155,7 @@ class PendapatanController extends Controller
       $filters = $request->only(['start_periode', 'end_periode']);
       $perPage = $request->input('per_page', 10);
 
-      $result = $this->service->getPendapatanByKaryawan($karyawanId, array_merge($filters, ['per_page' => $perPage]));
+      $result = $this->service->getGajiByKaryawan($karyawanId, array_merge($filters, ['per_page' => $perPage]));
 
       return response()->json([
         'success' => true,
@@ -170,7 +170,25 @@ class PendapatanController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal mengambil data pendapatan karyawan',
+        'message' => 'Gagal mengambil data gaji karyawan',
+        'data' => null
+      ], 500);
+    }
+  }
+  public function getSummaryByPeriode(Request $request): JsonResponse
+  {
+    try {
+      $periode = $request->input('periode', date('Y-m-d'));
+      $summary = $this->service->getSummaryByPeriode($periode);
+
+      return response()->json([
+        'success' => true,
+        'data' => array_merge(['periode' => $periode], $summary)
+      ], 200);
+    } catch (\Exception $e) {
+      return response()->json([
+        'success' => false,
+        'message' => 'Gagal mengambil summary gaji',
         'data' => null
       ], 500);
     }
@@ -180,26 +198,35 @@ class PendapatanController extends Controller
   {
     try {
       $periode = $request->input('periode');
+      $pendapatanId = $request->input('pendapatan_id');
+      $potonganId = $request->input('potongan_id');
 
-      if (!$periode) {
+      if ($periode) {
+        $this->service->recalculateGaji($periode);
+        $message = 'Data gaji berhasil dihitung ulang untuk periode ' . $periode;
+      } elseif ($pendapatanId) {
+        $this->service->recalculateGajiByPendapatan($pendapatanId);
+        $message = 'Data gaji berhasil dihitung ulang untuk pendapatan';
+      } elseif ($potonganId) {
+        $this->service->recalculateGajiByPotongan($potonganId);
+        $message = 'Data gaji berhasil dihitung ulang untuk potongan';
+      } else {
         return response()->json([
           'success' => false,
-          'message' => 'Periode harus diisi',
+          'message' => 'Periode, pendapatan_id, atau potongan_id harus diisi',
           'data' => null
         ], 422);
       }
 
-      $this->service->recalculatePendapatan($periode);
-
       return response()->json([
         'success' => true,
-        'message' => 'Data pendapatan berhasil dihitung ulang',
+        'message' => $message,
         'data' => null
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal menghitung ulang data pendapatan',
+        'message' => 'Gagal menghitung ulang data gaji',
         'data' => null
       ], 500);
     }

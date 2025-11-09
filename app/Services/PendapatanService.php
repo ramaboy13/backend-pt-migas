@@ -155,27 +155,6 @@ class PendapatanService
     return $result;
   }
 
-  public function getPendapatanByPeriode(string $periode): LengthAwarePaginator
-  {
-    $result = $this->repository->getByPeriode($periode);
-    $result->getCollection()->transform(function ($pendapatan) use ($periode) {
-      $data = $pendapatan->toArray();
-
-      $lemburDetail = $this->payrollService->calculateTotalPendapatan(
-        $pendapatan->karyawan_id,
-        $periode,
-        $pendapatan->tunjangan
-      );
-
-      return array_merge($data, [
-        'total_lembur_perperiode' => $lemburDetail['total_lembur_perperiode'],
-        'total_pendapatan_lembur_perperiode' => $lemburDetail['total_pendapatan_lembur_perperiode']
-      ]);
-    });
-
-    return $result;
-  }
-
   public function deletePendapatan(string $id): bool
   {
     return $this->repository->delete($id);

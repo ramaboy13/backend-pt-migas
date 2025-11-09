@@ -1,13 +1,14 @@
 <?php
+// app/Repositories/PotonganRepository.php
 
 namespace App\Repositories;
 
-use App\Models\Pendapatan;
+use App\Models\Potongan;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class PendapatanRepository
+class PotonganRepository
 {
-  public function __construct(private Pendapatan $model) {}
+  public function __construct(private Potongan $model) {}
 
   public function getAll(array $filters = [], int $perPage = 10): LengthAwarePaginator
   {
@@ -40,19 +41,19 @@ class PendapatanRepository
       ->paginate($perPage);
   }
 
-  public function findById(string $id): ?Pendapatan
+  public function findById(string $id): ?Potongan
   {
     return $this->model->with('karyawan')->find($id);
   }
 
-  public function findByKaryawanAndPeriode(string $karyawanId, string $periode): ?Pendapatan
+  public function findByKaryawanAndPeriode(string $karyawanId, string $periode): ?Potongan
   {
     return $this->model->where('karyawan_id', $karyawanId)
       ->where('periode', $periode)
       ->first();
   }
 
-  public function create(array $data): Pendapatan
+  public function create(array $data): Potongan
   {
     return $this->model->create($data);
   }

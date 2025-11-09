@@ -19,11 +19,11 @@ class AssetRepository
         }
 
         // Search by name
-        if (isset($filters['name'])) {
+        if (isset($filters['search'])) {
             $query->where('name', 'like', '%' . $filters['search'] . '%');
         }
 
-        return $query->orderBy('created_at', 'desc')->pagination($perPage);
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
     public function findById(string $id): ?Asset
