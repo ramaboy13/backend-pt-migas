@@ -1,26 +1,24 @@
 <?php
-// app/Http/Controllers/Api/PotonganController.php
 
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\PotonganRequest;
-use App\Services\PotonganService;
+use App\Http\Requests\GajiKaryawanRequest;
+use App\Services\GajiKaryawanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
-class PotonganController extends Controller
+class GajiKaryawanController extends Controller
 {
-  public function __construct(private PotonganService $service) {}
+  public function __construct(private GajiKaryawanService $service) {}
 
   public function index(Request $request): JsonResponse
   {
     try {
       $perPage = $request->input('per_page', 10);
-      $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id', 'nama_karyawan']);
+      $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id', 'nama_karyawan', 'is_active']);
 
-      $result = $this->service->getAllPotongan($filters, $perPage);
+      $result = $this->service->getAllGaji($filters, $perPage);
 
       return response()->json([
         'success' => true,
@@ -35,7 +33,7 @@ class PotonganController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal mengambil data potongan',
+        'message' => 'Gagal mengambil data gaji karyawan',
         'data' => null
       ], 500);
     }
@@ -44,39 +42,39 @@ class PotonganController extends Controller
   public function show(string $id): JsonResponse
   {
     try {
-      $potongan = $this->service->getPotonganById($id);
+      $gaji = $this->service->getGajiById($id);
 
-      if (!$potongan) {
+      if (!$gaji) {
         return response()->json([
           'success' => false,
-          'message' => 'Data potongan tidak ditemukan',
+          'message' => 'Data gaji karyawan tidak ditemukan',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'data' => $potongan
+        'data' => $gaji
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal mengambil data potongan',
+        'message' => 'Gagal mengambil data gaji karyawan',
         'data' => null
       ], 500);
     }
   }
 
-  public function store(PotonganRequest $request): JsonResponse
+  public function store(GajiKaryawanRequest $request): JsonResponse
   {
     try {
       $validated = $request->validated();
-      $potongan = $this->service->createPotongan($validated);
+      $gaji = $this->service->createGaji($validated);
 
       return response()->json([
         'success' => true,
-        'message' => 'Data potongan berhasil dibuat',
-        'data' => $potongan
+        'message' => 'Data gaji karyawan berhasil dibuat',
+        'data' => $gaji
       ], 201);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -87,30 +85,30 @@ class PotonganController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal membuat data potongan',
+        'message' => 'Gagal membuat data gaji karyawan',
         'data' => null
       ], 500);
     }
   }
 
-  public function update(PotonganRequest $request, string $id): JsonResponse
+  public function update(GajiKaryawanRequest $request, string $id): JsonResponse
   {
     try {
       $validated = $request->validated();
-      $potongan = $this->service->updatePotongan($id, $validated);
+      $gaji = $this->service->updateGaji($id, $validated);
 
-      if (!$potongan) {
+      if (!$gaji) {
         return response()->json([
           'success' => false,
-          'message' => 'Data potongan tidak ditemukan',
+          'message' => 'Data gaji karyawan tidak ditemukan',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Data potongan berhasil diupdate',
-        'data' => $potongan
+        'message' => 'Data gaji karyawan berhasil diupdate',
+        'data' => $gaji
       ], 200);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -119,13 +117,9 @@ class PotonganController extends Controller
         'data' => null
       ], 422);
     } catch (\Exception $e) {
-      Log::error('Failed to Update potongan: ' . $e->getMessage(), [
-        'trace' => $e->getTraceAsString(),
-        'request_data' => $request->all(),
-      ]);
       return response()->json([
         'success' => false,
-        'message' => 'Gagal mengupdate data potongan',
+        'message' => 'Gagal mengupdate data gaji karyawan',
         'data' => null
       ], 500);
     }
@@ -134,23 +128,23 @@ class PotonganController extends Controller
   public function destroy(string $id): JsonResponse
   {
     try {
-      $deleted = $this->service->deletePotongan($id);
+      $deleted = $this->service->deleteGaji($id);
 
       if (!$deleted) {
         return response()->json([
           'success' => false,
-          'message' => 'Data potongan tidak ditemukan',
+          'message' => 'Data gaji karyawan tidak ditemukan',
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Data potongan berhasil dihapus',
+        'message' => 'Data gaji karyawan berhasil dihapus',
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal menghapus data potongan',
+        'message' => 'Gagal menghapus data gaji karyawan',
       ], 500);
     }
   }
@@ -161,7 +155,7 @@ class PotonganController extends Controller
       $filters = $request->only(['start_periode', 'end_periode']);
       $perPage = $request->input('per_page', 10);
 
-      $result = $this->service->getPotonganByKaryawan($karyawanId, array_merge($filters, ['per_page' => $perPage]));
+      $result = $this->service->getGajiByKaryawan($karyawanId, array_merge($filters, ['per_page' => $perPage]));
 
       return response()->json([
         'success' => true,
@@ -176,29 +170,50 @@ class PotonganController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal mengambil data potongan karyawan',
+        'message' => 'Gagal mengambil data gaji karyawan',
+        'data' => null
+      ], 500);
+    }
+  }
+  public function getSummaryByPeriode(Request $request): JsonResponse
+  {
+    try {
+      $periode = $request->input('periode', date('Y-m-d'));
+      $summary = $this->service->getSummaryByPeriode($periode);
+
+      return response()->json([
+        'success' => true,
+        'data' => array_merge(['periode' => $periode], $summary)
+      ], 200);
+    } catch (\Exception $e) {
+      return response()->json([
+        'success' => false,
+        'message' => 'Gagal mengambil summary gaji',
         'data' => null
       ], 500);
     }
   }
 
-
   public function recalculate(Request $request): JsonResponse
   {
     try {
       $periode = $request->input('periode');
-      $karyawanId = $request->input('karyawan_id');
+      $pendapatanId = $request->input('pendapatan_id');
+      $potonganId = $request->input('potongan_id');
 
       if ($periode) {
-        $this->service->recalculatePotongan($periode);
-        $message = 'Data potongan berhasil dihitung ulang untuk periode ' . $periode;
-      } elseif ($karyawanId) {
-        $this->service->recalculatePotonganByKaryawan($karyawanId);
-        $message = 'Data potongan berhasil dihitung ulang untuk karyawan';
+        $this->service->recalculateGaji($periode);
+        $message = 'Data gaji berhasil dihitung ulang untuk periode ' . $periode;
+      } elseif ($pendapatanId) {
+        $this->service->recalculateGajiByPendapatan($pendapatanId);
+        $message = 'Data gaji berhasil dihitung ulang untuk pendapatan';
+      } elseif ($potonganId) {
+        $this->service->recalculateGajiByPotongan($potonganId);
+        $message = 'Data gaji berhasil dihitung ulang untuk potongan';
       } else {
         return response()->json([
           'success' => false,
-          'message' => 'Periode atau karyawan_id harus diisi',
+          'message' => 'Periode, pendapatan_id, atau potongan_id harus diisi',
           'data' => null
         ], 422);
       }
@@ -211,7 +226,7 @@ class PotonganController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Gagal menghitung ulang data potongan',
+        'message' => 'Gagal menghitung ulang data gaji',
         'data' => null
       ], 500);
     }

@@ -78,12 +78,4 @@ class PendapatanRepository
     return $query->orderBy('periode', 'desc')
       ->paginate($filters['per_page'] ?? 10);
   }
-
-  public function getByPeriode(string $periode): LengthAwarePaginator
-  {
-    return $this->model->with('karyawan')
-      ->where('periode', $periode)
-      ->orderBy('created_at', 'desc')
-      ->paginate(50);
-  }
 }

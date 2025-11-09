@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Api/PendapatanController.php
 
 namespace App\Http\Controllers\Api;
 
@@ -172,31 +171,6 @@ class PendapatanController extends Controller
       return response()->json([
         'success' => false,
         'message' => 'Gagal mengambil data pendapatan karyawan',
-        'data' => null
-      ], 500);
-    }
-  }
-
-  public function getByPeriode(Request $request): JsonResponse
-  {
-    try {
-      $periode = $request->input('periode', date('Y-m-d'));
-      $result = $this->service->getPendapatanByPeriode($periode);
-
-      return response()->json([
-        'success' => true,
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
-      ], 200);
-    } catch (\Exception $e) {
-      return response()->json([
-        'success' => false,
-        'message' => 'Gagal mengambil data pendapatan berdasarkan periode',
         'data' => null
       ], 500);
     }

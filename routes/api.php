@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AssetController;
+use App\Http\Controllers\Api\GajiKaryawanController;
 use App\Http\Controllers\Api\KaryawanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\KasBcaController;
@@ -105,7 +106,6 @@ Route::middleware(['auth:api'])->group(function () {
             Route::put('/update/{id}', [PendapatanController::class, 'update']);
             Route::delete('/delete/{id}', [PendapatanController::class, 'destroy']);
             Route::get('/karyawan/{karyawanId}', [PendapatanController::class, 'getByKaryawan']);
-            Route::get('/periode', [PendapatanController::class, 'getByPeriode']);
             Route::post('/recalculate', [PendapatanController::class, 'recalculate']);
         });
     });
@@ -119,9 +119,20 @@ Route::middleware(['auth:api'])->group(function () {
             Route::put('/update/{id}', [PotonganController::class, 'update']);
             Route::delete('/delete/{id}', [PotonganController::class, 'destroy']);
             Route::get('/karyawan/{karyawanId}', [PotonganController::class, 'getByKaryawan']);
-            Route::get('/periode', [PotonganController::class, 'getByPeriode']);
-            Route::get('/total-periode', [PotonganController::class, 'getTotalByPeriode']);
             Route::post('/recalculate', [PotonganController::class, 'recalculate']);
+        });
+    });
+
+    // Gaji Karyawan Routes
+    Route::prefix('gaji-karyawan')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [GajiKaryawanController::class, 'index']);
+            Route::post('/create', [GajiKaryawanController::class, 'store']);
+            Route::get('/show/{id}', [GajiKaryawanController::class, 'show']);
+            Route::put('/update/{id}', [GajiKaryawanController::class, 'update']);
+            Route::delete('/delete/{id}', [GajiKaryawanController::class, 'destroy']);
+            Route::get('/karyawan/{karyawanId}', [GajiKaryawanController::class, 'getByKaryawan']);
+            Route::post('/recalculate', [GajiKaryawanController::class, 'recalculate']);
         });
     });
 });

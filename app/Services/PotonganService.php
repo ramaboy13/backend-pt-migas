@@ -89,16 +89,6 @@ class PotonganService
     return $this->repository->getByKaryawanId($karyawanId, $filters);
   }
 
-  public function getPotonganByPeriode(string $periode): LengthAwarePaginator
-  {
-    return $this->repository->getByPeriode($periode);
-  }
-
-  public function getTotalPotonganByPeriode(string $periode): float
-  {
-    return $this->repository->getTotalPotonganByPeriode($periode);
-  }
-
   /**
    * Recalculate potongan when periode changes
    */

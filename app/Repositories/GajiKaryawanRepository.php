@@ -1,18 +1,17 @@
 <?php
-// app/Repositories/PotonganRepository.php
 
 namespace App\Repositories;
 
-use App\Models\Potongan;
+use App\Models\GajiKaryawan;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class PotonganRepository
+class GajiKaryawanRepository
 {
-  public function __construct(private Potongan $model) {}
+  public function __construct(private GajiKaryawan $model) {}
 
   public function getAll(array $filters = [], int $perPage = 10): LengthAwarePaginator
   {
-    $query = $this->model->with('karyawan');
+    $query = $this->model->with(['karyawan', 'pendapatan', 'potongan']);
 
     // Filter by periode
     if (!empty($filters['periode'])) {
@@ -36,24 +35,31 @@ class PotonganRepository
       });
     }
 
+    // Filter by status aktif karyawan
+    if (isset($filters['is_active'])) {
+      $query->whereHas('karyawan', function ($q) use ($filters) {
+        $q->where('is_active', $filters['is_active']);
+      });
+    }
+
     return $query->orderBy('periode', 'desc')
       ->orderBy('created_at', 'desc')
       ->paginate($perPage);
   }
 
-  public function findById(string $id): ?Potongan
+  public function findById(string $id): ?GajiKaryawan
   {
-    return $this->model->with('karyawan')->find($id);
+    return $this->model->with(['karyawan', 'pendapatan', 'potongan'])->find($id);
   }
 
-  public function findByKaryawanAndPeriode(string $karyawanId, string $periode): ?Potongan
+  public function findByKaryawanAndPeriode(string $karyawanId, string $periode): ?GajiKaryawan
   {
     return $this->model->where('karyawan_id', $karyawanId)
       ->where('periode', $periode)
       ->first();
   }
 
-  public function create(array $data): Potongan
+  public function create(array $data): GajiKaryawan
   {
     return $this->model->create($data);
   }
@@ -70,7 +76,8 @@ class PotonganRepository
 
   public function getByKaryawanId(string $karyawanId, array $filters = []): LengthAwarePaginator
   {
-    $query = $this->model->where('karyawan_id', $karyawanId);
+    $query = $this->model->with(['pendapatan', 'potongan'])
+      ->where('karyawan_id', $karyawanId);
 
     if (!empty($filters['start_periode']) && !empty($filters['end_periode'])) {
       $query->whereBetween('periode', [$filters['start_periode'], $filters['end_periode']]);
@@ -78,5 +85,18 @@ class PotonganRepository
 
     return $query->orderBy('periode', 'desc')
       ->paginate($filters['per_page'] ?? 10);
+  }
+
+  public function getSummaryByPeriode(string $periode): array
+  {
+    return $this->model->where('periode', $periode)
+      ->selectRaw('
+                              COUNT(*) as total_karyawan,
+                              SUM(subtotal) as total_subtotal,
+                              SUM(pph21) as total_pph21,
+                              SUM(gaji_bersih) as total_gaji_bersih
+                          ')
+      ->first()
+      ->toArray();
   }
 }
