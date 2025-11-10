@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PangkalanController;
 use App\Http\Controllers\Api\PendapatanController;
 use App\Http\Controllers\Api\PotonganController;
 use App\Http\Controllers\Api\TabungController;
+use App\Http\Controllers\Api\TransaksiOperasionalController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -17,7 +18,6 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('refresh', [AuthController::class, 'refresh']);
 });
-
 
 
 Route::middleware(['auth:api'])->group(function () {
@@ -133,6 +133,18 @@ Route::middleware(['auth:api'])->group(function () {
             Route::delete('/delete/{id}', [GajiKaryawanController::class, 'destroy']);
             Route::get('/karyawan/{karyawanId}', [GajiKaryawanController::class, 'getByKaryawan']);
             Route::post('/recalculate', [GajiKaryawanController::class, 'recalculate']);
+        });
+    });
+
+    // Transaksi Operasional Routes
+    Route::prefix('transaksi-operasional')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [TransaksiOperasionalController::class, 'index']);
+            Route::post('/create', [TransaksiOperasionalController::class, 'store']);
+            Route::get('/show/{id}', [TransaksiOperasionalController::class, 'show']);
+            Route::put('/update/{id}', [TransaksiOperasionalController::class, 'update']);
+            Route::delete('/delete/{id}', [TransaksiOperasionalController::class, 'destroy']);
+            Route::get('/summary', [TransaksiOperasionalController::class, 'getSummary']);
         });
     });
 });

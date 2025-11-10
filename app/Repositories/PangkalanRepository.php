@@ -1,5 +1,4 @@
 <?php
-// app/Repositories/PangkalanRepository.php
 
 namespace App\Repositories;
 
@@ -10,21 +9,12 @@ class PangkalanRepository
 {
   public function __construct(private Pangkalan $model) {}
 
-  // MODIFIKASI: Tambah parameter filters
   public function getAllPaginated(int $perPage = 10, array $filters = []): LengthAwarePaginator
   {
     $query = $this->model->newQuery();
 
     if (!empty($filters['name'])) {
       $query->where('name', 'LIKE', '%' . $filters['name'] . '%');
-    }
-
-    if (!empty($filters['regist_id'])) {
-      $query->where('regist_id', 'LIKE', '%' . $filters['regist_id'] . '%');
-    }
-
-    if (!empty($filters['no_ktp'])) {
-      $query->where('no_ktp', 'LIKE', '%' . $filters['no_ktp'] . '%');
     }
 
     return $query->orderBy('created_at', 'desc')
