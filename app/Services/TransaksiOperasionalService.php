@@ -89,14 +89,16 @@ class TransaksiOperasionalService
     $transactions = $this->repository->getAll([
       'start_date' => $startDate,
       'end_date' => $endDate
-    ], 1000); // Large number to get all data
+    ], 1000);
 
     $totalDebit = 0;
     $totalCredit = 0;
 
     foreach ($transactions as $transaction) {
-      $totalDebit += $transaction->debit;
-      $totalCredit += $transaction->credit;
+      if ($transaction instanceof TransaksiOperasional) {
+        $totalDebit += $transaction->debit;
+        $totalCredit += $transaction->credit;
+      }
     }
 
     return [
