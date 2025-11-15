@@ -31,14 +31,13 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->uuid('user_id')->nullable()->index(); // Changed to uuid
+            $table->uuid('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
 
-        // Tambahkan juga migration untuk refresh tokens
         Schema::create('refresh_tokens', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(Str::uuid());
             $table->uuid('user_id');
@@ -48,10 +47,10 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('cascade');
-            
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
+
             $table->index(['user_id', 'expires_at']);
         });
     }

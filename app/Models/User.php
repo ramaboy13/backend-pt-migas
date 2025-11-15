@@ -17,7 +17,7 @@ class User extends Authenticatable implements JWTSubject
 
     protected $fillable = [
         'name',
-        'email', 
+        'email',
         'password',
         'is_active',
     ];
@@ -68,7 +68,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return 'string';
     }
-     public function getRoleNames(): array
+    public function getRoleNames(): array
     {
         return $this->roles->pluck('name')->toArray();
     }

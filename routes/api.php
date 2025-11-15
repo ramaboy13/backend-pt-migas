@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PendapatanController;
 use App\Http\Controllers\Api\PotonganController;
 use App\Http\Controllers\Api\TabungController;
 use App\Http\Controllers\Api\TransaksiOperasionalController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -145,6 +146,19 @@ Route::middleware(['auth:api'])->group(function () {
             Route::put('/update/{id}', [TransaksiOperasionalController::class, 'update']);
             Route::delete('/delete/{id}', [TransaksiOperasionalController::class, 'destroy']);
             Route::get('/summary', [TransaksiOperasionalController::class, 'getSummary']);
+        });
+    });
+
+    // User Management Routes
+    Route::prefix('users')->group(function () {
+        Route::middleware(['role:super_admin'])->group(function () {
+            Route::get('/', [UserController::class, 'index']);
+            Route::post('/create', [UserController::class, 'store']);
+            Route::get('/show/{id}', [UserController::class, 'show']);
+            Route::put('/update/{id}', [UserController::class, 'update']);
+            Route::delete('/delete/{id}', [UserController::class, 'destroy']);
+            Route::post('/{id}/deactivate', [UserController::class, 'deactivate']);
+            Route::post('/{id}/activate', [UserController::class, 'activate']);
         });
     });
 });
