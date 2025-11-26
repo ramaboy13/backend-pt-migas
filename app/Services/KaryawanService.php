@@ -2,32 +2,38 @@
 
 namespace App\Services;
 
+use App\DTO\Karyawan\KaryawanDTO;
+use App\DTO\Karyawan\KaryawanCollectionDTO;
 use App\Repositories\KaryawanRepository;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class KaryawanService
 {
     public function __construct(private KaryawanRepository $repository) {}
 
-    public function getAllKaryawan(array $filters = []): LengthAwarePaginator
+    public function getAllKaryawan(array $filters = []): KaryawanCollectionDTO
     {
-        return $this->repository->getAll($filters);
+        $karyawans = $this->repository->getAll($filters);
+        return KaryawanCollectionDTO::fromPaginator($karyawans);
     }
 
-    public function getKaryawanById(string $id): ?array
+    public function getKaryawanById(string $id): ?KaryawanDTO
     {
         $karyawan = $this->repository->findById($id);
-        return $karyawan ? $karyawan->toArray() : null;
+
+        if (!$karyawan) {
+            return null;
+        }
+
+        return KaryawanDTO::fromModel($karyawan);
     }
 
-    public function createKaryawan(array $data): array
+    public function createKaryawan(array $data): KaryawanDTO
     {
-
         $karyawan = $this->repository->create($data);
-        return $karyawan->toArray();
+        return KaryawanDTO::fromModel($karyawan);
     }
 
-    public function updateKaryawan(string $id, array $data): ?array
+    public function updateKaryawan(string $id, array $data): ?KaryawanDTO
     {
         $updated = $this->repository->update($id, $data);
 
@@ -35,7 +41,8 @@ class KaryawanService
             return null;
         }
 
-        return $this->repository->findById($id)->toArray();
+        $karyawan = $this->repository->findById($id);
+        return KaryawanDTO::fromModel($karyawan);
     }
 
     public function deleteKaryawan(string $id): bool

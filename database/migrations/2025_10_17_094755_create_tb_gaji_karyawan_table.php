@@ -19,9 +19,9 @@ return new class extends Migration
             //   ->storedAs('
             //     (SELECT total_pendapatan FROM tb_pendapatan WHERE id = pendapatan_id) 
             //     - (SELECT total_potongan FROM tb_potongan WHERE id = potongan_id)
-            //   ');      
+            //   ');      AKAN DI HITUNG DI PayrollCalculationService.php
             $table->decimal('gaji_bersih', 15, 2);
-            //   ->storedAs('subtotal - pph21');
+            //   ->storedAs('subtotal - pph21'); AKAN DI HITUNG DI PayrollCalculationService.php
 
             $table->timestamps();
 

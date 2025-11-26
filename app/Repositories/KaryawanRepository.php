@@ -13,11 +13,6 @@ class KaryawanRepository
     {
         $query = $this->model->newQuery();
 
-        // Filter by NIK
-        if (!empty($filters['nik'])) {
-            $query->where('NIK', 'LIKE', '%' . $filters['nik'] . '%');
-        }
-
         // Filter by nama
         if (!empty($filters['nama'])) {
             $query->where('nama', 'LIKE', '%' . $filters['nama'] . '%');

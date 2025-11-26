@@ -19,16 +19,12 @@ class PendapatanController extends Controller
       $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id', 'nama_karyawan']);
 
       $result = $this->service->getAllPendapatan($filters, $perPage);
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -54,7 +50,7 @@ class PendapatanController extends Controller
 
       return response()->json([
         'success' => true,
-        'data' => $pendapatan
+        'data' => $pendapatan->toArray()
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -74,7 +70,7 @@ class PendapatanController extends Controller
       return response()->json([
         'success' => true,
         'message' => 'Data pendapatan berhasil dibuat',
-        'data' => $pendapatan
+        'data' => $pendapatan->toArray()
       ], 201);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -108,7 +104,7 @@ class PendapatanController extends Controller
       return response()->json([
         'success' => true,
         'message' => 'Data pendapatan berhasil diupdate',
-        'data' => $pendapatan
+        'data' => $pendapatan->toArray()
       ], 200);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -156,16 +152,12 @@ class PendapatanController extends Controller
       $perPage = $request->input('per_page', 10);
 
       $result = $this->service->getPendapatanByKaryawan($karyawanId, array_merge($filters, ['per_page' => $perPage]));
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([

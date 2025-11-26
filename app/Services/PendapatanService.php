@@ -1,7 +1,10 @@
 <?php
+// app/Services/PendapatanService.php
 
 namespace App\Services;
 
+use App\DTO\PendapatanKaryawan\PendapatanKaryawanCollectionDTO;
+use App\DTO\PendapatanKaryawan\PendapatanKaryawanDTO;
 use App\Repositories\PendapatanRepository;
 use App\Services\PayrollCalculationService;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -13,28 +16,24 @@ class PendapatanService
     private PayrollCalculationService $payrollService
   ) {}
 
-  public function getAllPendapatan(array $filters = []): LengthAwarePaginator
+  public function getAllPendapatan(array $filters = []): PendapatanKaryawanCollectionDTO
   {
     $result = $this->repository->getAll($filters);
 
-    $result->getCollection()->transform(function ($pendapatan) {
-      $data = $pendapatan->toArray();
-      $lemburDetail = $this->payrollService->calculateTotalPendapatan(
+    // Collect lembur details for all items
+    $lemburDetails = [];
+    foreach ($result->items() as $pendapatan) {
+      $lemburDetails[] = $this->payrollService->calculateTotalPendapatan(
         $pendapatan->karyawan_id,
         $pendapatan->periode,
         $pendapatan->tunjangan
       );
+    }
 
-      return array_merge($data, [
-        'total_lembur_perperiode' => $lemburDetail['total_lembur_perperiode'],
-        'total_pendapatan_lembur_perperiode' => $lemburDetail['total_pendapatan_lembur_perperiode']
-      ]);
-    });
-
-    return $result;
+    return PendapatanKaryawanCollectionDTO::fromPaginator($result, $lemburDetails);
   }
 
-  public function getPendapatanById(string $id): ?array
+  public function getPendapatanById(string $id): ?PendapatanKaryawanDTO
   {
     $pendapatan = $this->repository->findById($id);
 
@@ -42,21 +41,16 @@ class PendapatanService
       return null;
     }
 
-    $data = $pendapatan->toArray();
-
     $lemburDetail = $this->payrollService->calculateTotalPendapatan(
       $pendapatan->karyawan_id,
       $pendapatan->periode,
       $pendapatan->tunjangan
     );
 
-    return array_merge($data, [
-      'total_lembur_perperiode' => $lemburDetail['total_lembur_perperiode'],
-      'total_pendapatan_lembur_perperiode' => $lemburDetail['total_pendapatan_lembur_perperiode']
-    ]);
+    return PendapatanKaryawanDTO::fromModel($pendapatan, $lemburDetail);
   }
 
-  public function createPendapatan(array $data): array
+  public function createPendapatan(array $data): PendapatanKaryawanDTO
   {
     // Cek apakah sudah ada pendapatan untuk karyawan di periode yang sama
     $existing = $this->repository->findByKaryawanAndPeriode($data['karyawan_id'], $data['periode']);
@@ -66,24 +60,19 @@ class PendapatanService
 
     // Process calculation dengan rumus pendapatan
     $processedData = $this->payrollService->processPendapatanCalculation($data);
-
     $pendapatan = $this->repository->create($processedData);
 
-    // Kembalikan dengan properties lembur
-    $data = $pendapatan->toArray();
+    // Get lembur detail for the created record
     $lemburDetail = $this->payrollService->calculateTotalPendapatan(
       $pendapatan->karyawan_id,
       $pendapatan->periode,
       $pendapatan->tunjangan
     );
 
-    return array_merge($data, [
-      'total_lembur_perperiode' => $lemburDetail['total_lembur_perperiode'],
-      'total_pendapatan_lembur_perperiode' => $lemburDetail['total_pendapatan_lembur_perperiode']
-    ]);
+    return PendapatanKaryawanDTO::fromModel($pendapatan, $lemburDetail);
   }
 
-  public function updatePendapatan(string $id, array $data): ?array
+  public function updatePendapatan(string $id, array $data): ?PendapatanKaryawanDTO
   {
     $existing = $this->repository->findById($id);
     if (!$existing) {
@@ -121,38 +110,30 @@ class PendapatanService
     }
 
     $updatedPendapatan = $this->repository->findById($id);
-    $data = $updatedPendapatan->toArray();
     $lemburDetail = $this->payrollService->calculateTotalPendapatan(
       $updatedPendapatan->karyawan_id,
       $updatedPendapatan->periode,
       $updatedPendapatan->tunjangan
     );
 
-    return array_merge($data, [
-      'total_lembur_perperiode' => $lemburDetail['total_lembur_perperiode'],
-      'total_pendapatan_lembur_perperiode' => $lemburDetail['total_pendapatan_lembur_perperiode']
-    ]);
+    return PendapatanKaryawanDTO::fromModel($updatedPendapatan, $lemburDetail);
   }
 
-  public function getPendapatanByKaryawan(string $karyawanId, array $filters = []): LengthAwarePaginator
+  public function getPendapatanByKaryawan(string $karyawanId, array $filters = []): PendapatanKaryawanCollectionDTO
   {
     $result = $this->repository->getByKaryawanId($karyawanId, $filters);
-    $result->getCollection()->transform(function ($pendapatan) {
-      $data = $pendapatan->toArray();
 
-      $lemburDetail = $this->payrollService->calculateTotalPendapatan(
+    // Collect lembur details for all items
+    $lemburDetails = [];
+    foreach ($result->items() as $pendapatan) {
+      $lemburDetails[] = $this->payrollService->calculateTotalPendapatan(
         $pendapatan->karyawan_id,
         $pendapatan->periode,
         $pendapatan->tunjangan
       );
+    }
 
-      return array_merge($data, [
-        'total_lembur_perperiode' => $lemburDetail['total_lembur_perperiode'],
-        'total_pendapatan_lembur_perperiode' => $lemburDetail['total_pendapatan_lembur_perperiode']
-      ]);
-    });
-
-    return $result;
+    return PendapatanKaryawanCollectionDTO::fromPaginator($result, $lemburDetails);
   }
 
   public function deletePendapatan(string $id): bool

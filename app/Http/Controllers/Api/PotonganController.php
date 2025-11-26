@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Api/PotonganController.php
 
 namespace App\Http\Controllers\Api;
 
@@ -21,16 +20,12 @@ class PotonganController extends Controller
       $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id', 'nama_karyawan']);
 
       $result = $this->service->getAllPotongan($filters, $perPage);
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -162,16 +157,12 @@ class PotonganController extends Controller
       $perPage = $request->input('per_page', 10);
 
       $result = $this->service->getPotonganByKaryawan($karyawanId, array_merge($filters, ['per_page' => $perPage]));
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -181,6 +172,7 @@ class PotonganController extends Controller
       ], 500);
     }
   }
+
 
 
   public function recalculate(Request $request): JsonResponse

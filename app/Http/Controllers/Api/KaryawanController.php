@@ -7,7 +7,6 @@ use App\Http\Requests\KaryawanRequest;
 use App\Services\KaryawanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class KaryawanController extends Controller
 {
@@ -17,23 +16,20 @@ class KaryawanController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $filters = $request->only(['nik', 'nama', 'jabatan', 'is_active']);
+            $filters = $request->only(['nama', 'jabatan', 'is_active']);
+
             $result = $this->service->getAllKaryawan($filters, $perPage);
+            $responseData = $result->toArray();
 
             return response()->json([
                 'success' => true,
-                'data' => $result->items(),
-                'meta' => [
-                    'current_page' => $result->currentPage(),
-                    'total' => $result->total(),
-                    'per_page' => $result->perPage(),
-                    'last_page' => $result->lastPage()
-                ]
+                'data' => $responseData['data'],
+                'meta' => $responseData['meta']
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve karyawan',
+                'message' => 'Gagal mengambil data karyawan',
                 'data' => null
             ], 500);
         }
@@ -47,19 +43,19 @@ class KaryawanController extends Controller
             if (!$karyawan) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Karyawan not found',
+                    'message' => 'Karyawan tidak ditemukan',
                     'data' => null
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $karyawan
+                'data' => $karyawan->toArray()
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve karyawan',
+                'message' => 'Gagal mengambil data karyawan',
                 'data' => null
             ], 500);
         }
@@ -68,28 +64,24 @@ class KaryawanController extends Controller
     public function store(KaryawanRequest $request): JsonResponse
     {
         try {
-
             $validated = $request->validated();
-
             $karyawan = $this->service->createKaryawan($validated);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Karyawan successfully created',
-                'data' => $karyawan
+                'message' => 'Karyawan berhasil dibuat',
+                'data' => $karyawan->toArray()
             ], 201);
         } catch (\InvalidArgumentException $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
                 'data' => null
             ], 422);
         } catch (\Exception $e) {
-
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create karyawan',
+                'message' => 'Gagal membuat karyawan',
                 'data' => null
             ], 500);
         }
@@ -98,27 +90,23 @@ class KaryawanController extends Controller
     public function update(KaryawanRequest $request, string $id): JsonResponse
     {
         try {
-
-
             $validated = $request->validated();
-
             $karyawan = $this->service->updateKaryawan($id, $validated);
 
             if (!$karyawan) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Karyawan not found',
+                    'message' => 'Karyawan tidak ditemukan',
                     'data' => null
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Karyawan successfully updated',
-                'data' => $karyawan
+                'message' => 'Karyawan berhasil diupdate',
+                'data' => $karyawan->toArray()
             ], 200);
         } catch (\InvalidArgumentException $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -127,7 +115,7 @@ class KaryawanController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update karyawan',
+                'message' => 'Gagal mengupdate karyawan',
                 'data' => null
             ], 500);
         }
@@ -141,18 +129,18 @@ class KaryawanController extends Controller
             if (!$deleted) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Karyawan not found',
+                    'message' => 'Karyawan tidak ditemukan',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Karyawan successfully deleted',
+                'message' => 'Karyawan berhasil dihapus',
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete karyawan',
+                'message' => 'Gagal menghapus karyawan',
             ], 500);
         }
     }
