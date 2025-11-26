@@ -1,8 +1,9 @@
 <?php
-// app/Services/PotonganService.php
 
 namespace App\Services;
 
+use App\DTO\PotonganKaryawan\PotonganKaryawanDTO;
+use App\DTO\PotonganKaryawan\PotonganKaryawanCollectionDTO;
 use App\Repositories\PotonganRepository;
 use App\Services\PayrollCalculationService;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -14,18 +15,32 @@ class PotonganService
     private PayrollCalculationService $payrollService
   ) {}
 
-  public function getAllPotongan(array $filters = []): LengthAwarePaginator
+  public function getAllPotongan(array $filters = []): PotonganKaryawanCollectionDTO
   {
-    return $this->repository->getAll($filters);
+    // Load karyawan relationship for DTO
+    $filters['with_karyawan'] = true;
+    $potongans = $this->repository->getAll($filters);
+
+    return PotonganKaryawanCollectionDTO::fromPaginator($potongans);
   }
 
-  public function getPotonganById(string $id): ?array
+  public function getPotonganById(string $id): ?PotonganKaryawanDTO
   {
     $potongan = $this->repository->findById($id);
-    return $potongan ? $potongan->toArray() : null;
+
+    if (!$potongan) {
+      return null;
+    }
+
+    // Load karyawan relationship if not already loaded
+    if (!$potongan->relationLoaded('karyawan')) {
+      $potongan->load('karyawan');
+    }
+
+    return PotonganKaryawanDTO::fromModel($potongan);
   }
 
-  public function createPotongan(array $data): array
+  public function createPotongan(array $data): PotonganKaryawanDTO
   {
     // Cek apakah sudah ada potongan untuk karyawan di periode yang sama
     $existing = $this->repository->findByKaryawanAndPeriode($data['karyawan_id'], $data['periode']);
@@ -37,10 +52,14 @@ class PotonganService
     $processedData = $this->payrollService->processPotonganCalculation($data);
 
     $potongan = $this->repository->create($processedData);
-    return $potongan->toArray();
+
+    // Load karyawan relationship for DTO
+    $potongan->load('karyawan');
+
+    return PotonganKaryawanDTO::fromModel($potongan);
   }
 
-  public function updatePotongan(string $id, array $data): ?array
+  public function updatePotongan(string $id, array $data): ?PotonganKaryawanDTO
   {
     $existing = $this->repository->findById($id);
     if (!$existing) {
@@ -76,7 +95,12 @@ class PotonganService
       return null;
     }
 
-    return $this->repository->findById($id)->toArray();
+    $potongan = $this->repository->findById($id);
+
+    // Load karyawan relationship for DTO
+    $potongan->load('karyawan');
+
+    return PotonganKaryawanDTO::fromModel($potongan);
   }
 
   public function deletePotongan(string $id): bool
@@ -84,9 +108,13 @@ class PotonganService
     return $this->repository->delete($id);
   }
 
-  public function getPotonganByKaryawan(string $karyawanId, array $filters = []): LengthAwarePaginator
+  public function getPotonganByKaryawan(string $karyawanId, array $filters = []): PotonganKaryawanCollectionDTO
   {
-    return $this->repository->getByKaryawanId($karyawanId, $filters);
+    // Load karyawan relationship for DTO
+    $filters['with_karyawan'] = true;
+    $potongans = $this->repository->getByKaryawanId($karyawanId, $filters);
+
+    return PotonganKaryawanCollectionDTO::fromPaginator($potongans);
   }
 
   /**

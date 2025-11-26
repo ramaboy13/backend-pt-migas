@@ -16,19 +16,15 @@ class GajiKaryawanController extends Controller
   {
     try {
       $perPage = $request->input('per_page', 10);
-      $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id', 'nama_karyawan', 'is_active']);
+      $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id']);
 
       $result = $this->service->getAllGaji($filters, $perPage);
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -39,12 +35,13 @@ class GajiKaryawanController extends Controller
     }
   }
 
+
   public function show(string $id): JsonResponse
   {
     try {
-      $gaji = $this->service->getGajiById($id);
+      $gajiKaryawan = $this->service->getGajiById($id);
 
-      if (!$gaji) {
+      if (!$gajiKaryawan) {
         return response()->json([
           'success' => false,
           'message' => 'Data gaji karyawan tidak ditemukan',
@@ -54,7 +51,7 @@ class GajiKaryawanController extends Controller
 
       return response()->json([
         'success' => true,
-        'data' => $gaji
+        'data' => $gajiKaryawan->toArray()
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -69,12 +66,12 @@ class GajiKaryawanController extends Controller
   {
     try {
       $validated = $request->validated();
-      $gaji = $this->service->createGaji($validated);
+      $gajiKaryawan = $this->service->createGaji($validated);
 
       return response()->json([
         'success' => true,
         'message' => 'Data gaji karyawan berhasil dibuat',
-        'data' => $gaji
+        'data' => $gajiKaryawan->toArray()
       ], 201);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -95,9 +92,9 @@ class GajiKaryawanController extends Controller
   {
     try {
       $validated = $request->validated();
-      $gaji = $this->service->updateGaji($id, $validated);
+      $gajiKaryawan = $this->service->updateGaji($id, $validated);
 
-      if (!$gaji) {
+      if (!$gajiKaryawan) {
         return response()->json([
           'success' => false,
           'message' => 'Data gaji karyawan tidak ditemukan',
@@ -108,7 +105,7 @@ class GajiKaryawanController extends Controller
       return response()->json([
         'success' => true,
         'message' => 'Data gaji karyawan berhasil diupdate',
-        'data' => $gaji
+        'data' => $gajiKaryawan->toArray()
       ], 200);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -156,16 +153,12 @@ class GajiKaryawanController extends Controller
       $perPage = $request->input('per_page', 10);
 
       $result = $this->service->getGajiByKaryawan($karyawanId, array_merge($filters, ['per_page' => $perPage]));
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([

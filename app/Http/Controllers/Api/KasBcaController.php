@@ -84,6 +84,7 @@ class KasBcaController extends Controller
                 'data' => null
             ], 422);
         } catch (\Exception $e) {
+            Log::error('Error creating Kas BCA record: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create Kas BCA record',

@@ -14,8 +14,8 @@ class LemburKaryawanRepository
     $query = $this->model->with('karyawan');
 
     // Filter by tanggal
-    if (!empty($filters['tanggal'])) {
-      $query->where('tanggal', $filters['tanggal']);
+    if (!empty($filters['date'])) {
+      $query->where('tanggal', $filters['date']);
     }
 
     // Filter by range tanggal
@@ -29,9 +29,9 @@ class LemburKaryawanRepository
     }
 
     // Filter by nama karyawan (via relationship)
-    if (!empty($filters['nama_karyawan'])) {
+    if (!empty($filters['name'])) {
       $query->whereHas('karyawan', function ($q) use ($filters) {
-        $q->where('nama', 'LIKE', '%' . $filters['nama_karyawan'] . '%');
+        $q->where('nama', 'LIKE', '%' . $filters['name'] . '%');
       });
     }
 

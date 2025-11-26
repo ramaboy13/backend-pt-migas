@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Repositories\GajiKaryawanRepository;
 use App\Services\PayrollCalculationService;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\DTO\GajiKaryawan\GajiKaryawanDTO;
+use App\DTO\GajiKaryawan\GajiKaryawanCollectionDTO;
 
 class GajiKaryawanService
 {
@@ -13,18 +15,24 @@ class GajiKaryawanService
     private PayrollCalculationService $payrollService
   ) {}
 
-  public function getAllGaji(array $filters = []): LengthAwarePaginator
+  public function getAllGaji(array $filters = []): GajiKaryawanCollectionDTO
   {
-    return $this->repository->getAll($filters);
+    $gajiKaryawans = $this->repository->getAll($filters);
+    return GajiKaryawanCollectionDTO::fromPaginator($gajiKaryawans);
   }
 
-  public function getGajiById(string $id): ?array
+  public function getGajiById(string $id): ?GajiKaryawanDTO
   {
-    $gaji = $this->repository->findById($id);
-    return $gaji ? $gaji->toArray() : null;
+    $gajiKaryawan = $this->repository->findById($id);
+
+    if (!$gajiKaryawan) {
+      return null;
+    }
+
+    return GajiKaryawanDTO::fromModel($gajiKaryawan);
   }
 
-  public function createGaji(array $data): array
+  public function createGaji(array $data): GajiKaryawanDTO
   {
     // Cek apakah sudah ada gaji untuk karyawan di periode yang sama
     $existing = $this->repository->findByKaryawanAndPeriode($data['karyawan_id'], $data['periode']);
@@ -35,11 +43,11 @@ class GajiKaryawanService
     // Process calculation dengan rumus gaji
     $processedData = $this->payrollService->processGajiKaryawanCalculation($data);
 
-    $gaji = $this->repository->create($processedData);
-    return $gaji->toArray();
+    $gajiKaryawan = $this->repository->create($processedData);
+    return GajiKaryawanDTO::fromModel($gajiKaryawan);
   }
 
-  public function updateGaji(string $id, array $data): ?array
+  public function updateGaji(string $id, array $data): ?GajiKaryawanDTO
   {
     $existing = $this->repository->findById($id);
     if (!$existing) {
@@ -80,7 +88,8 @@ class GajiKaryawanService
       return null;
     }
 
-    return $this->repository->findById($id)->toArray();
+    $gajiKaryawan = $this->repository->findById($id);
+    return GajiKaryawanDTO::fromModel($gajiKaryawan);
   }
 
   public function deleteGaji(string $id): bool
@@ -88,11 +97,11 @@ class GajiKaryawanService
     return $this->repository->delete($id);
   }
 
-  public function getGajiByKaryawan(string $karyawanId, array $filters = []): LengthAwarePaginator
+  public function getGajiByKaryawan(string $karyawanId, array $filters = []): GajiKaryawanCollectionDTO
   {
-    return $this->repository->getByKaryawanId($karyawanId, $filters);
+    $gajiKaryawans = $this->repository->getByKaryawanId($karyawanId, $filters);
+    return GajiKaryawanCollectionDTO::fromPaginator($gajiKaryawans);
   }
-
 
   public function getSummaryByPeriode(string $periode): array
   {

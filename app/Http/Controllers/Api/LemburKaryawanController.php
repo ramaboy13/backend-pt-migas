@@ -7,7 +7,6 @@ use App\Http\Requests\LemburKaryawanRequest;
 use App\Services\LemburKaryawanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class LemburKaryawanController extends Controller
 {
@@ -18,23 +17,20 @@ class LemburKaryawanController extends Controller
     try {
       $perPage = $request->input('per_page', 10);
       $filters = $request->only(['tanggal', 'start_date', 'end_date', 'karyawan_id', 'nama_karyawan']);
+      $withKaryawan = $request->boolean('with_karyawan', true);
 
-      $result = $this->service->getAllLembur($filters, $perPage);
+      $result = $this->service->getAllLembur($filters, $perPage, $withKaryawan);
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to retrieve lembur',
+        'message' => 'Gagal mengambil data lembur',
         'data' => null
       ], 500);
     }
@@ -48,19 +44,19 @@ class LemburKaryawanController extends Controller
       if (!$lembur) {
         return response()->json([
           'success' => false,
-          'message' => 'Data lembur not found',
+          'message' => 'Data lembur tidak ditemukan',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'data' => $lembur
+        'data' => $lembur->toArray()
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to retrieve lembur',
+        'message' => 'Gagal mengambil data lembur',
         'data' => null
       ], 500);
     }
@@ -70,13 +66,12 @@ class LemburKaryawanController extends Controller
   {
     try {
       $validated = $request->validated();
-
       $lembur = $this->service->createLembur($validated);
 
       return response()->json([
         'success' => true,
-        'message' => 'Data successfully created',
-        'data' => $lembur
+        'message' => 'Data lembur berhasil dibuat',
+        'data' => $lembur->toArray()
       ], 201);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -87,7 +82,7 @@ class LemburKaryawanController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to create lembur',
+        'message' => 'Gagal membuat data lembur',
         'data' => null
       ], 500);
     }
@@ -102,15 +97,15 @@ class LemburKaryawanController extends Controller
       if (!$lembur) {
         return response()->json([
           'success' => false,
-          'message' => 'Failed to retrieve lembur',
+          'message' => 'Data lembur tidak ditemukan',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Data successfully updated',
-        'data' => $lembur
+        'message' => 'Data lembur berhasil diupdate',
+        'data' => $lembur->toArray()
       ], 200);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -121,7 +116,7 @@ class LemburKaryawanController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to update lembur',
+        'message' => 'Gagal mengupdate data lembur',
         'data' => null
       ], 500);
     }
@@ -135,18 +130,18 @@ class LemburKaryawanController extends Controller
       if (!$deleted) {
         return response()->json([
           'success' => false,
-          'message' => 'Failed to retrieve lembur',
+          'message' => 'Data lembur tidak ditemukan',
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Data successfully deleted',
+        'message' => 'Data lembur berhasil dihapus',
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to delete lembur',
+        'message' => 'Gagal menghapus data lembur',
       ], 500);
     }
   }
@@ -156,24 +151,25 @@ class LemburKaryawanController extends Controller
     try {
       $filters = $request->only(['start_date', 'end_date']);
       $perPage = $request->input('per_page', 10);
+      $withKaryawan = $request->boolean('with_karyawan', false);
 
-      $result = $this->service->getLemburByKaryawan($karyawanId, array_merge($filters, ['per_page' => $perPage]));
+      $result = $this->service->getLemburByKaryawan(
+        $karyawanId,
+        array_merge($filters, ['per_page' => $perPage]),
+        $withKaryawan
+      );
+
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'message' => 'Lembur records retrieved successfully',
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to retrieve lembur',
+        'message' => 'Gagal mengambil data lembur karyawan',
         'data' => null
       ], 500);
     }
