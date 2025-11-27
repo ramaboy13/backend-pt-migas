@@ -4,7 +4,8 @@ namespace App\Services;
 
 use App\Models\TransaksiOperasional;
 use App\Repositories\TransaksiOperasionalRepository;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\DTO\TransaksiOperasional\TransaksiOperasionalDTO;
+use App\DTO\TransaksiOperasional\TransaksiOperasionalCollectionDTO;
 
 class TransaksiOperasionalService
 {
@@ -12,27 +13,28 @@ class TransaksiOperasionalService
     private TransaksiOperasionalRepository $repository
   ) {}
 
-  public function getAllTransaksi(array $filters = []): LengthAwarePaginator
+  public function getAllTransaksi(array $filters = [], int $perPage = 10): TransaksiOperasionalCollectionDTO
   {
-    return $this->repository->getAll($filters);
+    $result = $this->repository->getAll($filters, $perPage);
+    return TransaksiOperasionalCollectionDTO::fromPaginator($result);
   }
 
-  public function getTransaksiById(string $id): ?array
+  public function getTransaksiById(string $id): ?TransaksiOperasionalDTO
   {
     $transaksi = $this->repository->findById($id);
-    return $transaksi ? $transaksi->toArray() : null;
+    return $transaksi ? TransaksiOperasionalDTO::fromModel($transaksi) : null;
   }
 
-  public function createTransaksi(array $data): array
+  public function createTransaksi(array $data): TransaksiOperasionalDTO
   {
     // Auto-calculate debit/credit based on is_in
     $data = $this->calculateDebitCredit($data);
 
     $transaksi = $this->repository->create($data);
-    return $transaksi->toArray();
+    return TransaksiOperasionalDTO::fromModel($transaksi);
   }
 
-  public function updateTransaksi(string $id, array $data): ?array
+  public function updateTransaksi(string $id, array $data): ?TransaksiOperasionalDTO
   {
     $existing = $this->repository->findById($id);
     if (!$existing) {
@@ -50,14 +52,14 @@ class TransaksiOperasionalService
       return null;
     }
 
-    return $this->repository->findById($id)->toArray();
+    $updatedTransaksi = $this->repository->findById($id);
+    return $updatedTransaksi ? TransaksiOperasionalDTO::fromModel($updatedTransaksi) : null;
   }
 
   public function deleteTransaksi(string $id): bool
   {
     return $this->repository->delete($id);
   }
-
 
   /**
    * Calculate debit and credit based on is_in flag

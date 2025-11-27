@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,7 @@ class Karyawan extends Model
     ];
 
     protected $casts = [
+        'NIK' => 'integer',
         'gapok' => 'decimal:2',
         'bpjs_kesehatan' => 'decimal:2',
         'bpjs_tenagakerja' => 'decimal:2',

@@ -1,4 +1,5 @@
 <?php
+// app/Http\Controllers\Api\PangkalanController.php
 
 namespace App\Http\Controllers\Api;
 
@@ -17,18 +18,15 @@ class PangkalanController extends Controller
     try {
       $perPage = $request->get('per_page', 10);
       $filters = $request->only(['name']);
+
       $result = $this->pangkalanService->getAllPangkalan($perPage, $filters);
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
         'message' => 'Pangkalan records retrieved successfully',
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'per_page' => $result->perPage(),
-          'total' => $result->total(),
-          'last_page' => $result->lastPage(),
-        ]
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -55,7 +53,7 @@ class PangkalanController extends Controller
       return response()->json([
         'success' => true,
         'message' => 'Pangkalan record retrieved successfully',
-        'data' => $pangkalan
+        'data' => $pangkalan->toArray()
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -74,7 +72,7 @@ class PangkalanController extends Controller
       return response()->json([
         'success' => true,
         'message' => 'Pangkalan record created successfully',
-        'data' => $pangkalan
+        'data' => $pangkalan->toArray()
       ], 201);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -107,7 +105,7 @@ class PangkalanController extends Controller
       return response()->json([
         'success' => true,
         'message' => 'Pangkalan record updated successfully',
-        'data' => $pangkalan
+        'data' => $pangkalan->toArray()
       ], 200);
     } catch (\InvalidArgumentException $e) {
       return response()->json([

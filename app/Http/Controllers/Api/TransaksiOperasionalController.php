@@ -22,20 +22,19 @@ class TransaksiOperasionalController extends Controller
         'end_date',
         'pangkalan_id',
         'tabung_id',
-        'is_in'
+        'is_in',
+        'no_ref',
+        'keterangan'
       ]);
 
       $result = $this->service->getAllTransaksi($filters, $perPage);
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'data' => $result->items(),
-        'meta' => [
-          'current_page' => $result->currentPage(),
-          'total' => $result->total(),
-          'per_page' => $result->perPage(),
-          'last_page' => $result->lastPage()
-        ]
+        'message' => 'Data transaksi berhasil diambil',
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -61,7 +60,8 @@ class TransaksiOperasionalController extends Controller
 
       return response()->json([
         'success' => true,
-        'data' => $transaksi
+        'message' => 'Data transaksi berhasil diambil',
+        'data' => $transaksi->toArray()
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
@@ -81,7 +81,7 @@ class TransaksiOperasionalController extends Controller
       return response()->json([
         'success' => true,
         'message' => 'Transaksi berhasil dibuat',
-        'data' => $transaksi
+        'data' => $transaksi->toArray()
       ], 201);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -115,7 +115,7 @@ class TransaksiOperasionalController extends Controller
       return response()->json([
         'success' => true,
         'message' => 'Transaksi berhasil diupdate',
-        'data' => $transaksi
+        'data' => $transaksi->toArray()
       ], 200);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -159,13 +159,14 @@ class TransaksiOperasionalController extends Controller
   public function getSummary(Request $request): JsonResponse
   {
     try {
-      $startDate = $request->input('start_date', date('Y-m-01')); // Default awal bulan
-      $endDate = $request->input('end_date', date('Y-m-d')); // Default hari ini
+      $startDate = $request->input('start_date', date('Y-m-01'));
+      $endDate = $request->input('end_date', date('Y-m-d'));
 
       $summary = $this->service->getSummaryByPeriode($startDate, $endDate);
 
       return response()->json([
         'success' => true,
+        'message' => 'Summary transaksi berhasil diambil',
         'data' => $summary
       ], 200);
     } catch (\Exception $e) {

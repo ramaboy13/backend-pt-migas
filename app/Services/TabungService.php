@@ -3,38 +3,44 @@
 namespace App\Services;
 
 use App\Repositories\TabungRepository;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\DTO\Tabung\TabungDTO;
+use App\DTO\Tabung\TabungCollectionDTO;
+
 
 class TabungService
 {
   public function __construct(private TabungRepository $repository) {}
 
-  public function getAllTabung(int $perPage = 10): LengthAwarePaginator
+  public function getAllTabung(int $perPage = 10): TabungCollectionDTO
   {
-    return $this->repository->getAllPaginated($perPage);
+    $result = $this->repository->getAllPaginated($perPage);
+    return TabungCollectionDTO::fromPaginator($result);
   }
 
-  public function getTabungById(string $id): ?array
+  public function getTabungById(string $id): ?TabungDTO
   {
     $tabung = $this->repository->findById($id);
-    return $tabung ? $tabung->toArray() : null;
+
+    if (!$tabung) {
+      return null;
+    }
+
+    return TabungDTO::fromModel($tabung);
   }
 
-  public function createTabung(array $data): array
+  public function createTabung(array $data): TabungDTO
   {
     // Validasi business logic
     $this->validateTabungData($data);
 
     $tabung = $this->repository->create($data);
-
-    return $tabung->toArray();
+    return TabungDTO::fromModel($tabung);
   }
 
-
-  public function updateTabung(string $id, array $data): ?array
+  public function updateTabung(string $id, array $data): ?TabungDTO
   {
     // Validasi business logic
-    $this->validateTabungData($data);
+    $this->validateTabungData($data, $id);
 
     $updated = $this->repository->update($id, $data);
 
@@ -42,7 +48,9 @@ class TabungService
       return null;
     }
 
-    return $this->getTabungById($id);
+    // Return data terbaru
+    $updatedTabung = $this->repository->findById($id);
+    return $updatedTabung ? TabungDTO::fromModel($updatedTabung) : null;
   }
 
   public function deleteTabung(string $id): bool
@@ -50,12 +58,19 @@ class TabungService
     return $this->repository->delete($id);
   }
 
-  private function validateTabungData(array $data): void
+  private function validateTabungData(array $data, ?string $id = null): void
   {
-    // Validasi nama tabung unik
-    if ($this->repository->findByName($data['name'])) {
+    // Validasi nama tabung unik (untuk create dan update)
+    $existingTabung = $this->repository->findByName($data['name']);
+
+    if ($existingTabung) {
+      // Untuk update, allow jika ID sama (update record yang sama)
+      if ($id && $existingTabung->id === $id) {
+        return;
+      }
       throw new \InvalidArgumentException('Tabung name must be unique');
     }
+
     // Validasi berat harus positif
     if (isset($data['berat']) && $data['berat'] <= 0) {
       throw new \InvalidArgumentException('Berat must be positive');

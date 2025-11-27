@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('tb_pangkalan', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('regist_id')->unique();
+            $table->bigInteger('regist_id')->unique();
             $table->string('name');
-            $table->string('no_ktp')->unique();
+            $table->bigInteger('no_ktp')->unique();
             $table->text('alamat')->nullable();
             $table->timestamps();
             $table->decimal('harga_satuan', 10, 2)->default(0);

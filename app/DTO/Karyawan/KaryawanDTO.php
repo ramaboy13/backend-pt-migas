@@ -8,7 +8,7 @@ class KaryawanDTO
 {
   public function __construct(
     public string $id,
-    public string $nik,
+    public int $nik,
     public string $nama,
     public string $jabatan,
     public float $gapok,
@@ -28,7 +28,7 @@ class KaryawanDTO
   {
     return new self(
       id: $karyawan->id,
-      nik: $karyawan->NIK,
+      nik: (int)$karyawan->NIK,
       nama: $karyawan->nama,
       jabatan: $karyawan->jabatan,
       gapok: (float) $karyawan->gapok,

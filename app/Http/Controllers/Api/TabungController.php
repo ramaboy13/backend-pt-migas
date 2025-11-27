@@ -16,23 +16,20 @@ class TabungController extends Controller
   {
     try {
       $perPage = $request->get('per_page', 10);
-      $tabungs = $this->tabungService->getAllTabung($perPage);
+
+      $result = $this->tabungService->getAllTabung($perPage);
+      $responseData = $result->toArray();
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung retrieved successfully',
-        'data' => $tabungs->items(),
-        'meta' => [
-          'current_page' => $tabungs->currentPage(),
-          'per_page' => $tabungs->perPage(),
-          'total' => $tabungs->total(),
-          'last_page' => $tabungs->lastPage(),
-        ]
+        'message' => 'Tabung records retrieved successfully',
+        'data' => $responseData['data'],
+        'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to retrieve tabung',
+        'message' => 'Failed to retrieve tabung records',
         'data' => null
       ], 500);
     }
@@ -46,20 +43,20 @@ class TabungController extends Controller
       if (!$tabung) {
         return response()->json([
           'success' => false,
-          'message' => 'Tabung not found',
+          'message' => 'Tabung record not found',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung retrieved successfully',
-        'data' => $tabung
+        'message' => 'Tabung record retrieved successfully',
+        'data' => $tabung->toArray()
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to retrieve tabung',
+        'message' => 'Failed to retrieve tabung record',
         'data' => null
       ], 500);
     }
@@ -72,8 +69,8 @@ class TabungController extends Controller
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung successfully created',
-        'data' => $tabung
+        'message' => 'Tabung record created successfully',
+        'data' => $tabung->toArray()
       ], 201);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -84,7 +81,7 @@ class TabungController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to create tabung',
+        'message' => 'Failed to create tabung record',
         'data' => null
       ], 500);
     }
@@ -98,15 +95,15 @@ class TabungController extends Controller
       if (!$tabung) {
         return response()->json([
           'success' => false,
-          'message' => 'Tabung not found',
+          'message' => 'Tabung record not found',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung successfully updated',
-        'data' => $tabung
+        'message' => 'Tabung record updated successfully',
+        'data' => $tabung->toArray()
       ], 200);
     } catch (\InvalidArgumentException $e) {
       return response()->json([
@@ -117,7 +114,7 @@ class TabungController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to update tabung',
+        'message' => 'Failed to update tabung record',
         'data' => null
       ], 500);
     }
@@ -131,18 +128,18 @@ class TabungController extends Controller
       if (!$deleted) {
         return response()->json([
           'success' => false,
-          'message' => 'Tabung not found',
+          'message' => 'Tabung record not found',
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung successfully deleted',
+        'message' => 'Tabung record deleted successfully',
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to delete tabung',
+        'message' => 'Failed to delete tabung record',
       ], 500);
     }
   }
