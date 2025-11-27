@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tb_karyawan', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('NIK')->unique();
+            $table->bigInteger('NIK')->unique();
             $table->string('nama');
             $table->string('jabatan');
             $table->decimal('gapok', 15, 2)->default(0);

@@ -1,20 +1,23 @@
 <?php
+// app/Services/PangkalanService.php
 
 namespace App\Services;
 
 use App\Repositories\PangkalanRepository;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\DTO\Pangkalan\PangkalanDTO;
+use App\DTO\Pangkalan\PangkalanCollectionDTO;
 
 class PangkalanService
 {
   public function __construct(private PangkalanRepository $repository) {}
 
-  public function getAllPangkalan(int $perPage = 15, array $filters = []): LengthAwarePaginator
+  public function getAllPangkalan(int $perPage = 15, array $filters = []): PangkalanCollectionDTO
   {
-    return $this->repository->getAllPaginated($perPage, $filters);
+    $result = $this->repository->getAllPaginated($perPage, $filters);
+    return PangkalanCollectionDTO::fromPaginator($result);
   }
 
-  public function getPangkalanById(string $id): ?array
+  public function getPangkalanById(string $id): ?PangkalanDTO
   {
     $pangkalan = $this->repository->findById($id);
 
@@ -22,21 +25,19 @@ class PangkalanService
       return null;
     }
 
-    return $pangkalan->toArray();
+    return PangkalanDTO::fromModel($pangkalan);
   }
 
-
-  public function createPangkalan(array $data): array
+  public function createPangkalan(array $data): PangkalanDTO
   {
     // Validasi business logic
     $this->validatePangkalanData($data);
 
     $pangkalan = $this->repository->create($data);
-    return $pangkalan->toArray();
+    return PangkalanDTO::fromModel($pangkalan);
   }
 
-
-  public function updatePangkalan(string $id, array $data): ?array
+  public function updatePangkalan(string $id, array $data): ?PangkalanDTO
   {
     $this->validatePangkalanData($data, false);
 
@@ -47,16 +48,15 @@ class PangkalanService
     }
 
     // Return data terbaru
-    return $this->getPangkalanById($id);
+    $updatedPangkalan = $this->repository->findById($id);
+    return $updatedPangkalan ? PangkalanDTO::fromModel($updatedPangkalan) : null;
   }
 
-  // Hapus pangkalan
   public function deletePangkalan(string $id): bool
   {
     return $this->repository->delete($id);
   }
 
-  // Validasi data pangkalan
   private function validatePangkalanData(array $data, bool $isCreate = true): void
   {
     // Untuk create, pastikan regist_id dan no_ktp unik

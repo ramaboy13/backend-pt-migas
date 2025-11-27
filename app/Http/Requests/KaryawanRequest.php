@@ -18,7 +18,7 @@ class KaryawanRequest extends FormRequest
         $isCreate = $this->isMethod('POST');
 
         $rules = [
-            'NIK' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:20'],
+            'NIK' => [$isCreate ? 'required' : 'sometimes', 'numeric', 'digits:16'],
             'nama' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:255'],
             'jabatan' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:100'],
             'gapok' => [$isCreate ? 'required' : 'sometimes', 'numeric', 'min:0'],
@@ -32,10 +32,10 @@ class KaryawanRequest extends FormRequest
         // Untuk update, tambahkan unique rule dengan ignore
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $karyawanId = $this->route('id');
-            $rules['NIK'] = ['sometimes', 'string', 'max:20', 'unique:tb_karyawan,NIK,' . $karyawanId];
+            $rules['NIK'] = ['sometimes', 'numeric', 'digits:16', 'unique:tb_karyawan,NIK,' . $karyawanId];
         } else {
             // Untuk create, tambahkan unique rule
-            $rules['NIK'] = ['required', 'string', 'max:20', 'unique:tb_karyawan,NIK'];
+            $rules['NIK'] = ['required', 'numeric', 'digits:16', 'unique:tb_karyawan,NIK'];
         }
 
         return $rules;
@@ -46,7 +46,8 @@ class KaryawanRequest extends FormRequest
         return [
             'NIK.required' => 'NIK is required',
             'NIK.unique' => 'NIK has already been registered',
-            'NIK.max' => 'NIK may not exceed 20 characters',
+            'NIK.numeric' => 'NIK must be a number',
+            'NIK.digits' => 'NIK must be 16 digits',
             'nama.required' => 'Name is required',
             'nama.max' => 'Name may not exceed 255 characters',
             'jabatan.required' => 'Position is required',

@@ -18,10 +18,9 @@ return new class extends Migration
             $table->decimal('saldo', 15, 2)->default(0);
             $table->decimal('saldo_akhir', 15, 2)->storedAs('saldo + debit - kredit');
             $table->timestamps();
-            
+
             // Indexes
             $table->index('tanggal');
-            $table->unique(['debit', 'tanggal']);
         });
     }
 
