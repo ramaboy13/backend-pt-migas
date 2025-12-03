@@ -111,7 +111,6 @@ class TransaksiOperasionalController extends Controller
           'data' => null
         ], 404);
       }
-
       return response()->json([
         'success' => true,
         'message' => 'Transaksi berhasil diupdate',
@@ -136,14 +135,12 @@ class TransaksiOperasionalController extends Controller
   {
     try {
       $deleted = $this->service->deleteTransaksi($id);
-
       if (!$deleted) {
         return response()->json([
           'success' => false,
           'message' => 'Data transaksi tidak ditemukan',
         ], 404);
       }
-
       return response()->json([
         'success' => true,
         'message' => 'Transaksi berhasil dihapus',
@@ -161,9 +158,7 @@ class TransaksiOperasionalController extends Controller
     try {
       $startDate = $request->input('start_date', date('Y-m-01'));
       $endDate = $request->input('end_date', date('Y-m-d'));
-
       $summary = $this->service->getSummaryByPeriode($startDate, $endDate);
-
       return response()->json([
         'success' => true,
         'message' => 'Summary transaksi berhasil diambil',
@@ -177,4 +172,60 @@ class TransaksiOperasionalController extends Controller
       ], 500);
     }
   }
+
+  public function getStock(Request $request): JsonResponse
+    {
+        try {
+            $pangkalanId = $request->input('pangkalan_id');
+            $tabungId = $request->input('tabung_id');
+            
+            if (!$pangkalanId || !$tabungId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pangkalan ID dan Tabung ID harus diisi',
+                    'data' => null
+                ], 422);
+            }
+            $stock = $this->service->getStockSummary($pangkalanId, $tabungId);
+            return response()->json([
+                'success' => true,
+                'data' => $stock
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data stok',
+                'data' => null
+            ], 500);
+        }
+    }
+
+    public function recalculate(Request $request): JsonResponse
+    {
+        try {
+            $pangkalanId = $request->input('pangkalan_id');
+            
+            if (!$pangkalanId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pangkalan ID harus diisi',
+                    'data' => null
+                ], 422);
+            }
+
+            $this->service->recalculateTransaksi($pangkalanId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaksi berhasil dihitung ulang',
+                'data' => null
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghitung ulang transaksi',
+                'data' => null
+            ], 500);
+        }
+    }
 }

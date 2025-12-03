@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('tb_pangkalan', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->bigInteger('regist_id')->unique();
-            $table->string('name');
+            $table->string('nama');
             $table->bigInteger('no_ktp')->unique();
             $table->text('alamat')->nullable();
             $table->timestamps();

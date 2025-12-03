@@ -20,7 +20,7 @@ class AssetRepository
 
         // Search by name
         if (isset($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
+            $query->where('nama', 'like', '%' . $filters['search'] . '%');
         }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);

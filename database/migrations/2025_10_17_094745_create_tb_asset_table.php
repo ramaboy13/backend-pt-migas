@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tb_asset', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name');
+            $table->string('nama');
             $table->string('identity');
             $table->integer('qty')->default(0);
             $table->string('note')->nullable();

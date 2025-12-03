@@ -26,7 +26,6 @@ class TransaksiOperasionalRequest extends FormRequest
       'is_in' => [$isCreate ? 'required' : 'sometimes', 'boolean'],
       'qty' => [$isCreate ? 'required' : 'sometimes', 'integer', 'min:1'],
       'unit' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:20'],
-      'harga_satuan' => [$isCreate ? 'required' : 'sometimes', 'numeric', 'min:0'],
       'debit' => ['sometimes', 'numeric', 'min:0'],
       'credit' => ['sometimes', 'numeric', 'min:0']
     ];
@@ -69,9 +68,6 @@ class TransaksiOperasionalRequest extends FormRequest
       'qty.min' => 'Quantity minimal 1',
       'unit.required' => 'Unit harus diisi',
       'unit.max' => 'Unit maksimal 20 karakter',
-      'harga_satuan.required' => 'Harga satuan harus diisi',
-      'harga_satuan.numeric' => 'Harga satuan harus berupa angka',
-      'harga_satuan.min' => 'Harga satuan tidak boleh negatif',
       'debit.numeric' => 'Debit harus berupa angka',
       'debit.min' => 'Debit tidak boleh negatif',
       'credit.numeric' => 'Credit harus berupa angka',

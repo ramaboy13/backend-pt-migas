@@ -10,7 +10,7 @@ class TabungRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Semua user yang sudah login bisa akses
+        return true; 
     }
 
     public function rules(): array
@@ -18,7 +18,7 @@ class TabungRequest extends FormRequest
         $isCreate = $this->isMethod('POST');
 
         return [
-            'name' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:100'],
+            'nama' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:100'],
             'berat' => [$isCreate ? 'required' : 'sometimes', 'numeric', 'min:0', 'max:1000'],
         ];
     }
@@ -26,9 +26,9 @@ class TabungRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Cylinder name is required',
-            'name.string' => 'Cylinder name must be a text',
-            'name.max' => 'Cylinder name may not exceed 100 characters',
+            'nama.required' => 'Cylinder nama is required',
+            'nama.string' => 'Cylinder nama must be a text',
+            'nama.max' => 'Cylinder nama may not exceed 100 characters',
             'berat.required' => 'Cylinder weight is required',
             'berat.numeric' => 'Cylinder weight must be a number',
             'berat.min' => 'Cylinder weight cannot be negative',

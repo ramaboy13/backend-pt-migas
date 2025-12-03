@@ -9,7 +9,7 @@ class PangkalanDTO
   public function __construct(
     public string $id,
     public int $regist_id,
-    public string $name,
+    public string $nama,
     public int $no_ktp,
     public ?string $alamat,
     public float $harga_satuan,
@@ -25,7 +25,7 @@ class PangkalanDTO
     return new self(
       id: $pangkalan->id,
       regist_id: (int) $pangkalan->regist_id,
-      name: $pangkalan->name,
+      nama: $pangkalan->nama,
       no_ktp: (int) $pangkalan->no_ktp,
       alamat: $pangkalan->alamat,
       harga_satuan: (float) $pangkalan->harga_satuan,
@@ -42,7 +42,7 @@ class PangkalanDTO
     return [
       'id' => $this->id,
       'regist_id' => $this->regist_id,
-      'name' => $this->name,
+      'nama' => $this->nama,
       'no_ktp' => $this->no_ktp,
       'alamat' => $this->alamat,
       'harga_satuan' => $this->harga_satuan,

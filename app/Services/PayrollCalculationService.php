@@ -7,6 +7,9 @@ use App\Models\Karyawan;
 use App\Models\LemburKaryawan;
 use App\Models\Pendapatan;
 use App\Models\Potongan;
+use App\Models\Pangkalan;
+use App\Models\Tabung;
+use App\Models\TransaksiOperasional;
 use Illuminate\Support\Facades\DB;
 
 class PayrollCalculationService
@@ -353,4 +356,43 @@ class PayrollCalculationService
       ]
     ];
   }
+
+     /**
+     * Calculate transaksi operasional total based on pangkalan harga_satuan
+     */
+    public function calculateTransaksiOperasional(array $data): array
+    {
+        // Ambil harga_satuan dari pangkalan
+        $pangkalan = Pangkalan::findOrFail($data['pangkalan_id']);
+        
+        $hargaSatuan = $pangkalan->harga_satuan;
+        $total = $data['qty'] * $hargaSatuan;
+        
+        // Hitung debit/credit berdasarkan is_in
+        if ($data['is_in']) {
+            $debit = $total;
+            $credit = 0;
+        } else {
+            $debit = 0;
+            $credit = $total;
+        }
+
+        return [
+            'total' => $total,
+            'debit' => $debit,
+            'credit' => $credit
+        ];
+    }
+
+    /**
+     * Process transaksi operasional calculation
+     */
+    public function processTransaksiCalculation(array $data): array
+    {
+        return DB::transaction(function () use ($data) {
+            $calculation = $this->calculateTransaksiOperasional($data);
+            return array_merge($data, $calculation);
+        });
+    }
+
 }

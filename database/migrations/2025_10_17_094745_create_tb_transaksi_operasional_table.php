@@ -18,10 +18,9 @@ return new class extends Migration
             $table->boolean('is_in')->default(true); // true = masuk, false = keluar
             $table->integer('qty')->default(0);
             $table->string('unit');
-            $table->decimal('harga_satuan', 15, 2)->default(0);
             $table->decimal('debit', 15, 2)->default(0);
             $table->decimal('credit', 15, 2)->default(0);
-            $table->decimal('total', 15, 2)->storedAs('qty * harga_satuan');
+            $table->decimal('total', 15, 2)->default(0);
 
             $table->timestamps();
 

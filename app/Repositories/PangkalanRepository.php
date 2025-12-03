@@ -13,8 +13,8 @@ class PangkalanRepository
   {
     $query = $this->model->newQuery();
 
-    if (!empty($filters['name'])) {
-      $query->where('name', 'LIKE', '%' . $filters['name'] . '%');
+    if (!empty($filters['nama'])) {
+      $query->where('nama', 'LIKE', '%' . $filters['nama'] . '%');
     }
 
     return $query->orderBy('created_at', 'desc')

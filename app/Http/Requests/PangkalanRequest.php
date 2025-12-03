@@ -21,7 +21,7 @@ class PangkalanRequest extends FormRequest
 
     return [
       'regist_id' => [$isCreate ? 'required' : 'sometimes', 'numeric', 'digits:10', Rule::unique('tb_pangkalan', 'regist_id')->ignore($pangkalanId)],
-      'name' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:255'],
+      'nama' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:255'],
       'no_ktp' => [$isCreate ? 'required' : 'sometimes', 'numeric', 'digits:16', Rule::unique('tb_pangkalan', 'no_ktp')->ignore($pangkalanId)],
       'alamat' => ['nullable', 'string'],
       'harga_satuan' => ['nullable', 'numeric', 'min:0'],
@@ -35,8 +35,8 @@ class PangkalanRequest extends FormRequest
       'regist_id.unique' => 'Registration ID already exists',
       'regist_id.numeric' => 'Registration ID must be a number',
       'regist_id.digits' => 'Registration ID must be 10 digits',
-      'name.required' => 'Name is required',
-      'name.max' => 'Name must not exceed 255 characters',
+      'nama.required' => 'nama is required',
+      'nama.max' => 'nama must not exceed 255 characters',
       'no_ktp.required' => 'KTP number is required',
       'no_ktp.unique' => 'KTP number already exists',
       'no_ktp.numeric' => 'KTP number must be a number',

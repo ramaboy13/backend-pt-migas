@@ -17,7 +17,7 @@ class Pangkalan extends Model
 
     protected $fillable = [
         'regist_id',
-        'name',
+        'nama',
         'no_ktp',
         'alamat',
         'harga_satuan'

@@ -25,7 +25,8 @@ class TransaksiOperasional extends Model
         'unit',
         'harga_satuan',
         'debit',
-        'credit'
+        'credit',
+        'total'
     ];
 
     protected $casts = [

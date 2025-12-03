@@ -18,7 +18,7 @@ class AssetRequest extends FormRequest
         $isCreate = $this->isMethod('POST');
 
         $rules = [
-            'name' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:255'],
+            'nama' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:255'],
             'identity' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:100'],
             'qty' => [$isCreate ? 'required' : 'sometimes', 'integer', 'min:0'],
             'note' => ['nullable', 'string', 'max:500'],
@@ -40,8 +40,8 @@ class AssetRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Asset name is required',
-            'name.max' => 'Asset name may not exceed 255 characters',
+            'nama.required' => 'Asset nama is required',
+            'nama.max' => 'Asset nama may not exceed 255 characters',
             'identity.required' => 'Asset identity is required',
             'identity.unique' => 'Asset identity has already been registered',
             'identity.max' => 'Asset identity may not exceed 100 characters',

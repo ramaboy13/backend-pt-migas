@@ -9,7 +9,6 @@ class TabungRepository
 {
   public function __construct(private Tabung $model) {}
 
-  // Ambil semua data tabung (dengan pagination)
   public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
   {
     return $this->model->newQuery()
@@ -17,7 +16,6 @@ class TabungRepository
       ->paginate($perPage);
   }
 
-  // Cari tabung by ID
   public function findById(string $id): ?Tabung
   {
     return $this->model->find($id);
@@ -41,9 +39,8 @@ class TabungRepository
     return $this->model->where('id', $id)->delete();
   }
 
-  // Cek apakah nama tabung sudah ada (untuk avoid duplikat)
-  public function findByName(string $name): ?Tabung
+  public function findByName(string $nama): ?Tabung
   {
-    return $this->model->where('name', $name)->first();
+    return $this->model->where('nama', $nama)->first();
   }
 }

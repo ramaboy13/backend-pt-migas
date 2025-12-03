@@ -20,11 +20,9 @@ class TabungService
   public function getTabungById(string $id): ?TabungDTO
   {
     $tabung = $this->repository->findById($id);
-
     if (!$tabung) {
       return null;
     }
-
     return TabungDTO::fromModel($tabung);
   }
 
@@ -32,7 +30,6 @@ class TabungService
   {
     // Validasi business logic
     $this->validateTabungData($data);
-
     $tabung = $this->repository->create($data);
     return TabungDTO::fromModel($tabung);
   }
@@ -41,13 +38,10 @@ class TabungService
   {
     // Validasi business logic
     $this->validateTabungData($data, $id);
-
     $updated = $this->repository->update($id, $data);
-
     if (!$updated) {
       return null;
     }
-
     // Return data terbaru
     $updatedTabung = $this->repository->findById($id);
     return $updatedTabung ? TabungDTO::fromModel($updatedTabung) : null;
@@ -61,19 +55,19 @@ class TabungService
   private function validateTabungData(array $data, ?string $id = null): void
   {
     // Validasi nama tabung unik (untuk create dan update)
-    $existingTabung = $this->repository->findByName($data['name']);
+    $existingTabung = $this->repository->findByName($data['nama']);
 
     if ($existingTabung) {
       // Untuk update, allow jika ID sama (update record yang sama)
       if ($id && $existingTabung->id === $id) {
         return;
       }
-      throw new \InvalidArgumentException('Tabung name must be unique');
+      throw new \InvalidArgumentException('Nama tabung harus unik');
     }
 
     // Validasi berat harus positif
     if (isset($data['berat']) && $data['berat'] <= 0) {
-      throw new \InvalidArgumentException('Berat must be positive');
+      throw new \InvalidArgumentException('Berat tabung harus positif');
     }
   }
 }

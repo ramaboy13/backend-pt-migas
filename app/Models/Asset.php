@@ -15,7 +15,7 @@ class Asset extends Model
     public $incrementing = false;
 
     protected $fillable = [
-        'name',
+        'nama',
         'identity',
         'qty',
         'note',

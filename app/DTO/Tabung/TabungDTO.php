@@ -8,7 +8,7 @@ class TabungDTO
 {
   public function __construct(
     public string $id,
-    public string $name,
+    public string $nama,
     public float $berat,
     public string $created_at,
     public string $updated_at
@@ -21,7 +21,7 @@ class TabungDTO
   {
     return new self(
       id: $tabung->id,
-      name: $tabung->name,
+      nama: $tabung->nama,
       berat: (float) $tabung->berat,
       created_at: Carbon::parse($tabung->created_at)->toISOString(),
       updated_at: Carbon::parse($tabung->updated_at)->toISOString()
@@ -35,7 +35,7 @@ class TabungDTO
   {
     return [
       'id' => $this->id,
-      'name' => $this->name,
+      'nama' => $this->nama,
       'berat' => $this->berat,
       'created_at' => $this->created_at,
       'updated_at' => $this->updated_at
