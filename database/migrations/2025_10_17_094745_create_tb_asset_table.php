@@ -14,12 +14,13 @@ return new class extends Migration
         Schema::create('tb_asset', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('nama');
-            $table->string('identity');
-            $table->integer('qty')->default(0);
-            $table->string('note')->nullable();
-            $table->boolean('its_rfu')->default(true);
+            $table->string('identitas');
+            $table->integer('jumlah')->default(0);
+            $table->string('catatan')->nullable();
+            $table->boolean('status')->default(true);
             $table->timestamps();
         });
+
     }
 
     /**

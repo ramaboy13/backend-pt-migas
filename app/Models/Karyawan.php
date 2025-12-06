@@ -18,43 +18,37 @@ class Karyawan extends Model
         'NIK',
         'nama',
         'jabatan',
-        'gapok',
+        'gaji_pokok',
         'bpjs_kesehatan',
         'bpjs_tenagakerja',
         'tgl_masuk',
-        'is_active',
+        'aktif',
         'alamat'
     ];
 
     protected $casts = [
-        'NIK' => 'integer',
-        'gapok' => 'decimal:2',
-        'bpjs_kesehatan' => 'decimal:2',
+        'gaji_pokok'       => 'decimal:2',
+        'bpjs_kesehatan'   => 'decimal:2',
         'bpjs_tenagakerja' => 'decimal:2',
-        'tgl_masuk' => 'date',
-        'is_active' => 'boolean'
+        'tgl_masuk'         => 'date',
+        'aktif'             => 'boolean'
     ];
 
-
-    // Relationship dengan LemburKaryawan
     public function lemburKaryawans()
     {
         return $this->hasMany(LemburKaryawan::class, 'karyawan_id');
     }
 
-    // Relationship dengan Pendapatan
     public function pendapatans()
     {
         return $this->hasMany(Pendapatan::class, 'karyawan_id');
     }
 
-    // Relationship dengan Potongan
     public function potongans()
     {
         return $this->hasMany(Potongan::class, 'karyawan_id');
     }
 
-    // Relationship dengan GajiKaryawan
     public function gajiKaryawans()
     {
         return $this->hasMany(GajiKaryawan::class, 'karyawan_id');

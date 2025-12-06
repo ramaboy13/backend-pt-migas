@@ -13,19 +13,19 @@ return new class extends Migration
     {
         Schema::create('tb_karyawan', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->bigInteger('NIK')->unique();
+            $table->string('NIK', 16)->unique();
             $table->string('nama');
             $table->string('jabatan');
-            $table->decimal('gapok', 15, 2)->default(0);
+            $table->decimal('gaji_pokok', 15, 2)->default(0);
             $table->decimal('bpjs_kesehatan', 5, 2)->default(0); // percentage
             $table->decimal('bpjs_tenagakerja', 5, 2)->default(0); // percentage
             $table->date('tgl_masuk');
-            $table->boolean('is_active')->default(true); // true = aktif, false = tidak
+            $table->boolean('aktif')->default(true); // true = aktif, false = tidak
             $table->longText('alamat')->nullable();
             $table->timestamps();
             //Indexes
             $table->index('NIK');
-            $table->index('is_active');
+            $table->index('aktif');
         });
     }
 

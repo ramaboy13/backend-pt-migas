@@ -24,8 +24,8 @@ class KaryawanRepository
         }
 
         // Filter by status aktif
-        if (isset($filters['is_active'])) {
-            $query->where('is_active', $filters['is_active']);
+        if (isset($filters['aktif'])) {
+            $query->where('aktif', $filters['aktif']);
         }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);

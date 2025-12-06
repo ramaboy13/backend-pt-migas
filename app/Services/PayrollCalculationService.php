@@ -42,8 +42,8 @@ class PayrollCalculationService
   public function calculateUpahLemburPerJam(string $karyawanId): float
   {
     $karyawan = Karyawan::findOrFail($karyawanId);
-    // RUMUS: gapok / 173
-    return $karyawan->gapok / 173;
+    // RUMUS: gaji_pokok / 173
+    return $karyawan->gaji_pokok / 173;
   }
 
   /**
@@ -90,10 +90,10 @@ class PayrollCalculationService
       ->whereMonth('tanggal', date('m', strtotime($periode)))
       ->get();
     $totalLembur = $lemburRecords->sum('rupiah_lembur');
-    $totalPendapatan = $karyawan->gapok + $tunjangan + $totalLembur;
+    $totalPendapatan = $karyawan->gaji_pokok + $tunjangan + $totalLembur;
 
     return [
-      'gapok' => $karyawan->gapok,
+      'gaji_pokok' => $karyawan->gaji_pokok,
       'tunjangan' => $tunjangan,
       'total_lembur' => $totalLembur,
       'total_pendapatan' => $totalPendapatan,
@@ -145,15 +145,15 @@ class PayrollCalculationService
   {
     $karyawan = Karyawan::findOrFail($karyawanId);
 
-    $rp_bpjs_kesehatan = ($karyawan->gapok * $karyawan->bpjs_kesehatan) / 100;
-    $rp_bpjs_tenagakerja = ($karyawan->gapok * $karyawan->bpjs_tenagakerja) / 100;
+    $rp_bpjs_kesehatan = ($karyawan->gaji_pokok * $karyawan->bpjs_kesehatan) / 100;
+    $rp_bpjs_tenagakerja = ($karyawan->gaji_pokok * $karyawan->bpjs_tenagakerja) / 100;
     $total_potongan = $rp_bpjs_kesehatan + $rp_bpjs_tenagakerja;
 
     return [
       'rp_bpjs_kesehatan' => round($rp_bpjs_kesehatan, 2),
       'rp_bpjs_tenagakerja' => round($rp_bpjs_tenagakerja, 2),
       'total_potongan' => round($total_potongan, 2),
-      'gapok' => $karyawan->gapok,
+      'gaji_pokok' => $karyawan->gaji_pokok,
       'persen_bpjs_kesehatan' => $karyawan->bpjs_kesehatan,
       'persen_bpjs_tenagakerja' => $karyawan->bpjs_tenagakerja
     ];
@@ -190,7 +190,7 @@ class PayrollCalculationService
   }
 
   /**
-   * Recalculate potongan when karyawan data changes (gapok or BPJS percentages)
+   * Recalculate potongan when karyawan data changes (gaji_pokok or BPJS percentages)
    */
   public function recalculatePotonganByKaryawan(string $karyawanId): void
   {
@@ -338,9 +338,9 @@ class PayrollCalculationService
           'jabatan' => $gaji->karyawan->jabatan
         ],
         'pendapatan' => [
-          'gapok' => $gaji->karyawan->gapok,
+          'gaji_pokok' => $gaji->karyawan->gaji_pokok,
           'tunjangan' => $gaji->pendapatan->tunjangan,
-          'total_lembur' => $gaji->pendapatan->total_pendapatan - $gaji->karyawan->gapok - $gaji->pendapatan->tunjangan,
+          'total_lembur' => $gaji->pendapatan->total_pendapatan - $gaji->karyawan->gaji_pokok - $gaji->pendapatan->tunjangan,
           'total_pendapatan' => $gaji->pendapatan->total_pendapatan
         ],
         'potongan' => [

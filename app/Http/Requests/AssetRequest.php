@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class AssetRequest extends FormRequest
@@ -19,19 +19,17 @@ class AssetRequest extends FormRequest
 
         $rules = [
             'nama' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:255'],
-            'identity' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:100'],
-            'qty' => [$isCreate ? 'required' : 'sometimes', 'integer', 'min:0'],
-            'note' => ['nullable', 'string', 'max:500'],
-            'its_rfu' => [$isCreate ? 'required' : 'sometimes', 'boolean']
+            'identitas' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:100'],
+            'jumlah' => [$isCreate ? 'required' : 'sometimes', 'integer', 'min:0'],
+            'catatan' => ['nullable', 'string', 'max:500'],
+            'status' => [$isCreate ? 'required' : 'sometimes', 'boolean'],
         ];
 
-        // Untuk update, tambahkan unique rule dengan ignore
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $assetId = $this->route('id');
-            $rules['identity'] = ['sometimes', 'string', 'max:100', 'unique:tb_asset,identity,' . $assetId];
+            $rules['identitas'] = ['sometimes', 'string', 'max:100', 'unique:tb_asset,identitas,'.$assetId];
         } else {
-            // Untuk create, tambahkan unique rule
-            $rules['identity'] = ['required', 'string', 'max:100', 'unique:tb_asset,identity'];
+            $rules['identitas'] = ['required', 'string', 'max:100', 'unique:tb_asset,identitas'];
         }
 
         return $rules;
@@ -40,17 +38,17 @@ class AssetRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nama.required' => 'Asset nama is required',
-            'nama.max' => 'Asset nama may not exceed 255 characters',
-            'identity.required' => 'Asset identity is required',
-            'identity.unique' => 'Asset identity has already been registered',
-            'identity.max' => 'Asset identity may not exceed 100 characters',
-            'qty.required' => 'Quantity is required',
-            'qty.integer' => 'Quantity must be an integer',
-            'qty.min' => 'Quantity cannot be negative',
-            'note.max' => 'Note may not exceed 500 characters',
-            'its_rfu.required' => 'RFU status is required',
-            'its_rfu.boolean' => 'RFU status must be true or false'
+            'nama.required' => 'Nama aset wajib diisi',
+            'nama.max' => 'Nama aset maksimal 255 karakter',
+            'identitas.required' => 'Identitas aset wajib diisi',
+            'identitas.unique' => 'Identitas aset sudah terdaftar',
+            'identitas.max' => 'Identitas aset maksimal 100 karakter',
+            'jumlah.required' => 'Jumlah aset wajib diisi',
+            'jumlah.integer' => 'Jumlah aset harus berupa angka',
+            'jumlah.min' => 'Jumlah aset tidak boleh kurang dari 0',
+            'catatan.max' => 'Catatan maksimal 500 karakter',
+            'status.required' => 'Status RFU wajib diisi',
+            'status.boolean' => 'Status RFU harus bernilai true atau false',
         ];
     }
 
@@ -61,7 +59,7 @@ class AssetRequest extends FormRequest
                 'success' => false,
                 'message' => 'Validasi gagal',
                 'data' => null,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422)
         );
     }
