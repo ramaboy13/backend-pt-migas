@@ -3,7 +3,6 @@
 use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\GajiKaryawanController;
 use App\Http\Controllers\Api\KaryawanController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\KasBcaController;
 use App\Http\Controllers\Api\LemburKaryawanController;
 use App\Http\Controllers\Api\PangkalanController;
@@ -12,6 +11,7 @@ use App\Http\Controllers\Api\PotonganController;
 use App\Http\Controllers\Api\TabungController;
 use App\Http\Controllers\Api\TransaksiOperasionalController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -19,7 +19,6 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('refresh', [AuthController::class, 'refresh']);
 });
-
 
 Route::middleware(['auth:api'])->group(function () {
 
@@ -86,7 +85,7 @@ Route::middleware(['auth:api'])->group(function () {
         });
     });
 
-    //Routes Lembur Karyawan
+    // Routes Lembur Karyawan
     Route::prefix('lembur-karyawan')->group(function () {
         Route::middleware(['role:admin|super_admin'])->group(function () {
             Route::get('/', [LemburKaryawanController::class, 'index']);
@@ -98,7 +97,7 @@ Route::middleware(['auth:api'])->group(function () {
         });
     });
 
-    //Routes Pendapatan
+    // Routes Pendapatan
     Route::prefix('pendapatan')->group(function () {
         Route::middleware(['role:admin|super_admin'])->group(function () {
             Route::get('/', [PendapatanController::class, 'index']);
@@ -146,6 +145,13 @@ Route::middleware(['auth:api'])->group(function () {
             Route::put('/update/{id}', [TransaksiOperasionalController::class, 'update']);
             Route::delete('/delete/{id}', [TransaksiOperasionalController::class, 'destroy']);
             Route::get('/summary', [TransaksiOperasionalController::class, 'getSummary']);
+            Route::prefix('pdf')->group(function () {
+                Route::get('/report', [TransaksiOperasionalController::class, 'generatePdfReport']);
+                Route::get('/pangkalan/{pangkalanId}', [TransaksiOperasionalController::class, 'generatePdfPangkalan']);
+                Route::get('/download-correct/{filename}', [TransaksiOperasionalController::class, 'downloadPdfCorrect']);
+                Route::get('/preview-correct/{filename}', [TransaksiOperasionalController::class, 'previewPdfCorrect']);
+                Route::get('/list', [TransaksiOperasionalController::class, 'listPdfFiles']);
+            });
         });
     });
 
