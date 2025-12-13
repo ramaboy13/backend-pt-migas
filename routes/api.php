@@ -19,6 +19,13 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('refresh', [AuthController::class, 'refresh']);
 });
+Route::get('/ping', function () {
+    return response()->json([
+        'status' => 'ok',
+        'time' => now()
+    ]);
+});
+
 
 Route::middleware(['auth:api'])->group(function () {
 
