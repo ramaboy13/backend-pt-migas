@@ -17,7 +17,6 @@ return new class extends Migration
             // Bisa NULL karena tidak semua transaksi butuh
             $table->uuid('pangkalan_id')->nullable();
             $table->uuid('tabung_id')->nullable();
-            $table->uuid('asset_id')->nullable(); // Tambah field untuk maintenance asset
 
             // Boolean untuk arah transaksi
             $table->boolean('is_pemasukan')->default(false);
@@ -38,7 +37,6 @@ return new class extends Migration
             // Foreign keys (nullable)
             $table->foreign('pangkalan_id')->references('id')->on('tb_pangkalan')->onDelete('set null');
             $table->foreign('tabung_id')->references('id')->on('tb_tabung')->onDelete('set null');
-            $table->foreign('asset_id')->references('id')->on('tb_assets')->onDelete('set null');
             $table->foreign('kas_perusahaan_id')->references('id')->on('tb_kas_perusahaan')->onDelete('set null');
 
             // Indexes

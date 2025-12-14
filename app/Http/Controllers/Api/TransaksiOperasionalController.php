@@ -8,7 +8,6 @@ use App\Services\pdf\PdfServiceTransaksiOperasional;
 use App\Services\TransaksiOperasionalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class TransaksiOperasionalController extends Controller
@@ -174,65 +173,6 @@ class TransaksiOperasionalController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil summary transaksi',
-                'data' => null,
-            ], 500);
-        }
-    }
-
-    public function getStock(Request $request): JsonResponse
-    {
-        try {
-            $pangkalanId = $request->input('pangkalan_id');
-            $tabungId = $request->input('tabung_id');
-
-            if (! $pangkalanId || ! $tabungId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Pangkalan ID dan Tabung ID harus diisi',
-                    'data' => null,
-                ], 422);
-            }
-            $stock = $this->service->getStockSummary($pangkalanId, $tabungId);
-
-            return response()->json([
-                'success' => true,
-                'data' => $stock,
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data stok',
-                'data' => null,
-            ], 500);
-        }
-    }
-
-    public function recalculate(Request $request): JsonResponse
-    {
-        try {
-            $pangkalanId = $request->input('pangkalan_id');
-
-            if (! $pangkalanId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Pangkalan ID harus diisi',
-                    'data' => null,
-                ], 422);
-            }
-
-            $this->service->recalculateTransaksi($pangkalanId);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaksi berhasil dihitung ulang',
-                'data' => null,
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Error recalculating transactions: '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghitung ulang transaksi',
                 'data' => null,
             ], 500);
         }

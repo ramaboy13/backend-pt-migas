@@ -8,7 +8,7 @@ class SumberKasDTO
 {
     public function __construct(
         public readonly string $id,
-        public readonly string $tipe, // 'BANK' atau 'CASH'
+        public readonly string $tipe,
         public readonly ?string $namaBank,
         public readonly ?string $nomorRekening,
         public readonly ?string $atasNama,
