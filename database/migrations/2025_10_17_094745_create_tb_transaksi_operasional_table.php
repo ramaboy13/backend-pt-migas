@@ -12,33 +12,38 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->date('tanggal');
             $table->string('no_ref')->unique();
+            $table->enum('jenis_transaksi', ['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_PANGKALAN', 'LAINNYA']);
             $table->string('keterangan');
-            $table->uuid('pangkalan_id');
-            $table->uuid('tabung_id');
-            $table->boolean('is_in')->default(true); // true = masuk, false = keluar
-            $table->integer('qty')->default(0);
-            $table->string('unit');
-            $table->decimal('debit', 15, 2)->default(0);
-            $table->decimal('credit', 15, 2)->default(0);
-            $table->decimal('total', 15, 2)->default(0);
+            // Bisa NULL karena tidak semua transaksi butuh
+            $table->uuid('pangkalan_id')->nullable();
+            $table->uuid('tabung_id')->nullable();
+            $table->uuid('asset_id')->nullable(); // Tambah field untuk maintenance asset
+
+            // Boolean untuk arah transaksi
+            $table->boolean('is_pemasukan')->default(false);
+
+            // Detail transaksi
+            $table->integer('qty')->nullable()->default(0); // Hanya untuk transaksi barang
+            $table->string('unit')->nullable(); // Hanya untuk transaksi barang
+            $table->decimal('harga_satuan', 15, 2)->nullable()->default(0);
+            $table->decimal('jumlah', 15, 2); // Jumlah uang
+
+            // Link ke kas
+            $table->uuid('kas_perusahaan_id')->nullable();
+            $table->string('created_by')->nullable();
 
             $table->timestamps();
+            $table->softDeletes();
 
-            // Foreign keys
-            $table->foreign('pangkalan_id')
-                ->references('id')
-                ->on('tb_pangkalan')
-                ->onDelete('cascade');
-
-            $table->foreign('tabung_id')
-                ->references('id')
-                ->on('tb_tabung')
-                ->onDelete('cascade');
+            // Foreign keys (nullable)
+            $table->foreign('pangkalan_id')->references('id')->on('tb_pangkalan')->onDelete('set null');
+            $table->foreign('tabung_id')->references('id')->on('tb_tabung')->onDelete('set null');
+            $table->foreign('asset_id')->references('id')->on('tb_assets')->onDelete('set null');
+            $table->foreign('kas_perusahaan_id')->references('id')->on('tb_kas_perusahaan')->onDelete('set null');
 
             // Indexes
-            $table->index('tanggal');
-            $table->index('no_ref');
-            $table->index(['pangkalan_id', 'tabung_id']);
+            $table->index('jenis_transaksi');
+            $table->index('is_pemasukan');
         });
     }
 

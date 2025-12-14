@@ -3,11 +3,12 @@
 use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\GajiKaryawanController;
 use App\Http\Controllers\Api\KaryawanController;
-use App\Http\Controllers\Api\KasBcaController;
+use App\Http\Controllers\Api\KasPerusahaanController;
 use App\Http\Controllers\Api\LemburKaryawanController;
 use App\Http\Controllers\Api\PangkalanController;
 use App\Http\Controllers\Api\PendapatanController;
 use App\Http\Controllers\Api\PotonganController;
+use App\Http\Controllers\Api\SumberKasController;
 use App\Http\Controllers\Api\TabungController;
 use App\Http\Controllers\Api\TransaksiOperasionalController;
 use App\Http\Controllers\Api\UserController;
@@ -22,10 +23,9 @@ Route::prefix('auth')->group(function () {
 Route::get('/ping', function () {
     return response()->json([
         'status' => 'ok',
-        'time' => now()
+        'time' => now(),
     ]);
 });
-
 
 Route::middleware(['auth:api'])->group(function () {
 
@@ -37,14 +37,13 @@ Route::middleware(['auth:api'])->group(function () {
     });
 
     // Kas BCA Routes
-    Route::prefix('kas-bca')->group(function () {
+    Route::prefix('kas-perusahaan')->group(function () {
         Route::middleware(['role:admin|super_admin'])->group(function () {
-            Route::get('/', [KasBcaController::class, 'index']);
-            Route::post('/create', [KasBcaController::class, 'store']);
-            Route::get('/show/{id}', [KasBcaController::class, 'show']);
-            // Route::get('/date-range', [KasBcaController::class, 'getByDateRange']);
-            Route::put('/update/{id}', [KasBcaController::class, 'update']);
-            Route::delete('/delete/{id}', [KasBcaController::class, 'destroy']);
+            Route::get('/', [KasPerusahaanController::class, 'index']);
+            Route::post('/create', [KasPerusahaanController::class, 'store']);
+            Route::get('/show/{id}', [KasPerusahaanController::class, 'show']);
+            Route::put('/update/{id}', [KasPerusahaanController::class, 'update']);
+            Route::delete('/delete/{id}', [KasPerusahaanController::class, 'destroy']);
         });
     });
 
@@ -172,6 +171,31 @@ Route::middleware(['auth:api'])->group(function () {
             Route::delete('/delete/{id}', [UserController::class, 'destroy']);
             Route::post('/{id}/deactivate', [UserController::class, 'deactivate']);
             Route::post('/{id}/activate', [UserController::class, 'activate']);
+        });
+    });
+
+    Route::prefix('kas-perusahaan')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [KasPerusahaanController::class, 'index']);
+            Route::post('/create', [KasPerusahaanController::class, 'store']);
+            Route::get('/show/{id}', [KasPerusahaanController::class, 'show']);
+            Route::put('/update/{id}', [KasPerusahaanController::class, 'update']);
+            Route::delete('/delete/{id}', [KasPerusahaanController::class, 'destroy']);
+            Route::get('/saldo-per-sumber-kas', [KasPerusahaanController::class, 'getSaldoPerSumberKas']);
+        });
+    });
+    Route::prefix('sumber-kas')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [SumberKasController::class, 'index']);
+            Route::post('/create', [SumberKasController::class, 'store']);
+            Route::get('/show/{id}', [SumberKasController::class, 'show']);
+            Route::put('/update/{id}', [SumberKasController::class, 'update']);
+            Route::delete('/delete/{id}', [SumberKasController::class, 'destroy']);
+            Route::post('/restore/{id}', [SumberKasController::class, 'restore']);
+            Route::get('/banks', [SumberKasController::class, 'getBanks']);
+            Route::get('/cash', [SumberKasController::class, 'getCash']);
+            Route::get('/active', [SumberKasController::class, 'getActiveSumberKas']);
+            Route::get('/saldo-summary', [SumberKasController::class, 'getSaldoSummary']);
         });
     });
 });

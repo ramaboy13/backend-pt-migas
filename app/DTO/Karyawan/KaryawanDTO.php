@@ -25,7 +25,7 @@ class KaryawanDTO
     {
         return new self(
             id: $karyawan->id,
-            nik: $karyawan->NIK, 
+            nik: $karyawan->nik, 
             nama: $karyawan->nama,
             jabatan: $karyawan->jabatan,
             gaji_pokok: (float) $karyawan->gaji_pokok,

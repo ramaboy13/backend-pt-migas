@@ -18,7 +18,7 @@ class KaryawanRequest extends FormRequest
         $isCreate = $this->isMethod('POST');
 
         $rules = [
-            'NIK' => [$isCreate ? 'required' : 'sometimes', 'regex:/^[0-9]{16}$/', 'digits:16'],
+            'nik' => [$isCreate ? 'required' : 'sometimes', 'regex:/^[0-9]{16}$/', 'digits:16'],
             'nama' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:255'],
             'jabatan' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:100'],
             'gaji_pokok' => [$isCreate ? 'required' : 'sometimes', 'numeric', 'min:0'],
@@ -33,20 +33,20 @@ class KaryawanRequest extends FormRequest
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $karyawanId = $this->route('id');
 
-            $rules['NIK'] = [
+            $rules['nik'] = [
                 'sometimes',
                 'regex:/^[0-9]{16}$/',
                 'digits:16',
-                'unique:tb_karyawan,NIK,' . $karyawanId
+                'unique:tb_karyawan,nik,' . $karyawanId
             ];
         }
         // Untuk create, tambahkan unique rule 
         else {
-            $rules['NIK'] = [
+            $rules['nik'] = [
                 'required',
                 'regex:/^[0-9]{16}$/',
                 'digits:16',
-                'unique:tb_karyawan,NIK'
+                'unique:tb_karyawan,nik'
             ];
         }
 
@@ -56,10 +56,10 @@ class KaryawanRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'NIK.required' => 'NIK is required',
-            'NIK.unique' => 'NIK has already been registered',
-            'NIK.regex' => 'NIK must be a number',
-            'NIK.digits' => 'NIK must be 16 digits',
+            'nik.required' => 'nik is required',
+            'nik.unique' => 'nik has already been registered',
+            'nik.regex' => 'nik must be a number',
+            'nik.digits' => 'nik must be 16 digits',
             'nama.required' => 'Name is required',
             'nama.max' => 'Name may not exceed 255 characters',
             'jabatan.required' => 'Position is required',

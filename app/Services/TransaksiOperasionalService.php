@@ -1,123 +1,178 @@
 <?php
-// app/Services/TransaksiOperasionalService.php
 
 namespace App\Services;
 
-use App\Models\TransaksiOperasional;
-use App\Repositories\TransaksiOperasionalRepository;
-use App\Services\PayrollCalculationService;
-use App\DTO\TransaksiOperasional\TransaksiOperasionalDTO;
 use App\DTO\TransaksiOperasional\TransaksiOperasionalCollectionDTO;
+use App\DTO\TransaksiOperasional\TransaksiOperasionalDTO;
+use App\Repositories\TransaksiOperasionalRepository;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TransaksiOperasionalService
 {
     public function __construct(
         private TransaksiOperasionalRepository $repository,
-        private PayrollCalculationService $payrollService
+        private KasPerusahaanService $kasPerusahaanService
     ) {}
 
     public function getAllTransaksi(array $filters = [], int $perPage = 10): TransaksiOperasionalCollectionDTO
     {
-        $result = $this->repository->getAll($filters, $perPage);
-        return TransaksiOperasionalCollectionDTO::fromPaginator($result);
+        $paginator = $this->repository->getAll($filters, $perPage);
+
+        return TransaksiOperasionalCollectionDTO::fromPaginator($paginator);
     }
 
     public function getTransaksiById(string $id): ?TransaksiOperasionalDTO
     {
         $transaksi = $this->repository->findById($id);
-        return $transaksi ? TransaksiOperasionalDTO::fromModel($transaksi) : null;
+
+        if (! $transaksi) {
+            return null;
+        }
+
+        return TransaksiOperasionalDTO::fromModel($transaksi);
     }
 
-   public function createTransaksi(array $data): TransaksiOperasionalDTO
+    public function createTransaksi(array $data): TransaksiOperasionalDTO
     {
-        $processedData = $this->payrollService->processTransaksiCalculation($data);
-        $transaksi = $this->repository->create($processedData);
-        return TransaksiOperasionalDTO::fromModel($transaksi);
+        return DB::transaction(function () use ($data) {
+            // Validate and calculate
+            $this->validateTransaksiData($data);
+
+            // Create kas perusahaan entry first
+            $kasData = $this->prepareKasPerusahaanData($data);
+            $kasPerusahaan = $this->kasPerusahaanService->createKasPerusahaan($kasData);
+
+            // Link kas_perusahaan_id to transaksi
+            $data['kas_perusahaan_id'] = $kasPerusahaan->id;
+
+            // Create transaksi
+            $transaksi = $this->repository->create($data);
+
+            return TransaksiOperasionalDTO::fromModel($transaksi);
+        });
     }
 
     public function updateTransaksi(string $id, array $data): ?TransaksiOperasionalDTO
     {
-        $existing = $this->repository->findById($id);
-        if (!$existing) {
-            return null;
-        }
-        $needsRecalculation = isset($data['pangkalan_id']) || 
-                             isset($data['qty']) || 
-                             isset($data['is_in']);
+        return DB::transaction(function () use ($id, $data) {
+            $existing = $this->repository->findById($id);
 
-        if ($needsRecalculation) {
-            // Merge dengan data existing untuk kalkulasi
-            $calculationData = array_merge($existing->toArray(), $data);
-            $calculationData['pangkalan_id'] = $data['pangkalan_id'] ?? $existing->pangkalan_id;
-            $calculationData['qty'] = $data['qty'] ?? $existing->qty;
-            $calculationData['is_in'] = $data['is_in'] ?? $existing->is_in;
-            
-            $calculation = $this->payrollService->calculateTransaksiOperasional($calculationData);
-            $data = array_merge($data, $calculation);
-        }
+            if (! $existing) {
+                return null;
+            }
 
-        $updated = $this->repository->update($id, $data);
+            // Validate
+            $this->validateTransaksiData($data, $existing);
 
-        if (!$updated) {
-            return null;
-        }
+            // Update kas perusahaan if needed
+            if ($existing->kas_perusahaan_id &&
+                (isset($data['jumlah']) || isset($data['sumber_kas_id']) || isset($data['is_pemasukan']))) {
 
-        $updatedTransaksi = $this->repository->findById($id);
-        return $updatedTransaksi ? TransaksiOperasionalDTO::fromModel($updatedTransaksi) : null;
+                $kasData = $this->prepareKasPerusahaanData(array_merge($existing->toArray(), $data));
+                $this->kasPerusahaanService->updateKasPerusahaan($existing->kas_perusahaan_id, $kasData);
+            }
+
+            // Update transaksi
+            $updated = $this->repository->update($id, $data);
+
+            if (! $updated) {
+                return null;
+            }
+
+            return $this->getTransaksiById($id);
+        });
     }
+
     public function deleteTransaksi(string $id): bool
     {
-        return $this->repository->delete($id);
+        return DB::transaction(function () use ($id) {
+            $transaksi = $this->repository->findById($id);
+
+            if (! $transaksi) {
+                return false;
+            }
+
+            // Delete kas perusahaan entry if exists
+            if ($transaksi->kas_perusahaan_id) {
+                $this->kasPerusahaanService->deleteKasPerusahaan($transaksi->kas_perusahaan_id);
+            }
+
+            // Delete transaksi
+            return $this->repository->delete($id);
+        });
+    }
+
+    public function getSummaryByPeriode(string $startDate, string $endDate): array
+    {
+        return $this->repository->getSummaryByPeriode($startDate, $endDate);
     }
 
     public function getByPangkalan(string $pangkalanId, array $filters = []): TransaksiOperasionalCollectionDTO
     {
-        $result = $this->repository->getByPangkalan($pangkalanId, $filters);
-        return TransaksiOperasionalCollectionDTO::fromPaginator($result);
+        $paginator = $this->repository->getByPangkalan($pangkalanId, $filters);
+
+        return TransaksiOperasionalCollectionDTO::fromPaginator($paginator);
     }
 
-    public function getByTabung(string $tabungId, array $filters = []): TransaksiOperasionalCollectionDTO
+    private function validateTransaksiData(array $data, ?\App\Models\TransaksiOperasional $existing = null): void
     {
-        $result = $this->repository->getByTabung($tabungId, $filters);
-        return TransaksiOperasionalCollectionDTO::fromPaginator($result);
+        // Validate jumlah
+        if (isset($data['jumlah']) && $data['jumlah'] <= 0) {
+            throw new \InvalidArgumentException('Jumlah transaksi harus lebih dari 0');
+        }
+
+        // Validate based on jenis_transaksi
+        switch ($data['jenis_transaksi'] ?? $existing?->jenis_transaksi) {
+            case 'PEMBELIAN_GAS':
+            case 'PENJUALAN_PANGKALAN':
+                if (empty($data['pangkalan_id']) && empty($existing?->pangkalan_id)) {
+                    throw new \InvalidArgumentException('Pangkalan harus dipilih untuk transaksi gas');
+                }
+                if (empty($data['tabung_id']) && empty($existing?->tabung_id)) {
+                    throw new \InvalidArgumentException('Tabung harus dipilih untuk transaksi gas');
+                }
+                if ((empty($data['qty']) && empty($existing?->qty)) ||
+                    (isset($data['qty']) && $data['qty'] <= 0)) {
+                    throw new \InvalidArgumentException('Quantity harus lebih dari 0');
+                }
+                break;
+
+            case 'MAINTENANCE':
+                if (empty($data['asset_id']) && empty($existing?->asset_id)) {
+                    throw new \InvalidArgumentException('Asset harus dipilih untuk maintenance');
+                }
+                break;
+        }
     }
 
-    /**
-     * Get summary by periode
-     */
-    public function getSummaryByPeriode(string $startDate, string $endDate): array
+    private function prepareKasPerusahaanData(array $transaksiData): array
     {
-        $transactions = $this->repository->getAll([
-            'start_date' => $startDate,
-            'end_date' => $endDate
-        ], 1000);
+        $jumlah = $transaksiData['jumlah'] ?? 0;
+        $isPemasukan = $transaksiData['is_pemasukan'] ?? false;
+        $sumberKasId = $transaksiData['sumber_kas_id'] ?? null;
+        $tanggal = $transaksiData['tanggal'] ?? now()->toDateString();
+        $keterangan = $transaksiData['keterangan'] ?? 'Transaksi Operasional';
 
-        $totalDebit = 0;
-        $totalCredit = 0;
-        $totalTransaksi = 0;
-
-        foreach ($transactions as $transaction) {
-            if ($transaction instanceof TransaksiOperasional) {
-                $totalDebit += $transaction->debit;
-                $totalCredit += $transaction->credit;
-                $totalTransaksi += $transaction->total;
-            }
+        if (! $sumberKasId) {
+            throw new \InvalidArgumentException('Sumber kas harus dipilih');
         }
 
         return [
-            'total_debit' => round($totalDebit, 2),
-            'total_credit' => round($totalCredit, 2),
-            'total_transaksi' => round($totalTransaksi, 2),
-            'net_balance' => round($totalDebit - $totalCredit, 2),
-            'transaction_count' => $transactions->count()
+            'tanggal' => $tanggal,
+            'sumber_kas_id' => $sumberKasId,
+            'keterangan' => $keterangan,
+            'tipe_transaksi' => $isPemasukan ? 'DEBIT' : 'KREDIT',
+            'jumlah' => $jumlah,
+            'transaksi_operasional_id' => $transaksiData['id'] ?? null,
+            'created_by' => Auth::user()->name ?? 'system',
         ];
     }
 
-    /**
-     * Recalculate transaksi when pangkalan harga_satuan changes
-     */
-    public function recalculateTransaksi(string $pangkalanId): void
+    public function validateSumberKasActive(string $sumberKasId): bool
     {
-        $this->payrollService->recalculateTransaksiByPangkalan($pangkalanId);
+        // This should be delegated to SumberKasService
+        // For now, we assume it's valid if passed validation
+        return true;
     }
 }

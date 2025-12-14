@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tb_karyawan', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('NIK', 16)->unique();
+            $table->string('nik', 16)->unique();
             $table->string('nama');
             $table->string('jabatan');
             $table->decimal('gaji_pokok', 15, 2)->default(0);
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->longText('alamat')->nullable();
             $table->timestamps();
             //Indexes
-            $table->index('NIK');
+            $table->index('nik');
             $table->index('aktif');
         });
     }

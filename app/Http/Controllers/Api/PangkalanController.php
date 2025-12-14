@@ -7,6 +7,7 @@ use App\Http\Requests\PangkalanRequest;
 use App\Services\PangkalanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PangkalanController extends Controller
 {
@@ -80,6 +81,7 @@ class PangkalanController extends Controller
         'data' => null
       ], 422);
     } catch (\Exception $e) {
+      Log::error('Error creating Pangkalan record: ' . $e->getMessage());
       return response()->json([
         'success' => false,
         'message' => 'Failed to create pangkalan record',
