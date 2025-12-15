@@ -20,6 +20,9 @@ class TransaksiOperasionalRequest extends FormRequest
         $isCreate = $this->isMethod('POST');
         $transaksiId = $this->route('id');
 
+        // Get jenis_transaksi from request data
+        $jenisTransaksi = $this->jenis_transaksi ?? null;
+
         $rules = [
             'tanggal' => [$isCreate ? 'required' : 'sometimes', 'date'],
             'jenis_transaksi' => [
@@ -28,28 +31,41 @@ class TransaksiOperasionalRequest extends FormRequest
             ],
             'keterangan' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:500'],
             'is_pemasukan' => [$isCreate ? 'required' : 'sometimes', 'boolean'],
-            'jumlah' => [$isCreate ? 'required' : 'sometimes', 'numeric', 'min:0.01'],
             'sumber_kas_id' => [$isCreate ? 'required' : 'sometimes', 'string', 'exists:tb_sumber_kas,id'],
             'created_by' => ['nullable', 'string'],
         ];
 
         // Conditional rules based on jenis_transaksi
-        switch ($this->input('jenis_transaksi')) {
-            case 'PEMBELIAN_GAS':
+        switch ($jenisTransaksi) {
             case 'PENJUALAN_PANGKALAN':
+                // JUAL ke pangkalan: butuh pangkalan, tabung, qty, harga
                 $rules['pangkalan_id'] = ['required', 'string', 'exists:tb_pangkalan,id'];
                 $rules['tabung_id'] = ['required', 'string', 'exists:tb_tabung,id'];
                 $rules['qty'] = ['required', 'integer', 'min:1'];
                 $rules['unit'] = ['required', 'string', 'max:20'];
                 $rules['harga_satuan'] = ['required', 'numeric', 'min:0.01'];
+                $rules['jumlah'] = ['sometimes', 'numeric', 'min:0.01']; // optional, auto-calculated
+                break;
+
+            case 'PEMBELIAN_GAS':
+                // BELI dari supplier: butuh tabung, qty, harga (TIDAK butuh pangkalan)
+                $rules['tabung_id'] = ['required', 'string', 'exists:tb_tabung,id'];
+                $rules['qty'] = ['required', 'integer', 'min:1'];
+                $rules['unit'] = ['required', 'string', 'max:20'];
+                $rules['harga_satuan'] = ['required', 'numeric', 'min:0.01'];
+                $rules['jumlah'] = ['sometimes', 'numeric', 'min:0.01']; // optional, auto-calculated
+                $rules['pangkalan_id'] = ['nullable', 'string', 'exists:tb_pangkalan,id']; // optional
                 break;
 
             case 'MAINTENANCE':
-                $rules['asset_id'] = ['required', 'string', 'exists:tb_assets,id'];
+                // Maintenance: butuh jumlah (asset_id optional karena Anda buang)
+                $rules['jumlah'] = ['required', 'numeric', 'min:0.01'];
+                $rules['asset_id'] = ['nullable', 'string', 'exists:tb_assets,id']; // optional
                 break;
 
             case 'LAINNYA':
-                $rules['keterangan'] = ['required', 'string', 'max:500'];
+                // Transaksi lainnya: butuh jumlah saja
+                $rules['jumlah'] = ['required', 'numeric', 'min:0.01'];
                 break;
         }
 
@@ -84,20 +100,18 @@ class TransaksiOperasionalRequest extends FormRequest
             'jumlah.min' => 'Jumlah minimal 0.01',
             'sumber_kas_id.required' => 'Sumber kas wajib dipilih',
             'sumber_kas_id.exists' => 'Sumber kas tidak ditemukan',
-            'pangkalan_id.required' => 'Pangkalan wajib dipilih',
+            'pangkalan_id.required' => 'Pangkalan wajib dipilih untuk penjualan',
             'pangkalan_id.exists' => 'Pangkalan tidak ditemukan',
-            'tabung_id.required' => 'Tabung wajib dipilih',
+            'tabung_id.required' => 'Tabung wajib dipilih untuk transaksi gas',
             'tabung_id.exists' => 'Tabung tidak ditemukan',
-            'qty.required' => 'Quantity wajib diisi',
+            'qty.required' => 'Quantity wajib diisi untuk transaksi gas',
             'qty.integer' => 'Quantity harus bilangan bulat',
             'qty.min' => 'Quantity minimal 1',
-            'unit.required' => 'Unit wajib diisi',
+            'unit.required' => 'Unit wajib diisi untuk transaksi gas',
             'unit.max' => 'Unit maksimal 20 karakter',
-            'harga_satuan.required' => 'Harga satuan wajib diisi',
+            'harga_satuan.required' => 'Harga satuan wajib diisi untuk transaksi gas',
             'harga_satuan.numeric' => 'Harga satuan harus berupa angka',
             'harga_satuan.min' => 'Harga satuan minimal 0.01',
-            'asset_id.required' => 'Asset wajib dipilih',
-            'asset_id.exists' => 'Asset tidak ditemukan',
             'no_ref.unique' => 'Nomor referensi sudah digunakan',
             'no_ref.max' => 'Nomor referensi maksimal 50 karakter',
         ];
@@ -107,7 +121,7 @@ class TransaksiOperasionalRequest extends FormRequest
     {
         // Auto-generate no_ref jika kosong dan create
         if ($this->isMethod('POST') && empty($this->no_ref)) {
-            $prefix = $this->is_pemasukan ? 'IN' : 'OUT';
+            $prefix = $this->boolean('is_pemasukan', false) ? 'IN' : 'OUT';
             $date = date('Ymd');
             $random = strtoupper(\Illuminate\Support\Str::random(6));
             $this->merge([
@@ -121,14 +135,19 @@ class TransaksiOperasionalRequest extends FormRequest
                 'created_by' => Auth::user()->name ?? 'system',
             ]);
         }
+        $requestData = $this->all();
 
-        // Calculate jumlah if qty and harga_satuan provided
-        if ($this->has('qty') && $this->has('harga_satuan')) {
-            $qty = (float) $this->input('qty', 0);
-            $hargaSatuan = (float) $this->input('harga_satuan', 0);
-            $this->merge([
-                'jumlah' => $qty * $hargaSatuan,
-            ]);
+        if (isset($requestData['jenis_transaksi']) &&
+            in_array($requestData['jenis_transaksi'], ['PEMBELIAN_GAS', 'PENJUALAN_PANGKALAN'])) {
+
+            if (isset($requestData['qty']) && isset($requestData['harga_satuan'])) {
+                $qty = (float) $requestData['qty'];
+                $hargaSatuan = (float) $requestData['harga_satuan'];
+
+                $this->merge([
+                    'jumlah' => $qty * $hargaSatuan,
+                ]);
+            }
         }
     }
 

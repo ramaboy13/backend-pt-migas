@@ -2,10 +2,6 @@
 
 namespace App\DTO\TransaksiOperasional;
 
-use App\DTO\KasPerusahaan\KasPerusahaanDTO;
-use App\DTO\Pangkalan\PangkalanDTO;
-use App\DTO\Tabung\TabungDTO;
-
 class TransaksiOperasionalDTO
 {
     public function __construct(
@@ -28,9 +24,8 @@ class TransaksiOperasionalDTO
         public readonly ?string $deletedAt,
         public readonly string $jenisDisplay,
         public readonly string $status,
-        public readonly ?PangkalanDTO $pangkalan = null,
-        public readonly ?TabungDTO $tabung = null,
-        public readonly ?KasPerusahaanDTO $kasPerusahaan = null
+        public readonly string $createdBy,
+
     ) {}
 
     public static function fromModel(\App\Models\TransaksiOperasional $model): self
@@ -55,15 +50,7 @@ class TransaksiOperasionalDTO
             deletedAt: $model->deleted_at?->toISOString(),
             jenisDisplay: $model->jenis_display,
             status: $model->status,
-            pangkalan: $model->relationLoaded('pangkalan') && $model->pangkalan
-                ? PangkalanDTO::fromModel($model->pangkalan)
-                : null,
-            tabung: $model->relationLoaded('tabung') && $model->tabung
-                ? TabungDTO::fromModel($model->tabung)
-                : null,
-            kasPerusahaan: $model->relationLoaded('kasPerusahaan') && $model->kasPerusahaan
-                ? KasPerusahaanDTO::fromModel($model->kasPerusahaan)
-                : null
+            createdBy: $model->created_by,
         );
     }
 
@@ -86,12 +73,10 @@ class TransaksiOperasionalDTO
             'harga_satuan' => $this->hargaSatuan,
             'jumlah' => $this->jumlah,
             'kas_perusahaan_id' => $this->kasPerusahaanId,
+            'created_by' => $this->createdBy,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
             'deleted_at' => $this->deletedAt,
-            'pangkalan' => $this->pangkalan?->toArray(),
-            'tabung' => $this->tabung?->toArray(),
-            'kas_perusahaan' => $this->kasPerusahaan?->toArray(),
         ];
     }
 }

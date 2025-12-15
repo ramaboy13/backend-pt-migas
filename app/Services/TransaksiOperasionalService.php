@@ -123,15 +123,32 @@ class TransaksiOperasionalService
         }
 
         // Validate based on jenis_transaksi
-        switch ($data['jenis_transaksi'] ?? $existing?->jenis_transaksi) {
-            case 'PEMBELIAN_GAS':
+        $jenisTransaksi = $data['jenis_transaksi'] ?? $existing?->jenis_transaksi;
+
+        switch ($jenisTransaksi) {
             case 'PENJUALAN_PANGKALAN':
+                // Untuk PENJUALAN ke pangkalan: pangkalan_id WAJIB
                 if (empty($data['pangkalan_id']) && empty($existing?->pangkalan_id)) {
-                    throw new \InvalidArgumentException('Pangkalan harus dipilih untuk transaksi gas');
+                    throw new \InvalidArgumentException('Pangkalan harus dipilih untuk penjualan ke pangkalan');
                 }
+                // Tabung WAJIB untuk transaksi gas
                 if (empty($data['tabung_id']) && empty($existing?->tabung_id)) {
-                    throw new \InvalidArgumentException('Tabung harus dipilih untuk transaksi gas');
+                    throw new \InvalidArgumentException('Tabung harus dipilih untuk transaksi penjualan gas');
                 }
+                // Qty validation
+                if ((empty($data['qty']) && empty($existing?->qty)) ||
+                    (isset($data['qty']) && $data['qty'] <= 0)) {
+                    throw new \InvalidArgumentException('Quantity harus lebih dari 0');
+                }
+                break;
+
+            case 'PEMBELIAN_GAS':
+                // Untuk PEMBELIAN dari supplier: pangkalan_id OPTIONAL, tabung_id WAJIB
+                // Tabung WAJIB untuk transaksi gas
+                if (empty($data['tabung_id']) && empty($existing?->tabung_id)) {
+                    throw new \InvalidArgumentException('Tabung harus dipilih untuk transaksi pembelian gas');
+                }
+                // Qty validation
                 if ((empty($data['qty']) && empty($existing?->qty)) ||
                     (isset($data['qty']) && $data['qty'] <= 0)) {
                     throw new \InvalidArgumentException('Quantity harus lebih dari 0');
@@ -139,9 +156,11 @@ class TransaksiOperasionalService
                 break;
 
             case 'MAINTENANCE':
-                if (empty($data['asset_id']) && empty($existing?->asset_id)) {
-                    throw new \InvalidArgumentException('Asset harus dipilih untuk maintenance');
-                }
+                // Tidak ada validasi khusus
+                break;
+
+            case 'LAINNYA':
+                // Tidak ada validasi khusus
                 break;
         }
     }
