@@ -7,6 +7,7 @@ use App\Http\Requests\KaryawanRequest;
 use App\Services\KaryawanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class KaryawanController extends Controller
 {
@@ -24,13 +25,13 @@ class KaryawanController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $responseData['data'],
-                'meta' => $responseData['meta']
+                'meta' => $responseData['meta'],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil data karyawan',
-                'data' => null
+                'data' => null,
             ], 500);
         }
     }
@@ -40,23 +41,23 @@ class KaryawanController extends Controller
         try {
             $karyawan = $this->service->getKaryawanById($id);
 
-            if (!$karyawan) {
+            if (! $karyawan) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Karyawan tidak ditemukan',
-                    'data' => null
+                    'data' => null,
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $karyawan->toArray()
+                'data' => $karyawan->toArray(),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil data karyawan',
-                'data' => null
+                'data' => null,
             ], 500);
         }
     }
@@ -70,19 +71,21 @@ class KaryawanController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Karyawan berhasil dibuat',
-                'data' => $karyawan->toArray()
+                'data' => $karyawan->toArray(),
             ], 201);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-                'data' => null
+                'data' => null,
             ], 422);
         } catch (\Exception $e) {
+            Log::error('Error creating karyawan: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal membuat karyawan',
-                'data' => null
+                'data' => null,
             ], 500);
         }
     }
@@ -93,30 +96,30 @@ class KaryawanController extends Controller
             $validated = $request->validated();
             $karyawan = $this->service->updateKaryawan($id, $validated);
 
-            if (!$karyawan) {
+            if (! $karyawan) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Karyawan tidak ditemukan',
-                    'data' => null
+                    'data' => null,
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Karyawan berhasil diupdate',
-                'data' => $karyawan->toArray()
+                'data' => $karyawan->toArray(),
             ], 200);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-                'data' => null
+                'data' => null,
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengupdate karyawan',
-                'data' => null
+                'data' => null,
             ], 500);
         }
     }
@@ -126,7 +129,7 @@ class KaryawanController extends Controller
         try {
             $deleted = $this->service->deleteKaryawan($id);
 
-            if (!$deleted) {
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Karyawan tidak ditemukan',
