@@ -2,6 +2,8 @@
 
 namespace App\DTO\KasPerusahaan;
 
+use App\DTO\TransaksiOperasional\TransaksiOperasionalDTO;
+
 class KasPerusahaanDTO
 {
     public function __construct(
@@ -13,6 +15,7 @@ class KasPerusahaanDTO
         public readonly float $jumlah,
         public readonly float $saldoSebelum,
         public readonly float $saldoSesudah,
+        public readonly ?TransaksiOperasionalDTO $transaksiOperasional,
         public readonly string $createdAt,
         public readonly string $updatedAt,
     ) {}
@@ -28,6 +31,11 @@ class KasPerusahaanDTO
             jumlah: (float) $model->jumlah,
             saldoSebelum: (float) $model->saldo_sebelum,
             saldoSesudah: (float) $model->saldo_sesudah,
+            transaksiOperasional: $model->transaksiOperasional
+            ? \App\DTO\TransaksiOperasional\TransaksiOperasionalDTO::fromModel(
+                $model->transaksiOperasional
+            )
+            : null,
             createdAt: $model->created_at->toISOString(),
             updatedAt: $model->updated_at->toISOString(),
         );
@@ -44,6 +52,7 @@ class KasPerusahaanDTO
             'jumlah' => $this->jumlah,
             'saldo_sebelum' => $this->saldoSebelum,
             'saldo_sesudah' => $this->saldoSesudah,
+            'transaksi_operasional' => $this->transaksiOperasional?->toArray(),
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
         ];
