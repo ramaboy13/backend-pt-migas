@@ -59,7 +59,6 @@ class SumberKasDTO
             'keterangan' => $this->keterangan,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
-            'deleted_at' => $this->deletedAt,
             'nama_display' => $this->nama_display,
         ];
     }

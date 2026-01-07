@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class KaryawanRequest extends FormRequest
@@ -26,7 +26,7 @@ class KaryawanRequest extends FormRequest
             'bpjs_tenagakerja' => [$isCreate ? 'required' : 'sometimes', 'numeric', 'min:0', 'max:100'],
             'tgl_masuk' => [$isCreate ? 'required' : 'sometimes', 'date'],
             'aktif' => ['sometimes', 'boolean'],
-            'alamat' => ['nullable', 'string']
+            'alamat' => ['nullable', 'string'],
         ];
 
         // Untuk update, tambahkan unique rule
@@ -37,16 +37,16 @@ class KaryawanRequest extends FormRequest
                 'sometimes',
                 'regex:/^[0-9]{16}$/',
                 'digits:16',
-                'unique:tb_karyawan,nik,' . $karyawanId
+                'unique:tb_karyawan,nik,'.$karyawanId,
             ];
         }
-        // Untuk create, tambahkan unique rule 
+        // Untuk create, tambahkan unique rule
         else {
             $rules['nik'] = [
                 'required',
                 'regex:/^[0-9]{16}$/',
                 'digits:16',
-                'unique:tb_karyawan,nik'
+                'unique:tb_karyawan,nik',
             ];
         }
 
@@ -56,23 +56,24 @@ class KaryawanRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nik.required' => 'nik is required',
-            'nik.unique' => 'nik has already been registered',
-            'nik.regex' => 'nik must be a number',
-            'nik.digits' => 'nik must be 16 digits',
-            'nama.required' => 'Name is required',
-            'nama.max' => 'Name may not exceed 255 characters',
-            'jabatan.required' => 'Position is required',
-            'jabatan.max' => 'Position may not exceed 100 characters',
-            'gaji_pokok.required' => 'Basic salary is required',
-            'gaji_pokok.numeric' => 'Basic salary must be a number',
-            'gaji_pokok.min' => 'Basic salary cannot be negative',
-            'bpjs_kesehatan.max' => 'BPJS Health cannot exceed 100%',
-            'bpjs_tenagakerja.max' => 'BPJS Employment cannot exceed 100%',
-            'tgl_masuk.required' => 'Join date is required',
-            'tgl_masuk.date' => 'Join date must be a valid date format',
-            'aktif.boolean' => 'Active status must be true or false'
+            'nik.required' => 'NIK wajib diisi',
+            'nik.unique' => 'NIK sudah terdaftar',
+            'nik.regex' => 'NIK harus berupa angka',
+            'nik.digits' => 'NIK harus terdiri dari 16 digit',
+            'nama.required' => 'Nama wajib diisi',
+            'nama.max' => 'Nama tidak boleh lebih dari 255 karakter',
+            'jabatan.required' => 'Jabatan wajib diisi',
+            'jabatan.max' => 'Jabatan tidak boleh lebih dari 100 karakter',
+            'gaji_pokok.required' => 'Gaji pokok wajib diisi',
+            'gaji_pokok.numeric' => 'Gaji pokok harus berupa angka',
+            'gaji_pokok.min' => 'Gaji pokok tidak boleh bernilai negatif',
+            'bpjs_kesehatan.max' => 'Persentase BPJS Kesehatan tidak boleh melebihi 100%',
+            'bpjs_tenagakerja.max' => 'Persentase BPJS Ketenagakerjaan tidak boleh melebihi 100%',
+            'tgl_masuk.required' => 'Tanggal masuk wajib diisi',
+            'tgl_masuk.date' => 'Tanggal masuk harus dalam format tanggal yang valid',
+            'aktif.boolean' => 'Status aktif harus bernilai true atau false',
         ];
+
     }
 
     protected function failedValidation(Validator $validator)
@@ -82,7 +83,7 @@ class KaryawanRequest extends FormRequest
                 'success' => false,
                 'message' => 'Validasi gagal',
                 'data' => null,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422)
         );
     }

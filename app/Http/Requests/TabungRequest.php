@@ -2,15 +2,15 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class TabungRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; 
+        return true;
     }
 
     public function rules(): array
@@ -26,14 +26,15 @@ class TabungRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nama.required' => 'Cylinder nama is required',
-            'nama.string' => 'Cylinder nama must be a text',
-            'nama.max' => 'Cylinder nama may not exceed 100 characters',
-            'berat.required' => 'Cylinder weight is required',
-            'berat.numeric' => 'Cylinder weight must be a number',
-            'berat.min' => 'Cylinder weight cannot be negative',
-            'berat.max' => 'Cylinder weight may not exceed 1000 kg',
+            'nama.required' => 'Nama tabung wajib diisi',
+            'nama.string' => 'Nama tabung harus berupa teks',
+            'nama.max' => 'Nama tabung tidak boleh lebih dari 100 karakter',
+            'berat.required' => 'Berat tabung wajib diisi',
+            'berat.numeric' => 'Berat tabung harus berupa angka',
+            'berat.min' => 'Berat tabung tidak boleh bernilai negatif',
+            'berat.max' => 'Berat tabung tidak boleh melebihi 1000 kg',
         ];
+
     }
 
     protected function failedValidation(Validator $validator)
@@ -43,7 +44,7 @@ class TabungRequest extends FormRequest
                 'success' => false,
                 'message' => 'Validasi gagal',
                 'data' => null,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422)
         );
     }
