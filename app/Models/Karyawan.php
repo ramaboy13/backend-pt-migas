@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Karyawan extends Model
@@ -11,11 +11,13 @@ class Karyawan extends Model
     use HasFactory;
 
     protected $table = 'tb_karyawan';
+
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
-        'NIK',
+        'nik',
         'nama',
         'jabatan',
         'gaji_pokok',
@@ -23,15 +25,15 @@ class Karyawan extends Model
         'bpjs_tenagakerja',
         'tgl_masuk',
         'aktif',
-        'alamat'
+        'alamat',
     ];
 
     protected $casts = [
-        'gaji_pokok'       => 'decimal:2',
-        'bpjs_kesehatan'   => 'decimal:2',
+        'gaji_pokok' => 'decimal:2',
+        'bpjs_kesehatan' => 'decimal:2',
         'bpjs_tenagakerja' => 'decimal:2',
-        'tgl_masuk'         => 'date',
-        'aktif'             => 'boolean'
+        'tgl_masuk' => 'date',
+        'aktif' => 'boolean',
     ];
 
     public function lemburKaryawans()

@@ -16,7 +16,6 @@ class SumberKasRepository
     {
         $query = $this->model->newQuery();
 
-        // Apply filters
         if (! empty($filters['tipe'])) {
             $query->where('tipe', $filters['tipe']);
         }

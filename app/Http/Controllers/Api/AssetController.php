@@ -7,7 +7,6 @@ use App\Http\Requests\AssetRequest;
 use App\Services\AssetService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class AssetController extends Controller
 {
@@ -17,7 +16,7 @@ class AssetController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $filters = $request->only(['its_rfu', 'search', 'identity']);
+            $filters = $request->only(['status', 'search']);
 
             $assets = $this->service->getAllAssets($filters, $perPage);
 
@@ -29,15 +28,15 @@ class AssetController extends Controller
                     'current_page' => $assets->currentPage(),
                     'per_page' => $assets->perPage(),
                     'total' => $assets->total(),
-                    'last_page' => $assets->lastPage()
-                ]
+                    'last_page' => $assets->lastPage(),
+                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve assets: ' . $e->getMessage(),
+                'message' => 'Failed to retrieve assets: '.$e->getMessage(),
                 'data' => null,
-                'meta' => null
+                'meta' => null,
             ], 500);
         }
     }
@@ -47,23 +46,24 @@ class AssetController extends Controller
         try {
             $asset = $this->service->getAssetById($id);
 
-            if (!$asset) {
+            if (! $asset) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Asset not found',
-                    'data' => null
+                    'data' => null,
                 ], 404);
             }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Asset retrieved successfully',
-                'data' => $asset
+                'data' => $asset,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve asset',
-                'data' => null
+                'data' => null,
             ], 500);
         }
     }
@@ -77,13 +77,13 @@ class AssetController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Asset created successfully',
-                'data' => $asset
+                'data' => $asset,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create asset',
-                'data' => null
+                'data' => null,
             ], 500);
         }
     }
@@ -94,23 +94,24 @@ class AssetController extends Controller
             $validated = $request->validated();
             $asset = $this->service->updateAsset($id, $validated);
 
-            if (!$asset) {
+            if (! $asset) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Asset not found',
-                    'data' => null
+                    'data' => null,
                 ], 404);
             }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Asset updated successfully',
-                'data' => $asset
+                'data' => $asset,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update asset',
-                'data' => null
+                'data' => null,
             ], 500);
         }
     }
@@ -120,12 +121,13 @@ class AssetController extends Controller
         try {
             $deleted = $this->service->deleteAsset($id);
 
-            if (!$deleted) {
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Asset not found',
                 ], 404);
             }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Asset deleted successfully',

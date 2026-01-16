@@ -28,8 +28,7 @@ class KasPerusahaanController extends Controller
                 'meta' => $result->meta,
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Error retrieving kas perusahaan: '.$e->getMessage());
-
+            // Log::error('Error retrieving kas perusahaan: '.$e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil data kas perusahaan',

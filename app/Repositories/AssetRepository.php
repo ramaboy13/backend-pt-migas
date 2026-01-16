@@ -13,14 +13,14 @@ class AssetRepository
     {
         $query = $this->model->newQuery();
 
-        // Filter by RFU status
-        if (isset($filters['its_rfu'])) {
-            $query->where('its_rfu', $filters['its_rfu']);
+        // Filter by status
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
         }
 
         // Search by name
         if (isset($filters['search'])) {
-            $query->where('nama', 'like', '%' . $filters['search'] . '%');
+            $query->where('nama', 'like', '%'.$filters['search'].'%');
         }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
@@ -39,12 +39,14 @@ class AssetRepository
     public function update(string $id, array $data): bool
     {
         $asset = $this->findById($id);
+
         return $asset ? $asset->update($data) : false;
     }
 
     public function delete(string $id): bool
     {
         $asset = $this->findById($id);
+
         return $asset ? $asset->delete() : false;
     }
 }
