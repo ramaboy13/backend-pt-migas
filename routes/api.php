@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::post('register-with-referral', [AuthController::class, 'registerWithReferral'])->name('auth.register.referral');
+    Route::get('verify-email/{token}', [AuthController::class, 'verifyByToken'])->name('auth.verify.email');
+    Route::post('verify-email-code', [AuthController::class, 'verifyEmailWithCode'])->name('auth.verify.email.code');
+    Route::post('resend-verification', [AuthController::class, 'resendVerification'])->name('auth.resend.verification');
 });
 Route::get('/ping', function () {
     return response()->json([
@@ -34,6 +38,13 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('register', [AuthController::class, 'register'])->middleware('role:super_admin');
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
+       Route::middleware(['role:super_admin'])->group(function () {
+            Route::post('register', [AuthController::class, 'register']);
+            Route::post('create-referral-code', [AuthController::class, 'createReferralCode']);
+            Route::post('send-referral-invitation', [AuthController::class, 'sendReferralInvitation']);
+            Route::get('referral-stats', [AuthController::class, 'getReferralStats']);
+            Route::get('my-referral-codes', [AuthController::class, 'getMyReferralCodes']);
+        });
     });
 
     // Kas BCA Routes

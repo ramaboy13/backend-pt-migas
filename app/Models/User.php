@@ -72,4 +72,42 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->roles->pluck('name')->toArray();
     }
+        public function emailVerifications()
+    {
+        return $this->hasMany(EmailVerification::class);
+    }
+
+    public function referredBy()
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    public function referredUsers()
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    public function createdReferralCodes()
+    {
+        return $this->hasMany(ReferralCode::class, 'created_by');
+    }
+
+    public function usedReferralCode()
+    {
+        return $this->hasOne(ReferralCode::class, 'used_by');
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->email_verified && !is_null($this->email_verified_at);
+    }
+
+    public function markEmailAsVerified(): bool
+    {
+        return $this->update([
+            'email_verified' => true,
+            'email_verified_at' => now()
+        ]);
+    }
+
 }

@@ -98,4 +98,9 @@ class UserRepository
   {
     return $this->model->where('id', $id)->update(['is_active' => true]);
   }
+
+  public function findByEmail(string $email): ?User
+  {
+    return $this->model->where('email', $email)->first();
+  }
 }
