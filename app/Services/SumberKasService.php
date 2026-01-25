@@ -1,7 +1,5 @@
 <?php
 
-// app/Services/SumberKasService.php
-
 namespace App\Services;
 
 use App\DTO\SumberKas\SumberKasCollectionDTO;

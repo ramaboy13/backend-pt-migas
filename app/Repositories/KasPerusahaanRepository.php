@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\KasPerusahaan;
 use App\Models\SumberKas;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class KasPerusahaanRepository
 {
@@ -14,9 +15,14 @@ class KasPerusahaanRepository
     {
         $query = $this->model->newQuery();
 
-        // Load relations if needed
+        // // Load relations if needed
         if ($withRelations) {
-            $query->with(['sumberKas', 'transaksiOperasional']);
+            $query->with([
+                'sumberKas',
+                'transaksiOperasional' => function ($query) {
+                    $query->withTrashed();
+                },
+            ]);
         }
 
         // Apply filters
@@ -88,7 +94,7 @@ class KasPerusahaanRepository
 
     public function getSaldoSebelum(string $sumberKasId, string $tanggal): float
     {
-        // Get last saldo_sesudah before the given date for this sumber_kas
+        // Cari record terakhir sebelum tanggal yang diberikan
         $lastRecord = $this->model
             ->where('sumber_kas_id', $sumberKasId)
             ->whereDate('tanggal', '<', $tanggal)
@@ -100,7 +106,7 @@ class KasPerusahaanRepository
             return (float) $lastRecord->saldo_sesudah;
         }
 
-        // If no previous record, get saldo_terakhir from sumber_kas
+        // Jika tidak ada record sebelumnya, ambil saldo_terakhir dari sumber kas
         $sumberKas = SumberKas::find($sumberKasId);
 
         return $sumberKas ? (float) $sumberKas->saldo_terakhir : 0;
@@ -110,5 +116,29 @@ class KasPerusahaanRepository
     {
         return SumberKas::where('id', $sumberKasId)
             ->update(['saldo_terakhir' => $saldoBaru]);
+    }
+
+    public function findLatestBySumberKas(string $sumberKasId): ?KasPerusahaan
+    {
+        return $this->model
+            ->where('sumber_kas_id', $sumberKasId)
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->first();
+    }
+    public function getAllAfterDate(string $sumberKasId, string $tanggal, string $createdAt): Collection
+    {
+        return $this->model
+            ->where('sumber_kas_id', $sumberKasId)
+            ->where(function ($query) use ($tanggal, $createdAt) {
+                $query->where('tanggal', '>', $tanggal)
+                    ->orWhere(function ($q) use ($tanggal, $createdAt) {
+                        $q->where('tanggal', $tanggal)
+                            ->where('created_at', '>=', $createdAt);
+                    });
+            })
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->get();
     }
 }

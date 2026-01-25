@@ -27,7 +27,7 @@ class TransaksiOperasionalRequest extends FormRequest
             'tanggal' => [$isCreate ? 'required' : 'sometimes', 'date'],
             'jenis_transaksi' => [
                 $isCreate ? 'required' : 'sometimes',
-                Rule::in(['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_PANGKALAN', 'LAINNYA']),
+                Rule::in(['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_GAS', 'LAINNYA']),
             ],
             'keterangan' => [$isCreate ? 'required' : 'sometimes', 'string', 'max:500'],
             'is_pemasukan' => [$isCreate ? 'required' : 'sometimes', 'boolean'],
@@ -37,7 +37,7 @@ class TransaksiOperasionalRequest extends FormRequest
 
         // Conditional rules based on jenis_transaksi
         switch ($jenisTransaksi) {
-            case 'PENJUALAN_PANGKALAN':
+            case 'PENJUALAN_GAS':
                 // JUAL ke pangkalan: butuh pangkalan, tabung, qty, harga
                 $rules['pangkalan_id'] = ['required', 'string', 'exists:tb_pangkalan,id'];
                 $rules['tabung_id'] = ['required', 'string', 'exists:tb_tabung,id'];
@@ -138,7 +138,7 @@ class TransaksiOperasionalRequest extends FormRequest
         $requestData = $this->all();
 
         if (isset($requestData['jenis_transaksi']) &&
-            in_array($requestData['jenis_transaksi'], ['PEMBELIAN_GAS', 'PENJUALAN_PANGKALAN'])) {
+            in_array($requestData['jenis_transaksi'], ['PEMBELIAN_GAS', 'PENJUALAN_GAS'])) {
 
             if (isset($requestData['qty']) && isset($requestData['harga_satuan'])) {
                 $qty = (float) $requestData['qty'];

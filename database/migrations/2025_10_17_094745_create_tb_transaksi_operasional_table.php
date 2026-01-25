@@ -12,7 +12,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->date('tanggal');
             $table->string('no_ref')->unique();
-            $table->enum('jenis_transaksi', ['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_PANGKALAN', 'LAINNYA']);
+            $table->enum('jenis_transaksi', ['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_GAS', 'LAINNYA']);
             $table->string('keterangan');
             // Bisa NULL karena tidak semua transaksi butuh
             $table->uuid('pangkalan_id')->nullable();

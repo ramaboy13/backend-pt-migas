@@ -7,6 +7,7 @@ use App\DTO\TransaksiOperasional\TransaksiOperasionalDTO;
 use App\Repositories\TransaksiOperasionalRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TransaksiOperasionalService
 {
@@ -15,8 +16,10 @@ class TransaksiOperasionalService
         private KasPerusahaanService $kasPerusahaanService
     ) {}
 
-    public function getAllTransaksi(array $filters = [], int $perPage = 10): TransaksiOperasionalCollectionDTO
-    {
+    public function getAllTransaksi(
+        array $filters = [],
+        int $perPage = 10
+    ): TransaksiOperasionalCollectionDTO {
         $paginator = $this->repository->getAll($filters, $perPage);
 
         return TransaksiOperasionalCollectionDTO::fromPaginator($paginator);
@@ -26,27 +29,19 @@ class TransaksiOperasionalService
     {
         $transaksi = $this->repository->findById($id);
 
-        if (! $transaksi) {
-            return null;
-        }
-
-        return TransaksiOperasionalDTO::fromModel($transaksi);
+        return $transaksi
+            ? TransaksiOperasionalDTO::fromModel($transaksi)
+            : null;
     }
 
     public function createTransaksi(array $data): TransaksiOperasionalDTO
     {
         return DB::transaction(function () use ($data) {
-            // Validate and calculate
-            $this->validateTransaksiData($data);
-
-            // Create kas perusahaan entry first
             $kasData = $this->prepareKasPerusahaanData($data);
             $kasPerusahaan = $this->kasPerusahaanService->createKasPerusahaan($kasData);
 
-            // Link kas_perusahaan_id to transaksi
             $data['kas_perusahaan_id'] = $kasPerusahaan->id;
 
-            // Create transaksi
             $transaksi = $this->repository->create($data);
 
             return TransaksiOperasionalDTO::fromModel($transaksi);
@@ -62,21 +57,27 @@ class TransaksiOperasionalService
                 return null;
             }
 
-            // Validate
             $this->validateTransaksiData($data, $existing);
 
-            // Update kas perusahaan if needed
-            if ($existing->kas_perusahaan_id &&
-                (isset($data['jumlah']) || isset($data['sumber_kas_id']) || isset($data['is_pemasukan']))) {
+            if (
+                $existing->kas_perusahaan_id &&
+                (
+                    isset($data['jumlah']) ||
+                    isset($data['sumber_kas_id']) ||
+                    isset($data['is_pemasukan'])
+                )
+            ) {
+                $kasData = $this->prepareKasPerusahaanData(
+                    array_merge($existing->toArray(), $data)
+                );
 
-                $kasData = $this->prepareKasPerusahaanData(array_merge($existing->toArray(), $data));
-                $this->kasPerusahaanService->updateKasPerusahaan($existing->kas_perusahaan_id, $kasData);
+                $this->kasPerusahaanService->updateKasPerusahaan(
+                    $existing->kas_perusahaan_id,
+                    $kasData
+                );
             }
 
-            // Update transaksi
-            $updated = $this->repository->update($id, $data);
-
-            if (! $updated) {
+            if (! $this->repository->update($id, $data)) {
                 return null;
             }
 
@@ -87,81 +88,113 @@ class TransaksiOperasionalService
     public function deleteTransaksi(string $id): bool
     {
         return DB::transaction(function () use ($id) {
-            $transaksi = $this->repository->findById($id);
+            $transaksi = $this->repository->findById($id, false);
 
             if (! $transaksi) {
                 return false;
             }
 
-            // Delete kas perusahaan entry if exists
-            if ($transaksi->kas_perusahaan_id) {
-                $this->kasPerusahaanService->deleteKasPerusahaan($transaksi->kas_perusahaan_id);
+            $kasPerusahaanId = $transaksi->kas_perusahaan_id;
+
+            if (! $this->repository->delete($id)) {
+                return false;
             }
 
-            // Delete transaksi
-            return $this->repository->delete($id);
+            if ($kasPerusahaanId) {
+                try {
+                    $this->kasPerusahaanService->deleteKasPerusahaan($kasPerusahaanId);
+                } catch (\Exception $e) {
+                    Log::error(
+                        "Failed to delete kas perusahaan {$kasPerusahaanId}: {$e->getMessage()}"
+                    );
+                }
+            }
+
+            return true;
         });
     }
 
-    public function getSummaryByPeriode(string $startDate, string $endDate): array
-    {
+    public function getSummaryByPeriode(
+        string $startDate,
+        string $endDate
+    ): array {
         return $this->repository->getSummaryByPeriode($startDate, $endDate);
     }
 
-    public function getByPangkalan(string $pangkalanId, array $filters = []): TransaksiOperasionalCollectionDTO
-    {
+    public function getByPangkalan(
+        string $pangkalanId,
+        array $filters = []
+    ): TransaksiOperasionalCollectionDTO {
         $paginator = $this->repository->getByPangkalan($pangkalanId, $filters);
 
         return TransaksiOperasionalCollectionDTO::fromPaginator($paginator);
     }
 
-    private function validateTransaksiData(array $data, ?\App\Models\TransaksiOperasional $existing = null): void
-    {
-        // Validate jumlah
+    private function validateTransaksiData(
+        array $data,
+        ?\App\Models\TransaksiOperasional $existing = null
+    ): void {
         if (isset($data['jumlah']) && $data['jumlah'] <= 0) {
-            throw new \InvalidArgumentException('Jumlah transaksi harus lebih dari 0');
+            throw new \InvalidArgumentException(
+                'Jumlah transaksi harus lebih dari 0'
+            );
         }
 
-        // Validate based on jenis_transaksi
-        $jenisTransaksi = $data['jenis_transaksi'] ?? $existing?->jenis_transaksi;
+        $jenisTransaksi = $data['jenis_transaksi']
+            ?? $existing?->jenis_transaksi;
 
-        switch ($jenisTransaksi) {
-            case 'PENJUALAN_PANGKALAN':
-                // Untuk PENJUALAN ke pangkalan: pangkalan_id WAJIB
-                if (empty($data['pangkalan_id']) && empty($existing?->pangkalan_id)) {
-                    throw new \InvalidArgumentException('Pangkalan harus dipilih untuk penjualan ke pangkalan');
-                }
-                // Tabung WAJIB untuk transaksi gas
-                if (empty($data['tabung_id']) && empty($existing?->tabung_id)) {
-                    throw new \InvalidArgumentException('Tabung harus dipilih untuk transaksi penjualan gas');
-                }
-                // Qty validation
-                if ((empty($data['qty']) && empty($existing?->qty)) ||
-                    (isset($data['qty']) && $data['qty'] <= 0)) {
-                    throw new \InvalidArgumentException('Quantity harus lebih dari 0');
-                }
-                break;
+        match ($jenisTransaksi) {
+            'PENJUALAN_GAS' => $this->validatePenjualanGas($data, $existing),
+            'PEMBELIAN_GAS' => $this->validatePembelianGas($data, $existing),
+            'MAINTENANCE',
+            'LAINNYA' => null,
+            default => null,
+        };
+    }
 
-            case 'PEMBELIAN_GAS':
-                // Untuk PEMBELIAN dari supplier: pangkalan_id OPTIONAL, tabung_id WAJIB
-                // Tabung WAJIB untuk transaksi gas
-                if (empty($data['tabung_id']) && empty($existing?->tabung_id)) {
-                    throw new \InvalidArgumentException('Tabung harus dipilih untuk transaksi pembelian gas');
-                }
-                // Qty validation
-                if ((empty($data['qty']) && empty($existing?->qty)) ||
-                    (isset($data['qty']) && $data['qty'] <= 0)) {
-                    throw new \InvalidArgumentException('Quantity harus lebih dari 0');
-                }
-                break;
+    private function validatePenjualanGas(
+        array $data,
+        ?\App\Models\TransaksiOperasional $existing
+    ): void {
+        if (empty($data['pangkalan_id']) && empty($existing?->pangkalan_id)) {
+            throw new \InvalidArgumentException(
+                'Pangkalan harus dipilih untuk penjualan ke pangkalan'
+            );
+        }
 
-            case 'MAINTENANCE':
-                // Tidak ada validasi khusus
-                break;
+        if (empty($data['tabung_id']) && empty($existing?->tabung_id)) {
+            throw new \InvalidArgumentException(
+                'Tabung harus dipilih untuk transaksi penjualan gas'
+            );
+        }
 
-            case 'LAINNYA':
-                // Tidak ada validasi khusus
-                break;
+        if (
+            (empty($data['qty']) && empty($existing?->qty)) ||
+            (isset($data['qty']) && $data['qty'] <= 0)
+        ) {
+            throw new \InvalidArgumentException(
+                'Quantity harus lebih dari 0'
+            );
+        }
+    }
+
+    private function validatePembelianGas(
+        array $data,
+        ?\App\Models\TransaksiOperasional $existing
+    ): void {
+        if (empty($data['tabung_id']) && empty($existing?->tabung_id)) {
+            throw new \InvalidArgumentException(
+                'Tabung harus dipilih untuk transaksi pembelian gas'
+            );
+        }
+
+        if (
+            (empty($data['qty']) && empty($existing?->qty)) ||
+            (isset($data['qty']) && $data['qty'] <= 0)
+        ) {
+            throw new \InvalidArgumentException(
+                'Quantity harus lebih dari 0'
+            );
         }
     }
 
@@ -170,28 +203,23 @@ class TransaksiOperasionalService
         $jumlah = $transaksiData['jumlah'] ?? 0;
         $isPemasukan = $transaksiData['is_pemasukan'] ?? false;
         $sumberKasId = $transaksiData['sumber_kas_id'] ?? null;
-        $tanggal = $transaksiData['tanggal'] ?? now()->toDateString();
-        $keterangan = $transaksiData['keterangan'] ?? 'Transaksi Operasional';
 
         if (! $sumberKasId) {
             throw new \InvalidArgumentException('Sumber kas harus dipilih');
         }
 
         return [
-            'tanggal' => $tanggal,
+            'tanggal' => $transaksiData['tanggal'] ?? now()->toDateString(),
             'sumber_kas_id' => $sumberKasId,
-            'keterangan' => $keterangan,
+            'keterangan' => $transaksiData['keterangan'] ?? 'Transaksi Operasional',
             'tipe_transaksi' => $isPemasukan ? 'DEBIT' : 'KREDIT',
             'jumlah' => $jumlah,
-            'transaksi_operasional_id' => $transaksiData['id'] ?? null,
             'created_by' => Auth::user()->name ?? 'system',
         ];
     }
 
     public function validateSumberKasActive(string $sumberKasId): bool
     {
-        // This should be delegated to SumberKasService
-        // For now, we assume it's valid if passed validation
         return true;
     }
 }

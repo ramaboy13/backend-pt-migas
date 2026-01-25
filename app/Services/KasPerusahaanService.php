@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTO\KasPerusahaan\KasPerusahaanCollectionDTO;
 use App\DTO\KasPerusahaan\KasPerusahaanDTO;
+use App\Models\SumberKas;
 use App\Repositories\KasPerusahaanRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -11,12 +12,13 @@ use Illuminate\Support\Facades\DB;
 class KasPerusahaanService
 {
     public function __construct(
-        private KasPerusahaanRepository $repository,
-        private SumberKasService $sumberKasService
+        private KasPerusahaanRepository $repository
     ) {}
 
-    public function getAllKasPerusahaan(array $filters = [], int $perPage = 10): KasPerusahaanCollectionDTO
-    {
+    public function getAllKasPerusahaan(
+        array $filters = [],
+        int $perPage = 10
+    ): KasPerusahaanCollectionDTO {
         $paginator = $this->repository->getAllPaginated($filters, $perPage);
 
         return KasPerusahaanCollectionDTO::fromPaginator($paginator);
@@ -26,45 +28,45 @@ class KasPerusahaanService
     {
         $kasPerusahaan = $this->repository->findById($id);
 
-        if (! $kasPerusahaan) {
-            return null;
-        }
-
-        return KasPerusahaanDTO::fromModel($kasPerusahaan);
+        return $kasPerusahaan
+            ? KasPerusahaanDTO::fromModel($kasPerusahaan)
+            : null;
     }
 
     public function createKasPerusahaan(array $data): KasPerusahaanDTO
     {
         return DB::transaction(function () use ($data) {
-            // Validate sumber kas exists and active
-            $this->validateSumberKas($data['sumber_kas_id']);
+            $sumberKas = SumberKas::where('id', $data['sumber_kas_id'])
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            // Calculate saldo sebelum
-            $saldoSebelum = $this->repository->getSaldoSebelum(
-                $data['sumber_kas_id'],
-                $data['tanggal']
-            );
+            if (! $sumberKas->aktif) {
+                throw new \InvalidArgumentException('Sumber kas tidak aktif');
+            }
 
-            // Calculate saldo sesudah
+            if ($data['tipe_transaksi'] === 'KREDIT') {
+                $this->validateSaldoCukup(
+                    $sumberKas->saldo_terakhir,
+                    $data['jumlah'],
+                    $sumberKas->nama_display ?? 'Sumber Kas'
+                );
+            }
+
+            $saldoSebelum = (float) $sumberKas->saldo_terakhir;
             $saldoSesudah = $this->calculateSaldoSesudah(
                 $saldoSebelum,
                 $data['tipe_transaksi'],
                 $data['jumlah']
             );
 
-            // Add calculated fields to data
             $data['saldo_sebelum'] = $saldoSebelum;
             $data['saldo_sesudah'] = $saldoSesudah;
             $data['created_by'] = Auth::user()->name ?? 'system';
 
-            // Create kas perusahaan record
             $kasPerusahaan = $this->repository->create($data);
 
-            // Update saldo terakhir in sumber_kas
-            $this->repository->updateSaldoTerakhirSumberKas(
-                $data['sumber_kas_id'],
-                $saldoSesudah
-            );
+            $sumberKas->saldo_terakhir = $saldoSesudah;
+            $sumberKas->save();
 
             return KasPerusahaanDTO::fromModel($kasPerusahaan);
         });
@@ -79,40 +81,56 @@ class KasPerusahaanService
                 return null;
             }
 
-            // If changing sumber_kas_id or tipe_transaksi or jumlah, recalculate
-            $needRecalculation = isset($data['sumber_kas_id']) ||
-                                isset($data['tipe_transaksi']) ||
-                                isset($data['jumlah']);
+            $needRecalculation =
+                isset($data['sumber_kas_id']) ||
+                isset($data['tipe_transaksi']) ||
+                isset($data['jumlah']) ||
+                isset($data['tanggal']);
 
             if ($needRecalculation) {
                 $sumberKasId = $data['sumber_kas_id'] ?? $existing->sumber_kas_id;
-                $tanggal = $data['tanggal'] ?? $existing->tanggal->toDateString();
+
+                $sumberKas = SumberKas::where('id', $sumberKasId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (! $sumberKas->aktif) {
+                    throw new \InvalidArgumentException('Sumber kas tidak aktif');
+                }
+
                 $tipeTransaksi = $data['tipe_transaksi'] ?? $existing->tipe_transaksi;
                 $jumlah = $data['jumlah'] ?? $existing->jumlah;
 
-                // Validate sumber kas
-                $this->validateSumberKas($sumberKasId);
+                if ($tipeTransaksi === 'KREDIT') {
+                    $existingIsKredit = $existing->tipe_transaksi === 'KREDIT';
+                    $jumlahBertambah =
+                        isset($data['jumlah']) && $data['jumlah'] > $existing->jumlah;
 
-                // Recalculate saldo
-                $saldoSebelum = $this->repository->getSaldoSebelum($sumberKasId, $tanggal);
-                $saldoSesudah = $this->calculateSaldoSesudah($saldoSebelum, $tipeTransaksi, $jumlah);
+                    if (! $existingIsKredit || $jumlahBertambah) {
+                        $this->validateSaldoCukup(
+                            $sumberKas->saldo_terakhir,
+                            $jumlah,
+                            $sumberKas->nama_display ?? 'Sumber Kas'
+                        );
+                    }
+                }
+
+                $saldoSebelum = (float) $sumberKas->saldo_terakhir;
+                $saldoSesudah = $this->calculateSaldoSesudah(
+                    $saldoSebelum,
+                    $tipeTransaksi,
+                    $jumlah
+                );
 
                 $data['saldo_sebelum'] = $saldoSebelum;
                 $data['saldo_sesudah'] = $saldoSesudah;
+
+                $sumberKas->saldo_terakhir = $saldoSesudah;
+                $sumberKas->save();
             }
 
-            $updated = $this->repository->update($id, $data);
-
-            if (! $updated) {
+            if (! $this->repository->update($id, $data)) {
                 return null;
-            }
-
-            // Update saldo terakhir if needed
-            if ($needRecalculation) {
-                $this->repository->updateSaldoTerakhirSumberKas(
-                    $sumberKasId,
-                    $saldoSesudah
-                );
             }
 
             return $this->getKasPerusahaanById($id);
@@ -122,67 +140,80 @@ class KasPerusahaanService
     public function deleteKasPerusahaan(string $id): bool
     {
         return DB::transaction(function () use ($id) {
-            $kasPerusahaan = $this->repository->findById($id, false);
+            $kasToDelete = $this->repository->findById($id, false);
 
-            if (! $kasPerusahaan) {
+            if (! $kasToDelete) {
                 return false;
             }
 
-            // Delete the record
-            $deleted = $this->repository->delete($id);
+            $sumberKas = SumberKas::where('id', $kasToDelete->sumber_kas_id)
+                ->lockForUpdate()
+                ->first();
 
-            if ($deleted) {
-                // Recalculate saldo terakhir for the sumber kas
-                $this->recalculateSaldoTerakhir($kasPerusahaan->sumber_kas_id);
+            if (! $sumberKas) {
+                return false;
             }
 
-            return $deleted;
+            $laterRecords = $this->repository->getAllAfterDate(
+                $kasToDelete->sumber_kas_id,
+                $kasToDelete->tanggal,
+                $kasToDelete->created_at
+            );
+
+            $currentSaldo = $kasToDelete->saldo_sebelum;
+
+            if ($this->repository->delete($id)) {
+                foreach ($laterRecords as $record) {
+                    if ($record->tipe_transaksi === 'DEBIT') {
+                        $record->saldo_sebelum = $currentSaldo;
+                        $record->saldo_sesudah = $currentSaldo + $record->jumlah;
+                    } else {
+                        $record->saldo_sebelum = $currentSaldo;
+                        $record->saldo_sesudah = $currentSaldo - $record->jumlah;
+                    }
+
+                    $currentSaldo = $record->saldo_sesudah;
+                    $record->save();
+                }
+
+                $sumberKas->saldo_terakhir = $currentSaldo;
+                $sumberKas->save();
+
+                return true;
+            }
+
+            return false;
         });
     }
 
-    private function validateSumberKas(string $sumberKasId): void
-    {
-        $sumberKas = $this->sumberKasService->getSumberKasById($sumberKasId);
-
-        if (! $sumberKas) {
-            throw new \InvalidArgumentException('Sumber kas tidak ditemukan');
-        }
-
-        if (! $sumberKas->aktif) {
-            throw new \InvalidArgumentException('Sumber kas tidak aktif');
+    private function validateSaldoCukup(
+        float $saldoTersedia,
+        float $jumlahDibutuhkan,
+        string $namaSumberKas
+    ): void {
+        if ($saldoTersedia < $jumlahDibutuhkan) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Saldo di %s tidak cukup. Saldo tersedia: %s, Jumlah diperlukan: %s',
+                    $namaSumberKas,
+                    number_format($saldoTersedia, 0, ',', '.'),
+                    number_format($jumlahDibutuhkan, 0, ',', '.')
+                )
+            );
         }
     }
 
-    private function calculateSaldoSesudah(float $saldoSebelum, string $tipeTransaksi, float $jumlah): float
-    {
+    private function calculateSaldoSesudah(
+        float $saldoSebelum,
+        string $tipeTransaksi,
+        float $jumlah
+    ): float {
         return match ($tipeTransaksi) {
             'DEBIT' => $saldoSebelum + $jumlah,
             'KREDIT' => $saldoSebelum - $jumlah,
-            default => throw new \InvalidArgumentException('Tipe transaksi tidak valid')
+            default => throw new \InvalidArgumentException(
+                'Tipe transaksi tidak valid. Harus DEBIT atau KREDIT'
+            ),
         };
-    }
-
-    private function recalculateSaldoTerakhir(string $sumberKasId): void
-    {
-        // Get the latest record for this sumber kas
-        $latestRecord = $this->repository->getAllPaginated(['sumber_kas_id' => $sumberKasId], 1);
-
-        if ($latestRecord->count() > 0) {
-            $lastSaldo = $latestRecord->first()->saldo_sesudah;
-        } else {
-            // If no records, get saldo_awal from sumber_kas
-            $sumberKas = $this->sumberKasService->getSumberKasById($sumberKasId);
-            $lastSaldo = $sumberKas ? $sumberKas->saldoAwal : 0;
-        }
-
-        $this->repository->updateSaldoTerakhirSumberKas($sumberKasId, $lastSaldo);
-    }
-
-    public function getSaldoPerSumberKas(): array
-    {
-        // Logic to get saldo per sumber kas
-        // This would require a custom query or use of Eloquent relationships
-        // For now, returning empty array
-        return [];
     }
 }

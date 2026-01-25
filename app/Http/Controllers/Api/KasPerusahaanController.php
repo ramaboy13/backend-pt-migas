@@ -156,24 +156,4 @@ class KasPerusahaanController extends Controller
         }
     }
 
-    public function getSaldoPerSumberKas(): JsonResponse
-    {
-        try {
-            $saldoData = $this->service->getSaldoPerSumberKas();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Data saldo per sumber kas berhasil diambil',
-                'data' => $saldoData,
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Error getting saldo per sumber kas: '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data saldo per sumber kas',
-                'data' => null,
-            ], 500);
-        }
-    }
 }

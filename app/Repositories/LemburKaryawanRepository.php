@@ -2,12 +2,17 @@
 
 namespace App\Repositories;
 
+use App\Models\Karyawan;
 use App\Models\LemburKaryawan;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class LemburKaryawanRepository
 {
-    public function __construct(private LemburKaryawan $model) {}
+    public function __construct(
+        private LemburKaryawan $model,
+        private Karyawan $karyawanModel
+    ) {}
 
     public function getAll(array $filters = [], int $perPage = 10): LengthAwarePaginator
     {
@@ -47,12 +52,75 @@ class LemburKaryawanRepository
 
     public function create(array $data): LemburKaryawan
     {
+        // Validasi: Cek apakah karyawan aktif
+        $karyawan = $this->karyawanModel->find($data['karyawan_id']);
+
+        if (! $karyawan) {
+            throw new ModelNotFoundException("Karyawan dengan ID {$data['karyawan_id']} tidak ditemukan");
+        }
+
+        if (! $karyawan->aktif) {
+            throw new \InvalidArgumentException(
+                'Tidak dapat membuat data lembur untuk karyawan yang tidak aktif. '.
+                "Karyawan {$karyawan->nama} (NIK: {$karyawan->nik}) berstatus tidak aktif."
+            );
+        }
+
+        // Validasi tambahan: Cek apakah tanggal lembur setelah tanggal masuk karyawan
+        if (isset($data['tanggal']) && $karyawan->tgl_masuk) {
+            $tanggalLembur = \Carbon\Carbon::parse($data['tanggal']);
+            $tanggalMasuk = \Carbon\Carbon::parse($karyawan->tgl_masuk);
+
+            if ($tanggalLembur->lt($tanggalMasuk)) {
+                throw new \InvalidArgumentException(
+                    'Tanggal lembur tidak boleh sebelum tanggal masuk karyawan. '.
+                    "Tanggal masuk: {$karyawan->tgl_masuk}"
+                );
+            }
+        }
+
         return $this->model->create($data);
     }
 
     public function update(string $id, array $data): bool
     {
-        return $this->model->where('id', $id)->update($data);
+        // Cari data lembur yang akan diupdate
+        $lemburKaryawan = $this->findById($id);
+
+        if (! $lemburKaryawan) {
+            throw new ModelNotFoundException("Data lembur dengan ID {$id} tidak ditemukan");
+        }
+
+        // Jika ada perubahan karyawan_id, validasi karyawan baru
+        if (isset($data['karyawan_id']) && $data['karyawan_id'] !== $lemburKaryawan->karyawan_id) {
+            $karyawanBaru = $this->karyawanModel->find($data['karyawan_id']);
+
+            if (! $karyawanBaru) {
+                throw new ModelNotFoundException("Karyawan dengan ID {$data['karyawan_id']} tidak ditemukan");
+            }
+
+            if (! $karyawanBaru->aktif) {
+                throw new \InvalidArgumentException(
+                    'Tidak dapat mengubah data lembur ke karyawan yang tidak aktif. '.
+                    "Karyawan {$karyawanBaru->nama} (NIK: {$karyawanBaru->nik}) berstatus tidak aktif."
+                );
+            }
+
+            // Validasi tanggal jika ada perubahan tanggal
+            if (isset($data['tanggal']) && $karyawanBaru->tgl_masuk) {
+                $tanggalLembur = \Carbon\Carbon::parse($data['tanggal']);
+                $tanggalMasuk = \Carbon\Carbon::parse($karyawanBaru->tgl_masuk);
+
+                if ($tanggalLembur->lt($tanggalMasuk)) {
+                    throw new \InvalidArgumentException(
+                        'Tanggal lembur tidak boleh sebelum tanggal masuk karyawan. '.
+                        "Tanggal masuk: {$karyawanBaru->tgl_masuk}"
+                    );
+                }
+            }
+        }
+
+        return $lemburKaryawan->update($data);
     }
 
     public function delete(string $id): bool
@@ -69,5 +137,23 @@ class LemburKaryawanRepository
         }
 
         return $query->orderBy('tanggal', 'desc')->paginate($filters['per_page'] ?? 10);
+    }
+
+    public function getKaryawanInfo(string $karyawanId): array
+    {
+        $karyawan = $this->karyawanModel->find($karyawanId);
+
+        if (! $karyawan) {
+            throw new ModelNotFoundException("Karyawan dengan ID {$karyawanId} tidak ditemukan");
+        }
+
+        return [
+            'id' => $karyawan->id,
+            'nik' => $karyawan->nik,
+            'nama' => $karyawan->nama,
+            'aktif' => $karyawan->aktif,
+            'tgl_masuk' => $karyawan->tgl_masuk,
+            'jabatan' => $karyawan->jabatan,
+        ];
     }
 }

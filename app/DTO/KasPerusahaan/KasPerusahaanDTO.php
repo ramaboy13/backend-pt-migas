@@ -22,6 +22,13 @@ class KasPerusahaanDTO
 
     public static function fromModel(\App\Models\KasPerusahaan $model): self
     {
+        $transaksiOperasionalDTO = null;
+        if ($model->relationLoaded('transaksiOperasional') && $model->transaksiOperasional) {
+            $transaksiOperasionalDTO = \App\DTO\TransaksiOperasional\TransaksiOperasionalDTO::fromModel(
+                $model->transaksiOperasional
+            );
+        }
+
         return new self(
             id: $model->id,
             tanggal: $model->tanggal->toDateString(),
@@ -31,11 +38,7 @@ class KasPerusahaanDTO
             jumlah: (float) $model->jumlah,
             saldo_sebelum: (float) $model->saldo_sebelum,
             saldo_sesudah: (float) $model->saldo_sesudah,
-            transaksi_operasional: $model->transaksi_operasional
-            ? \App\DTO\TransaksiOperasional\TransaksiOperasionalDTO::fromModel(
-                $model->transaksi_operasional
-            )
-            : null,
+            transaksi_operasional: $transaksiOperasionalDTO,
             createdAt: $model->created_at->toISOString(),
             updatedAt: $model->updated_at->toISOString(),
         );
