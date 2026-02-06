@@ -18,9 +18,14 @@ class AssetRepository
             $query->where('status', $filters['status']);
         }
 
-        // Search by name
-        if (isset($filters['search'])) {
-            $query->where('nama', 'like', '%'.$filters['search'].'%');
+        // filter multiple collumn
+        if(!empty($filters['search'])) {
+           $search = $filters['search'];
+           $query->where(function ($q) use ($search) {
+            $q->where('nama', 'like', "%{$search}%")
+              ->orWhere('identitas', 'like', "%{$search}%")
+              ->orWhere('catatan', 'like', "%{$search}%");
+        });
         }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);

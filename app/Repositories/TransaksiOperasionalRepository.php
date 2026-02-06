@@ -43,12 +43,13 @@ class TransaksiOperasionalRepository
             $query->where('asset_id', $filters['asset_id']);
         }
 
-        if (! empty($filters['no_ref'])) {
-            $query->where('no_ref', 'LIKE', '%'.$filters['no_ref'].'%');
-        }
-
-        if (! empty($filters['keterangan'])) {
-            $query->where('keterangan', 'LIKE', '%'.$filters['keterangan'].'%');
+        // filter multiple collumn
+        if(!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('no_ref', 'like', "%{$search}%")
+                ->orWhere('keterangan', 'like', "%{$search}%");
+            });
         }
 
         // Order by

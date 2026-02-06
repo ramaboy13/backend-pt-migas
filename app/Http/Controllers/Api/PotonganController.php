@@ -17,7 +17,7 @@ class PotonganController extends Controller
   {
     try {
       $perPage = $request->input('per_page', 10);
-      $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id', 'nama_karyawan']);
+      $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_id', 'search']);
 
       $result = $this->service->getAllPotongan($filters, $perPage);
       $responseData = $result->toArray();

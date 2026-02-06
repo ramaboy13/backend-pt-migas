@@ -38,8 +38,13 @@ class KasPerusahaanRepository
             $query->where('tipe_transaksi', $filters['tipe_transaksi']);
         }
 
-        if (! empty($filters['keterangan'])) {
-            $query->where('keterangan', 'LIKE', '%'.$filters['keterangan'].'%');
+        // Filter multiple column
+        if(!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('keterangan', 'like', "%{$search}%")
+                ->orWhere('tipe_transaksi', 'like', "%{$search}%");
+            });
         }
 
         // Order by

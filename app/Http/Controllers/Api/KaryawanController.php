@@ -17,7 +17,7 @@ class KaryawanController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $filters = $request->only(['nama', 'jabatan', 'aktif']);
+            $filters = $request->only(['search', 'jabatan', 'aktif']);
 
             $result = $this->service->getAllKaryawan($filters, $perPage);
             $responseData = $result->toArray();

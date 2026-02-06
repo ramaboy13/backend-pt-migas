@@ -13,9 +13,14 @@ class KaryawanRepository
     {
         $query = $this->model->newQuery();
 
-        // Filter by nama
-        if (!empty($filters['nama'])) {
-            $query->where('nama', 'LIKE', '%' . $filters['nama'] . '%');
+        // filter multiple collumn
+        if(!empty($filters['search'])) {
+           $search = $filters['search'];
+           $query->where(function ($q) use ($search) {
+            $q->where('nama', 'like', "%{$search}%")
+              ->orWhere('nik', 'like', "%{$search}%")
+              ->orWhere('alamat', 'like', "%{$search}%");
+        });
         }
 
         // Filter by jabatan

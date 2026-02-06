@@ -16,7 +16,7 @@ class GajiKaryawanController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_aktif', 'nama_karyawan']);
+            $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_aktif', 'search']);
 
             $result = $this->service->getAllGaji($filters, $perPage);
             $responseData = $result->toArray();

@@ -13,8 +13,14 @@ class PangkalanRepository
   {
     $query = $this->model->newQuery();
 
-    if (!empty($filters['nama'])) {
-      $query->where('nama', 'LIKE', '%' . $filters['nama'] . '%');
+    // filter multiple collumn
+    if(!empty($filters['search'])) {
+        $search = $filters['search'];
+        $query->where(function ($q) use ($search) {
+            $q->where('nama', 'like', "%{$search}%")
+            ->orWhere('alamat', 'like', "%{$search}%")
+            ->orWhere('no_ktp', 'like', "%{$search}%");
+        });
     }
 
     return $query->orderBy('created_at', 'desc')

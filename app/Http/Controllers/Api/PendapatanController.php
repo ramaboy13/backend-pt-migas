@@ -16,7 +16,7 @@ class PendapatanController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $filters = $request->only(['periode', 'start_periode', 'end_periode', 'nama_karyawan']);
+            $filters = $request->only(['periode', 'start_periode', 'end_periode', 'search']);
 
             $result = $this->service->getAllPendapatan($filters, $perPage);
             $responseData = $result->toArray();

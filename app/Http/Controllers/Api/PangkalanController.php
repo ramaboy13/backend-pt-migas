@@ -17,7 +17,7 @@ class PangkalanController extends Controller
     {
         try {
             $perPage = $request->get('per_page', 10);
-            $filters = $request->only(['nama']);
+            $filters = $request->only(['search']);
 
             $result = $this->pangkalanService->getAllPangkalan($perPage, $filters);
             $responseData = $result->toArray();

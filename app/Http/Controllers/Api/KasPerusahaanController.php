@@ -17,7 +17,7 @@ class KasPerusahaanController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $filters = $request->only(['start_date', 'end_date', 'sumber_kas_id', 'tipe_transaksi', 'keterangan']);
+            $filters = $request->only(['start_date', 'end_date', 'sumber_kas_id', 'tipe_transaksi', 'search']);
 
             $result = $this->service->getAllKasPerusahaan($filters, $perPage);
 

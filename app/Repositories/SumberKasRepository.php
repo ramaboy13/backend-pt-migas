@@ -24,8 +24,15 @@ class SumberKasRepository
             $query->where('aktif', filter_var($filters['aktif'], FILTER_VALIDATE_BOOLEAN));
         }
 
-        if (! empty($filters['search'])) {
-            $query->search($filters['search']);
+        // filter multiple collumn
+        if(!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_bank', 'like', "%{$search}%")
+                ->orWhere('nomor_rekening', 'like', "%{$search}%")
+                ->orWhere('atas_nama', 'like', "%{$search}%")
+                ->orWhere('keterangan', 'like', "%{$search}%");
+            });
         }
 
         // Order by

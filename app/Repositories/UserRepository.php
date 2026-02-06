@@ -14,9 +14,13 @@ class UserRepository
   {
     $query = $this->model->with('roles');
 
-    // Filter by name
-    if (!empty($filters['name'])) {
-      $query->where('name', 'LIKE', '%' . $filters['name'] . '%');
+    // Filter multiple column
+    if(!empty($filters['search'])) {
+        $search = $filters['search'];
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+            ->orWhere('email', 'like', "%{$search}%");
+        });
     }
 
     // Filter by role

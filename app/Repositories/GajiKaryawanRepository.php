@@ -33,10 +33,11 @@ class GajiKaryawanRepository
         //     $query->where('karyawan_id', $filters['karyawan_id']);
         // }
 
-        // Filter by nama karyawan
-        if (! empty($filters['nama_karyawan'])) {
-            $query->whereHas('karyawan', function ($q) use ($filters) {
-                $q->where('nama', 'LIKE', '%'.$filters['nama_karyawan'].'%');
+        // Filter multiple column
+        if(!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('karyawan', function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%");
             });
         }
 

@@ -25,8 +25,7 @@ class TransaksiOperasionalController extends Controller
                 'pangkalan_id',
                 'tabung_id',
                 'is_in',
-                'no_ref',
-                'keterangan',
+                'search',
             ]);
 
             $result = $this->service->getAllTransaksi($filters, $perPage);

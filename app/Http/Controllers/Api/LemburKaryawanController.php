@@ -16,7 +16,7 @@ class LemburKaryawanController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $filters = $request->only(['periode', 'start_date', 'end_date', 'nama_karyawan']);
+            $filters = $request->only(['periode', 'start_date', 'end_date', 'search']);
             $withKaryawan = $request->boolean('with_karyawan', true);
 
             $result = $this->service->getAllLembur($filters, $perPage, $withKaryawan);

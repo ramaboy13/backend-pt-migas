@@ -18,9 +18,7 @@ class SumberKasController extends Controller
         try {
             $perPage = $request->input('per_page', 10);
             $filters = $request->only(['tipe', 'aktif', 'search']);
-
             $result = $this->service->getAllSumberKas($filters, $perPage);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Data sumber kas berhasil diambil',
