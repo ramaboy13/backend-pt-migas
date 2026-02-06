@@ -139,4 +139,23 @@ class AssetController extends Controller
             ], 500);
         }
     }
+
+    public function fullGetData(Request $request): JsonResponse
+    {
+        try {
+            $assets = $this->service->getAllAssets();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Assets retrieved successfully',
+                'data' => $assets,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve assets',
+                'data' => null,
+            ], 500);
+        }
+    }
 }

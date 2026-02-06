@@ -49,4 +49,9 @@ class AssetRepository
 
         return $asset ? $asset->delete() : false;
     }
+
+    public function getAllAssets()
+    {
+        return $this->model->all();
+    }
 }

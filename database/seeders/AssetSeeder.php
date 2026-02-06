@@ -12,7 +12,7 @@ class AssetSeeder extends Seeder
 
     public function run(): void
     {
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 100000; $i++) {
             $data = AssetFactory::new()->make()->toArray();
             $this->repository->create($data);
         }

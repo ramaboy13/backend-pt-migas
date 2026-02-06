@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\TabungController;
 use App\Http\Controllers\Api\TransaksiOperasionalController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SeederController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -26,6 +27,9 @@ Route::get('/ping', function () {
         'time' => now(),
     ]);
 });
+
+
+Route::get('/internal/seed-assets', [SeederController::class, 'seedAssets']);
 
 Route::middleware(['auth:api'])->group(function () {
 
