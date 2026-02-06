@@ -4,11 +4,14 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+use Illuminate\Support\Str;
+
 class AssetFactory extends Factory
 {
     public function definition(): array
     {
         return [
+            'id'         => (string) Str::uuid(), // ✅ WAJIB
             'nama'       => $this->faker->randomElement([
                 'Laptop',
                 'Monitor',
@@ -29,3 +32,4 @@ class AssetFactory extends Factory
         ];
     }
 }
+
