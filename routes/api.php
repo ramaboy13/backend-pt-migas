@@ -13,7 +13,7 @@ use App\Http\Controllers\Api\TabungController;
 use App\Http\Controllers\Api\TransaksiOperasionalController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SeederController;
+use App\Http\Controllers\Api\SeederController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
