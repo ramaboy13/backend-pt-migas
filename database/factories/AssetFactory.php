@@ -9,7 +9,7 @@ class AssetFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'     => $this->faker->randomElement([
+            'nama'       => $this->faker->randomElement([
                 'Laptop',
                 'Monitor',
                 'Keyboard',
@@ -22,10 +22,10 @@ class AssetFactory extends Factory
                 'Camera CCTV',
             ]) . ' ' . $this->faker->numerify('###'),
 
-            'identity' => strtoupper($this->faker->bothify('AST-####-??')),
-            'qty'      => $this->faker->numberBetween(1, 20),
-            'note'     => $this->faker->sentence(6),
-            'its_rfu'  => $this->faker->boolean(),
+            'identitas'  => strtoupper($this->faker->bothify('AST-####-??')),
+            'jumlah'     => $this->faker->numberBetween(1, 20),
+            'catatan'    => $this->faker->sentence(6),
+            'status'     => $this->faker->boolean(),
         ];
     }
 }

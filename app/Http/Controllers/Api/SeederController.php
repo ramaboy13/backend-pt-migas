@@ -26,7 +26,7 @@ class SeederController extends Controller
             $data[] = AssetFactory::new()->make()->toArray();
         }
 
-        DB::table('assets')->insert($data);
+        DB::table('tb_asset')->insert($data);
 
         return response()->json([
             'inserted' => $limit,
