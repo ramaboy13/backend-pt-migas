@@ -59,6 +59,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/show/{id}', [AssetController::class, 'show']);
             Route::put('/update/{id}', [AssetController::class, 'update']);
             Route::delete('/delete/{id}', [AssetController::class, 'destroy']);
+            Route::get('/all-assets', [AssetController::class, 'fullGetData']);
         });
     });
 
