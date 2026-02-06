@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use Database\Factories\AssetFactory;
 use Illuminate\Http\Request;
