@@ -143,7 +143,7 @@ class AssetController extends Controller
     public function fullGetData(Request $request): JsonResponse
     {
         try {
-            $assets = $this->service->getAllAssets();
+            $assets = $this->service->getAllAssetsFullData();
 
             return response()->json([
                 'success' => true,

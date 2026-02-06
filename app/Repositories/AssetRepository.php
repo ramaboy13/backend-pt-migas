@@ -50,7 +50,7 @@ class AssetRepository
         return $asset ? $asset->delete() : false;
     }
 
-    public function getAllAssets()
+    public function getAllAssetsFullData()
     {
         return $this->model->all();
     }

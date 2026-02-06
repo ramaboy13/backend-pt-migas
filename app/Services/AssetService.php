@@ -52,4 +52,9 @@ class AssetService
     {
         return $this->repository->delete($id);
     }
+
+    public function getAllAssetsFullData(): array
+    {
+        return $this->repository->getAllAssetsFullData();
+    }
 }
