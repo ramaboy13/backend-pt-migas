@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\TabungController;
 use App\Http\Controllers\Api\TransaksiOperasionalController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -196,6 +197,15 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/cash', [SumberKasController::class, 'getCash']);
             Route::get('/active', [SumberKasController::class, 'getActiveSumberKas']);
             Route::get('/saldo-summary', [SumberKasController::class, 'getSaldoSummary']);
+        });
+    });
+
+    // Dashboard Routes
+    Route::prefix('dashboard')->group(function () {
+        Route::middleware(['role:admin|super_admin'])->group(function () {
+            Route::get('/', [DashboardController::class, 'index']);
+            Route::get('/summary', [DashboardController::class, 'summary']);
+            Route::get('/charts', [DashboardController::class, 'charts']);
         });
     });
 });
