@@ -44,11 +44,11 @@ class TransaksiOperasionalRepository
         }
 
         // filter multiple collumn
-        if(!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('no_ref', 'like', "%{$search}%")
-                ->orWhere('keterangan', 'like', "%{$search}%");
+                    ->orWhere('keterangan', 'like', "%{$search}%");
             });
         }
 
