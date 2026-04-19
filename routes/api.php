@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AssetController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GajiKaryawanController;
 use App\Http\Controllers\Api\KaryawanController;
 use App\Http\Controllers\Api\KasPerusahaanController;
@@ -13,7 +14,6 @@ use App\Http\Controllers\Api\TabungController;
 use App\Http\Controllers\Api\TransaksiOperasionalController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Api\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -140,6 +140,10 @@ Route::middleware(['auth:api'])->group(function () {
             Route::delete('/delete/{id}', [GajiKaryawanController::class, 'destroy']);
             Route::get('/karyawan/{karyawanId}', [GajiKaryawanController::class, 'getByKaryawan']);
             Route::post('/recalculate', [GajiKaryawanController::class, 'recalculate']);
+            Route::prefix('pdf')->group(function () {
+                Route::get('/report', [GajiKaryawanController::class, 'generatePdfReport']);
+                Route::get('/download-correct/{filename}', [GajiKaryawanController::class, 'downloadPdfCorrect']);
+            });
         });
     });
 
@@ -183,6 +187,10 @@ Route::middleware(['auth:api'])->group(function () {
             Route::put('/update/{id}', [KasPerusahaanController::class, 'update']);
             Route::delete('/delete/{id}', [KasPerusahaanController::class, 'destroy']);
             Route::get('/saldo-per-sumber-kas', [KasPerusahaanController::class, 'getSaldoPerSumberKas']);
+            Route::prefix('pdf')->group(function () {
+                Route::get('/report', [KasPerusahaanController::class, 'generatePdfReport']);
+                Route::get('/download-correct/{filename}', [KasPerusahaanController::class, 'downloadPdfKasPerusahaan']);
+            });
         });
     });
     Route::prefix('sumber-kas')->group(function () {

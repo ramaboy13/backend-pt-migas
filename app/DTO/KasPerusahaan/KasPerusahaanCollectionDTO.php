@@ -29,7 +29,7 @@ class KasPerusahaanCollectionDTO
     public function toArray(): array
     {
         return [
-            'data' => array_map(fn($item) => $item->toArray(), $this->items),
+            'data' => array_map(fn ($item) => $item->toArray(), $this->items),
             'meta' => $this->meta,
         ];
     }

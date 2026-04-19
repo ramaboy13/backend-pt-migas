@@ -8,6 +8,7 @@ use App\Models\SumberKas;
 use App\Repositories\KasPerusahaanRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class KasPerusahaanService
 {
@@ -36,6 +37,7 @@ class KasPerusahaanService
     public function createKasPerusahaan(array $data): KasPerusahaanDTO
     {
         return DB::transaction(function () use ($data) {
+            Log::info('createKasPerusahaan dipanggil dengan data: ', $data);
             $sumberKas = SumberKas::where('id', $data['sumber_kas_id'])
                 ->lockForUpdate()
                 ->firstOrFail();

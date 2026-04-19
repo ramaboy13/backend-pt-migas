@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\KasPerusahaanRequest;
 use App\Services\KasPerusahaanService;
+use App\Services\pdf\PdfServiceKasPerusahaan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class KasPerusahaanController extends Controller
 {
@@ -28,7 +30,8 @@ class KasPerusahaanController extends Controller
                 'meta' => $result->meta,
             ], 200);
         } catch (\Exception $e) {
-            // Log::error('Error retrieving kas perusahaan: '.$e->getMessage());
+            Log::error('Error retrieving kas perusahaan: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil data kas perusahaan',
@@ -156,4 +159,66 @@ class KasPerusahaanController extends Controller
         }
     }
 
+    public function generatePdfReport(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only(['start_date', 'end_date', 'tipe_transaksi']);
+
+            $pdfService = app(PdfServiceKasPerusahaan::class);
+            $pdfContent = $pdfService->generateLaporanKasPerusahaanPdf($filters);
+            $filename = $pdfService->generateFilename('laporan-kas-perusahaan');
+            $filepath = $pdfService->savePdfToStorage($pdfContent, $filename);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan PDF berhasil dibuat',
+                'data' => [
+                    'download_url' => Storage::url($filepath),
+                    'filepath' => $filepath,
+                    'filename' => $filename,
+                ],
+            ], 200);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error generating PDF report: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat laporan PDF',
+                'error' => $e->getMessage(),
+                'data' => null,
+            ], 500);
+        }
+    }
+
+    public function downloadPdfKasPerusahaan(string $filename)
+    {
+        try {
+            $filepath = 'pdf-reports-kas-perusahaan/'.$filename;
+
+            if (! Storage::exists($filepath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File PDF tidak ditemukan',
+                ], 404);
+            }
+
+            return Storage::download($filepath, $filename, [
+                'Content-Type' => Storage::mimeType($filepath),
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error downloading PDF: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mendownload file PDF',
+            ], 500);
+        }
+    }
 }

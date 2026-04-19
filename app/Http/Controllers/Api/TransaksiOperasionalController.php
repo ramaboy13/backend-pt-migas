@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TransaksiOperasionalRequest;
 use App\Services\pdf\PdfServiceTransaksiOperasional;
 use App\Services\TransaksiOperasionalService;
+use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -182,7 +183,7 @@ class TransaksiOperasionalController extends Controller
         try {
             $filters = $request->only([
                 'tanggal', 'start_date', 'end_date', 'pangkalan_id',
-                'tabung_id', 'is_in', 'no_ref', 'keterangan',
+                'tabung_id', 'is_in',
             ]);
 
             $pdfService = app(PdfServiceTransaksiOperasional::class);
@@ -268,33 +269,13 @@ class TransaksiOperasionalController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            // Log::error('Error downloading PDF: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mendownload: '.$e->getMessage(),
                 'data' => null,
             ], 500);
-        }
-    }
-
-    public function previewPdfCorrect(string $filename)
-    {
-        try {
-            $path = 'pdf-reports/'.$filename;
-
-            if (! Storage::exists($path)) {
-                abort(404, 'File tidak ditemukan');
-            }
-
-            $file = Storage::get($path);
-            $mimeType = Storage::mimeType($path);
-
-            return response($file, 200)
-                ->header('Content-Type', $mimeType)
-                ->header('Content-Disposition', 'inline; filename="'.$filename.'"')
-                ->header('Content-Length', Storage::size($path));
-
-        } catch (\Exception $e) {
-            abort(500, 'Gagal memuat file');
         }
     }
 }
