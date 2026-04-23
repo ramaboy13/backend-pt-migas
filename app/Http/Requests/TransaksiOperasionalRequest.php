@@ -60,7 +60,7 @@ class TransaksiOperasionalRequest extends FormRequest
             case 'MAINTENANCE':
                 // Maintenance: butuh jumlah (asset_id optional karena Anda buang)
                 $rules['jumlah'] = ['required', 'numeric', 'min:0.01'];
-                $rules['asset_id'] = ['nullable', 'string', 'exists:tb_assets,id']; // optional
+                $rules['asset_id'] = ['nullable', 'string', 'exists:tb_asset,id']; // optional
                 break;
 
             case 'LAINNYA':
