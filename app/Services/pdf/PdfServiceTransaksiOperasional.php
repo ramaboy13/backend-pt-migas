@@ -17,7 +17,7 @@ class PdfServiceTransaksiOperasional
      */
     public function generateLaporanTransaksiPdf(array $filters = []): string
     {
-        $transactions = $this->transaksiRepository->getAll($filters, 1000); // Get all without pagination
+        $transactions = $this->transaksiRepository->getAll($filters, 1000);
 
         $summary = [
             'total_debit' => $transactions->sum('debit'),

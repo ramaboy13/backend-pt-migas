@@ -9,6 +9,7 @@ use App\Services\TransaksiOperasionalService;
 use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Storage;
 
 class TransaksiOperasionalController extends Controller
@@ -92,7 +93,10 @@ class TransaksiOperasionalController extends Controller
                 'data' => null,
             ], 422);
         } catch (\Exception $e) {
+            FacadesLog::error('Error creating transaksi: '.$e->getMessage());
+
             return response()->json([
+                FacadesLog::error('Error creating transaksi: '.$e->getMessage()),
                 'success' => false,
                 'message' => 'Gagal membuat transaksi',
                 'data' => null,
