@@ -12,9 +12,6 @@ class GajiKaryawanDTO
 {
   public function __construct(
     public string $id,
-    public string $karyawan_id,
-    public string $pendapatan_id,
-    public string $potongan_id,
     public float $pph21,
     public string $periode,
     public float $subtotal,
@@ -37,9 +34,6 @@ class GajiKaryawanDTO
 
     return new self(
       id: $gajiKaryawan->id,
-      karyawan_id: $gajiKaryawan->karyawan_id,
-      pendapatan_id: $gajiKaryawan->pendapatan_id,
-      potongan_id: $gajiKaryawan->potongan_id,
       pph21: (float) $gajiKaryawan->pph21,
       periode: Carbon::parse($gajiKaryawan->periode)->format('Y-m-d'),
       subtotal: (float) $gajiKaryawan->subtotal,
@@ -59,9 +53,6 @@ class GajiKaryawanDTO
   {
     return [
       'id' => $this->id,
-      'karyawan_id' => $this->karyawan_id,
-      'pendapatan_id' => $this->pendapatan_id,
-      'potongan_id' => $this->potongan_id,
       'pph21' => $this->pph21,
       'periode' => $this->periode,
       'subtotal' => $this->subtotal,

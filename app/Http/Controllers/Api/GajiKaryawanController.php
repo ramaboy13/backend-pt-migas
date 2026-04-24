@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GajiKaryawanRequest;
 use App\Services\GajiKaryawanService;
+use App\Services\pdf\PdfServiceGajiKaryawan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class GajiKaryawanController extends Controller
 {
@@ -220,6 +223,63 @@ class GajiKaryawanController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghitung ulang data gaji',
+                'data' => null,
+            ], 500);
+        }
+    }
+
+    public function generatePdfReport(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_aktif']);
+            $pdfService = app(PdfServiceGajiKaryawan::class);
+            $pdfContent = $pdfService->generateSlipGajiPdf($filters);
+            $filename = $pdfService->generateFilename('slip-gaji-karyawan');
+            $filePath = $pdfService->savePdfToStorage($pdfContent, $filename);
+            Storage::disk('public')->put($filePath, $pdfContent);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan PDF gaji karyawan berhasil dibuat',
+                'data' => [
+                    'url' => Storage::url($filePath),
+                    'file_path' => $filePath,
+                    'filename' => $filename,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error generating PDF gaji karyawan report: '.$e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat laporan PDF gaji karyawan',
+                'data' => null,
+            ], 500);
+        }
+    }
+
+    public function downloadPdfGajiKaryawanReport(string $filename)
+    {
+        try {
+            $path = 'pdf-slip-gaji-karyawan/' . $filename;
+
+            //cek apakah file ada distorage
+            if (!Storage::disk('public')->exists($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File PDF tidak ditemukan',
+                    'data' => null,
+                ], 404);
+            }
+            
+            return Storage::download($path, $filename, [
+                'Content-Type' => Storage::mimeType($path),
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error downloading PDF gaji karyawan report: '.$e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengunduh laporan PDF gaji karyawan',
                 'data' => null,
             ], 500);
         }

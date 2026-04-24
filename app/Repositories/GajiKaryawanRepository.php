@@ -128,4 +128,38 @@ class GajiKaryawanRepository
             ->first()
             ->toArray();
     }
+    public function getAllForPdf(array $filters = [])
+{
+    $query = $this->gajiKaryawan->with(['karyawan', 'pendapatan', 'potongan']);
+
+    // Filter by periode tunggal
+    if (!empty($filters['periode'])) {
+        $query->where('periode', $filters['periode']);
+    }
+
+    // Filter by range periode
+    if (!empty($filters['start_periode']) && !empty($filters['end_periode'])) {
+        $query->whereBetween('periode', [$filters['start_periode'], $filters['end_periode']]);
+    }
+
+    // Filter by karyawan_id tertentu (opsional)
+    if (!empty($filters['karyawan_id'])) {
+        $query->where('karyawan_id', $filters['karyawan_id']);
+    }
+
+    // Search by nama karyawan
+    if (!empty($filters['search'])) {
+        $search = $filters['search'];
+        $query->whereHas('karyawan', function ($q) use ($search) {
+            $q->where('nama', 'like', "%{$search}%");
+        });
+    }
+
+    return $query
+    ->join('tb_karyawan', 'tb_karyawan.id', '=', 'tb_gaji_karyawan.karyawan_id')
+    ->orderBy('tb_gaji_karyawan.periode', 'desc')
+    ->orderBy('tb_karyawan.nama', 'asc')
+    ->select('tb_gaji_karyawan.*') // penting biar tidak bentrok kolom
+    ->get();
+}
 }

@@ -142,7 +142,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('/recalculate', [GajiKaryawanController::class, 'recalculate']);
             Route::prefix('pdf')->group(function () {
                 Route::get('/report', [GajiKaryawanController::class, 'generatePdfReport']);
-                Route::get('/download-correct/{filename}', [GajiKaryawanController::class, 'downloadPdfCorrect']);
+                Route::get('/download-correct/{filename}', [GajiKaryawanController::class, 'downloadPdfGajiKaryawanReport']);
             });
         });
     });
@@ -160,8 +160,6 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::get('/report', [TransaksiOperasionalController::class, 'generatePdfReport']);
                 Route::get('/pangkalan/{pangkalanId}', [TransaksiOperasionalController::class, 'generatePdfPangkalan']);
                 Route::get('/download-correct/{filename}', [TransaksiOperasionalController::class, 'downloadPdfCorrect']);
-                Route::get('/preview-correct/{filename}', [TransaksiOperasionalController::class, 'previewPdfCorrect']);
-                Route::get('/list', [TransaksiOperasionalController::class, 'listPdfFiles']);
             });
         });
     });
