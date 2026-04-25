@@ -17,14 +17,16 @@ class PdfServiceKasPerusahaan
      */
     public function generateLaporanKasPerusahaanPdf(array $filters = []): string
     {
-        $kasEntries = $this->kasPerusahaanRepository->getAllPaginated($filters, 1000);
+        $paginator = $this->kasPerusahaanRepository->getAllPaginated($filters, 1000);
+        $kasEntries = $paginator->getCollection();
+
+        $totalMasuk = $kasEntries->filter(fn ($i) => strtoupper($i->tipe_transaksi) === 'DEBIT')->sum('jumlah');
+        $totalKeluar = $kasEntries->filter(fn ($i) => strtoupper($i->tipe_transaksi) === 'KREDIT')->sum('jumlah');
 
         $summary = [
-            'total_masuk' => $kasEntries->where('tipe_transaksi', 'masuk')->sum('jumlah'),
-            'total_keluar' => $kasEntries->where('tipe_transaksi', 'keluar')->sum('jumlah'),
+            'total_masuk' => $totalMasuk,
+            'total_keluar' => $totalKeluar,
             'total_entries' => $kasEntries->count(),
-            'net_balance' => $kasEntries->where('tipe_transaksi', 'masuk')->sum('jumlah')
-                             - $kasEntries->where('tipe_transaksi', 'keluar')->sum('jumlah'),
         ];
 
         $data = [

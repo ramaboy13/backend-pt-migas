@@ -9,26 +9,19 @@ class TransaksiOperasionalRepository
 {
     public function __construct(private TransaksiOperasional $model) {}
 
-    public function getAll(array $filters = [], int $perPage = 10, bool $withRelations = true): LengthAwarePaginator
+    public function getAll(array $filters = [], int $perPage = 10)
     {
-        $query = $this->model->newQuery();
+        $query = $this->model->with(['pangkalan', 'tabung', 'asset']);
 
-        // Load relations if needed
-        if ($withRelations) {
-            $query->with(['pangkalan', 'tabung', 'asset', 'kasPerusahaan.sumberKas']);
+        if (! empty($filters['tanggal'])) {
+            $query->whereDate('tanggal', $filters['tanggal']);
         }
 
-        // Apply filters
         if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
-            $query->whereBetween('tanggal', [$filters['start_date'], $filters['end_date']]);
-        }
-
-        if (! empty($filters['jenis_transaksi'])) {
-            $query->where('jenis_transaksi', $filters['jenis_transaksi']);
-        }
-
-        if (isset($filters['is_pemasukan'])) {
-            $query->where('is_pemasukan', filter_var($filters['is_pemasukan'], FILTER_VALIDATE_BOOLEAN));
+            $query->whereBetween('tanggal', [
+                $filters['start_date'],
+                $filters['end_date'],
+            ]);
         }
 
         if (! empty($filters['pangkalan_id'])) {
@@ -39,24 +32,21 @@ class TransaksiOperasionalRepository
             $query->where('tabung_id', $filters['tabung_id']);
         }
 
-        if (! empty($filters['asset_id'])) {
-            $query->where('asset_id', $filters['asset_id']);
+        if (isset($filters['is_pemasukan']) && $filters['is_pemasukan'] !== '') {
+            $query->where('is_pemasukan', (bool) $filters['is_pemasukan']);
         }
 
-        // filter multiple collumn
         if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('no_ref', 'like', "%{$search}%")
-                    ->orWhere('keterangan', 'like', "%{$search}%");
+                $q->where('keterangan', 'like', "%{$search}%")
+                    ->orWhere('no_ref', 'like', "%{$search}%");
             });
         }
 
-        // Order by
-        $query->orderBy('tanggal', 'desc')
-            ->orderBy('created_at', 'desc');
-
-        return $query->paginate($perPage);
+        return $query->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 
     public function findById(string $id, bool $withRelations = true): ?TransaksiOperasional

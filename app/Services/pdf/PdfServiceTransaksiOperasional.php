@@ -17,13 +17,17 @@ class PdfServiceTransaksiOperasional
      */
     public function generateLaporanTransaksiPdf(array $filters = []): string
     {
-        $transactions = $this->transaksiRepository->getAll($filters, 1000);
+        $result = $this->transaksiRepository->getAll($filters, 1000);
+        $transactions = ($result instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            ? $result->getCollection()
+            : collect($result);
 
         $summary = [
-            'total_debit' => $transactions->sum('debit'),
-            'total_credit' => $transactions->sum('credit'),
             'total_transactions' => $transactions->count(),
-            'net_balance' => $transactions->sum('debit') - $transactions->sum('credit'),
+            'total_debit' => $transactions->where('is_pemasukan', true)->sum('jumlah'),
+            'total_credit' => $transactions->where('is_pemasukan', false)->sum('jumlah'),
+            'net_balance' => $transactions->where('is_pemasukan', true)->sum('jumlah')
+                            - $transactions->where('is_pemasukan', false)->sum('jumlah'),
         ];
 
         $data = [
@@ -34,7 +38,8 @@ class PdfServiceTransaksiOperasional
             'summary' => $summary,
         ];
 
-        $pdf = Pdf::loadView('pdf.transaksi-laporan', $data);
+        $pdf = Pdf::loadView('pdf.transaksi-laporan', $data)
+            ->setPaper('a4', 'landscape');
 
         return $pdf->output();
     }

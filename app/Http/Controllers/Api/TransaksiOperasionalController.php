@@ -186,15 +186,19 @@ class TransaksiOperasionalController extends Controller
     {
         try {
             $filters = $request->only([
-                'tanggal', 'start_date', 'end_date', 'pangkalan_id',
-                'tabung_id', 'is_in',
+                'tanggal',
+                'start_date',
+                'end_date',
+                'pangkalan_id',
+                'tabung_id',
+                'is_pemasukan',
             ]);
+
+            $filters = array_filter($filters, fn ($v) => $v !== null && $v !== '');
 
             $pdfService = app(PdfServiceTransaksiOperasional::class);
             $pdfContent = $pdfService->generateLaporanTransaksiPdf($filters);
             $filename = $pdfService->generateFilename('laporan_transaksi');
-
-            // Simpan ke storage
             $filePath = $pdfService->savePdfToStorage($pdfContent, $filename);
 
             return response()->json([
@@ -206,10 +210,13 @@ class TransaksiOperasionalController extends Controller
                     'filename' => $filename,
                 ],
             ], 200);
+
         } catch (\Exception $e) {
+            FacadesLog::error('Error generating PDF transaksi: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal membuat laporan PDF',
+                'message' => 'Gagal membuat laporan PDF: '.$e->getMessage(),
                 'data' => null,
             ], 500);
         }
