@@ -1,13 +1,12 @@
 <?php
-// app/Services/DashboardService.php
 
 namespace App\Services;
 
-use App\Repositories\DashboardRepository;
+use App\DTO\Dashboard\DashboardChartDTO;
 use App\DTO\Dashboard\DashboardDTO;
 use App\DTO\Dashboard\DashboardSummaryDTO;
-use App\DTO\Dashboard\DashboardChartDTO;
 use App\DTO\Dashboard\RecentActivityDTO;
+use App\Repositories\DashboardRepository;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardService
@@ -33,14 +32,14 @@ class DashboardService
         // Calculate net cashflow
         $summaryData['netCashflow'] = $summaryData['totalPemasukanBulanIni'] - $summaryData['totalPengeluaranBulanIni'];
 
-        // Add super admin specific data 
+        // Add super admin specific data
         $userRoleData = null;
         if ($isSuperAdmin) {
             $summaryData['totalUsers'] = $this->repository->getTotalUsers();
             $summaryData['newUsersThisMonth'] = $this->repository->getNewUsersThisMonth();
-            
+
             $userRoleData = [
-                'stats_by_role' => $this->repository->getUserStatsByRole()
+                'stats_by_role' => $this->repository->getUserStatsByRole(),
             ];
         }
 
@@ -84,7 +83,7 @@ class DashboardService
             'total_pengeluaran_bulan_ini' => $this->repository->getTotalPengeluaranBulanIni(),
             'net_cashflow' => $this->repository->getTotalPemasukanBulanIni() - $this->repository->getTotalPengeluaranBulanIni(),
             'total_karyawan' => $this->repository->getTotalKaryawan(),
-            'total_asset' => $this->repository->getTotalAsset()
+            'total_asset' => $this->repository->getTotalAsset(),
         ];
 
         if ($isSuperAdmin) {
@@ -103,7 +102,7 @@ class DashboardService
         return [
             'daily_transactions' => $this->repository->getDailyTransactions(7),
             'transaction_by_type' => $this->repository->getTransactionByType(),
-            'saldo_per_sumber_kas' => $this->repository->getSaldoPerSumberKas()
+            'saldo_per_sumber_kas' => $this->repository->getSaldoPerSumberKas(),
         ];
     }
 }

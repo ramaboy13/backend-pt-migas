@@ -1,16 +1,14 @@
 <?php
-// app/Services/AuthService.php
 
 namespace App\Services;
 
-use App\Models\User;
-use App\Models\RefreshToken;
 use App\Exceptions\AuthenticationException;
-use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Models\RefreshToken;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthService
 {
@@ -18,13 +16,13 @@ class AuthService
     {
         $credentials = ['email' => $email, 'password' => $password];
 
-        if (!$token = JWTAuth::attempt($credentials)) {
+        if (! $token = JWTAuth::attempt($credentials)) {
             throw new AuthenticationException('Invalid credentials');
         }
 
         $user = Auth::user();
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             throw new AuthenticationException('Account is deactivated');
         }
 
@@ -72,7 +70,7 @@ class AuthService
             // Ambil refresh token dari request
             $refreshToken = request()->input('refresh_token');
 
-            if (!$refreshToken) {
+            if (! $refreshToken) {
                 throw new AuthenticationException('Refresh token is required');
             }
 
@@ -82,13 +80,13 @@ class AuthService
                 ->where('is_revoked', false)
                 ->first();
 
-            if (!$storedToken) {
+            if (! $storedToken) {
                 throw new AuthenticationException('Invalid or expired refresh token');
             }
 
             $user = User::find($storedToken->user_id);
 
-            if (!$user || !$user->is_active) {
+            if (! $user || ! $user->is_active) {
                 throw new AuthenticationException('User not found or inactive');
             }
 
@@ -115,7 +113,7 @@ class AuthService
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             throw new AuthenticationException('User not found');
         }
 
@@ -142,13 +140,13 @@ class AuthService
             'user_id' => $userId,
             'token' => $refreshToken,
             'expires_at' => now()->addDays(14),
-            'is_revoked' => false
+            'is_revoked' => false,
         ]);
 
         return $refreshToken;
     }
 
-    protected function respondWithToken(string $token, string $refreshToken = null): array
+    protected function respondWithToken(string $token, ?string $refreshToken = null): array
     {
         $user = Auth::user();
         $userWithRoles = User::with('roles')->find($user->id);
@@ -163,7 +161,7 @@ class AuthService
                 'name' => $userWithRoles->name,
                 'email' => $userWithRoles->email,
                 'roles' => $userWithRoles->getRoleNames(),
-            ]
+            ],
         ];
 
         return $response;

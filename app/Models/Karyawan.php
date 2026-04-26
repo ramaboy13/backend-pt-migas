@@ -36,19 +36,41 @@ class Karyawan extends Model
         'aktif' => 'boolean',
     ];
 
-    public function lemburKaryawans()
+    public function komponenGaji()
     {
-        return $this->hasMany(LemburKaryawan::class, 'karyawan_id');
+        return $this->hasMany(KomponenGaji::class, 'karyawan_id');
     }
 
-    public function pendapatans()
+    // Relationship khusus lembur
+    public function lembur()
     {
-        return $this->hasMany(Pendapatan::class, 'karyawan_id');
+        return $this->hasMany(KomponenGaji::class, 'karyawan_id')->where('tipe', 'LEMBUR');
     }
 
-    public function potongans()
+    // Relationship khusus tunjangan
+    public function tunjangan()
     {
-        return $this->hasMany(Potongan::class, 'karyawan_id');
+        return $this->hasMany(KomponenGaji::class, 'karyawan_id')->where('tipe', 'TUNJANGAN');
+    }
+
+    // Method untuk mendapatkan total lembur per bulan
+    public function getTotalLemburPerBulan(int $bulan, int $tahun): float
+    {
+        return $this->komponenGaji()
+            ->where('tipe', 'LEMBUR')
+            ->whereYear('tanggal', $tahun)
+            ->whereMonth('tanggal', $bulan)
+            ->sum('nominal');
+    }
+
+    // Method untuk mendapatkan total tunjangan per bulan
+    public function getTotalTunjanganPerBulan(int $bulan, int $tahun): float
+    {
+        return $this->komponenGaji()
+            ->where('tipe', 'TUNJANGAN')
+            ->whereYear('tanggal', $tahun)
+            ->whereMonth('tanggal', $bulan)
+            ->sum('nominal');
     }
 
     public function gajiKaryawans()

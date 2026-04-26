@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Repositories\KomponenGajiRepository;
+use App\Services\KomponenGajiService;
+use App\Services\PayrollCalculationService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +14,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(KomponenGajiService::class, function ($app) {
+            return new KomponenGajiService(
+                $app->make(KomponenGajiRepository::class),
+                $app->make(PayrollCalculationService::class)
+            );
+        });
     }
 
     /**

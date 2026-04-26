@@ -8,34 +8,35 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('tb_lembur_karyawan', function (Blueprint $table) {
+        Schema::create('tb_komponen_gaji', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->date('tanggal');
-            $table->string('hari');
+            $table->enum('tipe', ['LEMBUR', 'TUNJANGAN']);
             $table->uuid('karyawan_id');
-            $table->decimal('jam_lembur', 5, 2)->default(0);
-            $table->decimal('total_jam_lembur', 5, 2)->default(0);
-            $table->decimal('upah_lembur_perjam', 15, 2);
-            //   ->storedAs('(SELECT gapok FROM tb_karyawan WHERE id = karyawan_id) / 173');   INI TIDAK SUPPORT DI MYSQL JADI RUMUS DITARUH DI PayrollCalculationService.php
-            $table->decimal('rupiah_lembur', 15, 2);
+            $table->date('tanggal');
+            $table->decimal('jam_lembur', 5, 2)->nullable();
+            $table->decimal('total_jam_lembur', 5, 2)->nullable();
+            $table->decimal('upah_perjam', 15, 2)->nullable();
+            $table->decimal('nominal', 15, 2)->default(0);
             $table->string('keterangan')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
-            // Foreign key
             $table->foreign('karyawan_id')
                 ->references('id')
                 ->on('tb_karyawan')
                 ->onDelete('cascade');
 
             // Indexes
+            $table->index('tipe');
             $table->index('tanggal');
             $table->index('karyawan_id');
             $table->index(['karyawan_id', 'tanggal']);
+            $table->index(['karyawan_id', 'tipe']);
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('tb_lembur_karyawan');
+        Schema::dropIfExists('tb_komponen_gaji');
     }
 };

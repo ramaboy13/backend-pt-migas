@@ -2,133 +2,228 @@
 
 namespace App\Services;
 
-use App\Repositories\GajiKaryawanRepository;
-use App\Services\PayrollCalculationService;
-use Illuminate\Pagination\LengthAwarePaginator;
-use App\DTO\GajiKaryawan\GajiKaryawanDTO;
 use App\DTO\GajiKaryawan\GajiKaryawanCollectionDTO;
+use App\DTO\GajiKaryawan\GajiKaryawanDTO;
+use App\Repositories\GajiKaryawanRepository;
+use Illuminate\Support\Facades\DB;
 
 class GajiKaryawanService
 {
-  public function __construct(
-    private GajiKaryawanRepository $repository,
-    private PayrollCalculationService $payrollService
-  ) {}
+    public function __construct(
+        private GajiKaryawanRepository $repository,
+        private PayrollCalculationService $payrollService
+    ) {}
 
-  public function getAllGaji(array $filters = []): GajiKaryawanCollectionDTO
-  {
-    $gajiKaryawans = $this->repository->getAll($filters);
-    return GajiKaryawanCollectionDTO::fromPaginator($gajiKaryawans);
-  }
+    public function getAllGaji(array $filters = [], int $perPage = 10, bool $withRelations = true): GajiKaryawanCollectionDTO
+    {
+        $gajiList = $this->repository->getAll($filters, $perPage, $withRelations);
 
-  public function getGajiById(string $id): ?GajiKaryawanDTO
-  {
-    $gajiKaryawan = $this->repository->findById($id);
-
-    if (!$gajiKaryawan) {
-      return null;
+        return GajiKaryawanCollectionDTO::fromPaginator($gajiList, $withRelations);
     }
 
-    return GajiKaryawanDTO::fromModel($gajiKaryawan);
-  }
+    public function getGajiById(string $id, bool $withRelations = true): ?GajiKaryawanDTO
+    {
+        $gaji = $this->repository->findById($id, $withRelations);
 
-  public function createGaji(array $data): GajiKaryawanDTO
-  {
-    // Cek apakah sudah ada gaji untuk karyawan di periode yang sama
-    $existing = $this->repository->findByKaryawanAndPeriode($data['karyawan_id'], $data['periode']);
-    if ($existing) {
-      throw new \InvalidArgumentException('Gaji untuk karyawan pada periode ini sudah ada');
-    }
-
-    // Process calculation dengan rumus gaji
-    $processedData = $this->payrollService->processGajiKaryawanCalculation($data);
-
-    $gajiKaryawan = $this->repository->create($processedData);
-    return GajiKaryawanDTO::fromModel($gajiKaryawan);
-  }
-
-  public function updateGaji(string $id, array $data): ?GajiKaryawanDTO
-  {
-    $existing = $this->repository->findById($id);
-    if (!$existing) {
-      return null;
-    }
-
-    // Jika ada perubahan yang mempengaruhi perhitungan
-    $needsRecalculation = isset($data['pendapatan_id']) ||
-      isset($data['potongan_id']) ||
-      isset($data['pph21']);
-
-    if ($needsRecalculation) {
-      $pendapatanId = $data['pendapatan_id'] ?? $existing->pendapatan_id;
-      $potonganId = $data['potongan_id'] ?? $existing->potongan_id;
-      $pph21 = $data['pph21'] ?? $existing->pph21;
-
-      // Cek unique constraint untuk update
-      if (isset($data['karyawan_id']) || isset($data['periode'])) {
-        $karyawanId = $data['karyawan_id'] ?? $existing->karyawan_id;
-        $periode = $data['periode'] ?? $existing->periode;
-
-        $duplicate = $this->repository->findByKaryawanAndPeriode($karyawanId, $periode);
-        if ($duplicate && $duplicate->id !== $id) {
-          throw new \InvalidArgumentException('Gaji untuk karyawan pada periode ini sudah ada');
+        if (! $gaji) {
+            return null;
         }
-      }
 
-      $calculation = $this->payrollService->calculateGajiKaryawan($pendapatanId, $potonganId, $pph21);
-      $data = array_merge($data, [
-        'subtotal' => $calculation['subtotal'],
-        'gaji_bersih' => $calculation['gaji_bersih']
-      ]);
+        return GajiKaryawanDTO::fromModel($gaji, $withRelations);
     }
 
-    $updated = $this->repository->update($id, $data);
+    public function createGaji(array $data): GajiKaryawanDTO
+    {
+        return DB::transaction(function () use ($data) {
+            // Cek apakah sudah ada gaji untuk karyawan di periode yang sama
+            $existing = $this->repository->findByKaryawanAndPeriode(
+                $data['karyawan_id'],
+                $data['bulan'],
+                $data['tahun']
+            );
 
-    if (!$updated) {
-      return null;
+            if ($existing) {
+                throw new \InvalidArgumentException('Gaji untuk karyawan pada periode ini sudah ada');
+            }
+
+            // Process calculation dengan PayrollCalculationService
+            $calculation = $this->payrollService->processGajiKaryawanCalculation(
+                $data['karyawan_id'],
+                $data['bulan'],
+                $data['tahun'],
+                $data['potongan_lainnya'] ?? 0,
+                $data['pph21'] ?? 0
+            );
+
+            // Merge data
+            $processedData = array_merge($data, $calculation);
+            $processedData['tanggal_gaji'] = $data['tanggal_gaji'] ?? now();
+
+            // Create gaji karyawan
+            $gaji = $this->repository->create($processedData);
+
+            return GajiKaryawanDTO::fromModel($gaji, true);
+        });
     }
 
-    $gajiKaryawan = $this->repository->findById($id);
-    return GajiKaryawanDTO::fromModel($gajiKaryawan);
-  }
+    public function updateGaji(string $id, array $data): ?GajiKaryawanDTO
+    {
+        return DB::transaction(function () use ($id, $data) {
+            $existing = $this->repository->findById($id, false);
 
-  public function deleteGaji(string $id): bool
-  {
-    return $this->repository->delete($id);
-  }
+            if (! $existing) {
+                return null;
+            }
 
-  public function getGajiByKaryawan(string $karyawanId, array $filters = []): GajiKaryawanCollectionDTO
-  {
-    $gajiKaryawans = $this->repository->getByKaryawanId($karyawanId, $filters);
-    return GajiKaryawanCollectionDTO::fromPaginator($gajiKaryawans);
-  }
+            // Cek unique constraint jika ada perubahan karyawan atau periode
+            if ((isset($data['karyawan_id']) && $data['karyawan_id'] !== $existing->karyawan_id) ||
+                (isset($data['bulan']) && $data['bulan'] !== $existing->bulan) ||
+                (isset($data['tahun']) && $data['tahun'] !== $existing->tahun)) {
 
-  public function getSummaryByPeriode(string $periode): array
-  {
-    return $this->repository->getSummaryByPeriode($periode);
-  }
+                $karyawanId = $data['karyawan_id'] ?? $existing->karyawan_id;
+                $bulan = $data['bulan'] ?? $existing->bulan;
+                $tahun = $data['tahun'] ?? $existing->tahun;
 
-  /**
-   * Recalculate gaji when periode changes
-   */
-  public function recalculateGaji(string $periode): void
-  {
-    $this->payrollService->recalculateGajiByPeriode($periode);
-  }
+                $duplicate = $this->repository->findByKaryawanAndPeriode($karyawanId, $bulan, $tahun);
+                if ($duplicate && $duplicate->id !== $id) {
+                    throw new \InvalidArgumentException('Gaji untuk karyawan pada periode ini sudah ada');
+                }
+            }
 
-  /**
-   * Recalculate gaji when pendapatan changes
-   */
-  public function recalculateGajiByPendapatan(string $pendapatanId): void
-  {
-    $this->payrollService->recalculateGajiByPendapatan($pendapatanId);
-  }
+            // Jika ada perubahan yang mempengaruhi perhitungan
+            $needsRecalculation = isset($data['potongan_lainnya']) ||
+                                  isset($data['pph21']) ||
+                                  isset($data['karyawan_id']) ||
+                                  isset($data['bulan']) ||
+                                  isset($data['tahun']);
 
-  /**
-   * Recalculate gaji when potongan changes
-   */
-  public function recalculateGajiByPotongan(string $potonganId): void
-  {
-    $this->payrollService->recalculateGajiByPotongan($potonganId);
-  }
+            if ($needsRecalculation) {
+                $karyawanId = $data['karyawan_id'] ?? $existing->karyawan_id;
+                $bulan = $data['bulan'] ?? $existing->bulan;
+                $tahun = $data['tahun'] ?? $existing->tahun;
+                $potonganLainnya = $data['potongan_lainnya'] ?? $existing->potongan_lainnya;
+                $pph21 = $data['pph21'] ?? $existing->pph21;
+
+                $calculation = $this->payrollService->processGajiKaryawanCalculation(
+                    $karyawanId,
+                    $bulan,
+                    $tahun,
+                    $potonganLainnya,
+                    $pph21
+                );
+
+                $data = array_merge($data, $calculation);
+            }
+
+            $updated = $this->repository->update($id, $data);
+
+            if (! $updated) {
+                return null;
+            }
+
+            return $this->getGajiById($id);
+        });
+    }
+
+    public function deleteGaji(string $id): bool
+    {
+        return DB::transaction(function () use ($id) {
+            return $this->repository->delete($id);
+        });
+    }
+
+    public function getGajiByKaryawan(string $karyawanId, array $filters = []): GajiKaryawanCollectionDTO
+    {
+        $gajiList = $this->repository->getByKaryawanId($karyawanId, $filters);
+
+        return GajiKaryawanCollectionDTO::fromPaginator($gajiList, true);
+    }
+
+    public function getSummaryByPeriode(int $bulan, int $tahun): array
+    {
+        return $this->repository->getSummaryByPeriode($bulan, $tahun);
+    }
+
+    /**
+     * Generate gaji untuk semua karyawan aktif di periode tertentu
+     */
+    public function generateGajiForAllKaryawan(int $bulan, int $tahun, float $potonganLainnya = 0, float $pph21 = 0): array
+    {
+        return DB::transaction(function () use ($bulan, $tahun, $potonganLainnya, $pph21) {
+            $karyawanList = \App\Models\Karyawan::where('is_active', true)->get();
+
+            $results = [];
+            $successCount = 0;
+            $failedCount = 0;
+            $errors = [];
+
+            foreach ($karyawanList as $karyawan) {
+                try {
+                    // Cek apakah sudah ada
+                    $existing = $this->repository->findByKaryawanAndPeriode($karyawan->id, $bulan, $tahun);
+
+                    if ($existing) {
+                        // Update existing
+                        $calculation = $this->payrollService->processGajiKaryawanCalculation(
+                            $karyawan->id,
+                            $bulan,
+                            $tahun,
+                            $potonganLainnya,
+                            $pph21
+                        );
+
+                        $existing->update($calculation);
+                        $results[] = ['karyawan' => $karyawan->nama, 'status' => 'updated'];
+                        $successCount++;
+                    } else {
+                        // Create new
+                        $calculation = $this->payrollService->processGajiKaryawanCalculation(
+                            $karyawan->id,
+                            $bulan,
+                            $tahun,
+                            $potonganLainnya,
+                            $pph21
+                        );
+
+                        $calculation['tanggal_gaji'] = now();
+                        $calculation['status'] = 'PROCESSED';
+                        $calculation['processed_at'] = now();
+
+                        $this->repository->create($calculation);
+                        $results[] = ['karyawan' => $karyawan->nama, 'status' => 'created'];
+                        $successCount++;
+                    }
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    $errors[] = ['karyawan' => $karyawan->nama, 'error' => $e->getMessage()];
+                }
+            }
+
+            return [
+                'success' => true,
+                'total_karyawan' => $karyawanList->count(),
+                'success_count' => $successCount,
+                'failed_count' => $failedCount,
+                'results' => $results,
+                'errors' => $errors,
+            ];
+        });
+    }
+
+    /**
+     * Update status gaji
+     */
+    public function updateStatus(string $id, string $status): ?GajiKaryawanDTO
+    {
+        $updated = $this->repository->update($id, [
+            'status' => $status,
+            'processed_at' => now(),
+        ]);
+
+        if (! $updated) {
+            return null;
+        }
+
+        return $this->getGajiById($id);
+    }
 }

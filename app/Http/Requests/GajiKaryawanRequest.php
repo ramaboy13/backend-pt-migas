@@ -1,74 +1,77 @@
 <?php
 
+// app/Http/Requests/GajiKaryawanRequest.php
+
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class GajiKaryawanRequest extends FormRequest
 {
-  public function authorize(): bool
-  {
-    return true;
-  }
-
-  public function rules(): array
-  {
-    $isCreate = $this->isMethod('POST');
-
-    $rules = [
-      'karyawan_id' => [$isCreate ? 'required' : 'sometimes', 'string', 'exists:tb_karyawan,id'],
-      'pendapatan_id' => [$isCreate ? 'required' : 'sometimes', 'string', 'exists:tb_pendapatan,id'],
-      'potongan_id' => [$isCreate ? 'required' : 'sometimes', 'string', 'exists:tb_potongan,id'],
-      'pph21' => ['sometimes', 'numeric', 'min:0'],
-      'periode' => [$isCreate ? 'required' : 'sometimes', 'date', 'date_format:Y-m-d']
-    ];
-
-    // Untuk create, tambahkan unique constraint
-    if ($isCreate) {
-      $rules['periode'][] = 'unique:tb_gaji_karyawan,periode,NULL,id,karyawan_id,' . $this->karyawan_id;
-    } else {
-      // Untuk update, ignore current record
-      $gajiId = $this->route('id');
-      $rules['periode'] = [
-        'sometimes',
-        'date',
-        'date_format:Y-m-d',
-        'unique:tb_gaji_karyawan,periode,' . $gajiId . ',id,karyawan_id,' . $this->karyawan_id
-      ];
+    public function authorize(): bool
+    {
+        return true;
     }
 
-    return $rules;
-  }
+    public function rules(): array
+    {
+        $isCreate = $this->isMethod('POST');
 
-  public function messages(): array
-  {
-    return [
-      'karyawan_id.required' => 'Karyawan harus dipilih',
-      'karyawan_id.exists' => 'Karyawan tidak ditemukan',
-      'pendapatan_id.required' => 'Data pendapatan harus dipilih',
-      'pendapatan_id.exists' => 'Data pendapatan tidak ditemukan',
-      'potongan_id.required' => 'Data potongan harus dipilih',
-      'potongan_id.exists' => 'Data potongan tidak ditemukan',
-      'pph21.numeric' => 'PPH21 harus berupa angka',
-      'pph21.min' => 'PPH21 tidak boleh negatif',
-      'periode.required' => 'Periode harus diisi',
-      'periode.date' => 'Format periode tidak valid',
-      'periode.date_format' => 'Format periode harus YYYY-MM-DD',
-      'periode.unique' => 'Gaji untuk karyawan pada periode ini sudah ada'
-    ];
-  }
+        return [
+            'karyawan_id' => [$isCreate ? 'required' : 'sometimes', 'string', 'exists:tb_karyawan,id'],
+            'bulan' => [$isCreate ? 'required' : 'sometimes', 'integer', 'min:1', 'max:12'],
+            'tahun' => [$isCreate ? 'required' : 'sometimes', 'integer', 'min:2020', 'max:2030'],
+            'tanggal_gaji' => ['nullable', 'date'],
+            'potongan_lainnya' => ['nullable', 'numeric', 'min:0'],
+            'pph21' => ['nullable', 'numeric', 'min:0'],
+            'status' => ['nullable', Rule::in(['DRAFT', 'PROCESSED', 'PAID', 'APPROVED'])],
+        ];
+    }
 
-  protected function failedValidation(Validator $validator)
-  {
-    throw new HttpResponseException(
-      response()->json([
-        'success' => false,
-        'message' => 'Validasi gagal',
-        'data' => null,
-        'errors' => $validator->errors()
-      ], 422)
-    );
-  }
+    public function messages(): array
+    {
+        return [
+            'karyawan_id.required' => 'Karyawan wajib dipilih',
+            'karyawan_id.exists' => 'Data karyawan tidak ditemukan',
+            'bulan.required' => 'Bulan wajib diisi',
+            'bulan.integer' => 'Bulan harus berupa angka',
+            'bulan.min' => 'Bulan minimal 1',
+            'bulan.max' => 'Bulan maksimal 12',
+            'tahun.required' => 'Tahun wajib diisi',
+            'tahun.integer' => 'Tahun harus berupa angka',
+            'tahun.min' => 'Tahun minimal 2020',
+            'tahun.max' => 'Tahun maksimal 2030',
+            'tanggal_gaji.date' => 'Format tanggal gaji tidak valid',
+            'potongan_lainnya.numeric' => 'Potongan lainnya harus berupa angka',
+            'potongan_lainnya.min' => 'Potongan lainnya tidak boleh negatif',
+            'pph21.numeric' => 'PPH21 harus berupa angka',
+            'pph21.min' => 'PPH21 tidak boleh negatif',
+            'status.in' => 'Status tidak valid',
+        ];
+    }
+
+    protected function prepareForValidation()
+    {
+        // Set default nilai jika tidak diisi
+        $this->merge([
+            'potongan_lainnya' => $this->input('potongan_lainnya', 0),
+            'pph21' => $this->input('pph21', 0),
+            'status' => $this->input('status', 'DRAFT'),
+        ]);
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'data' => null,
+                'errors' => $validator->errors(),
+            ], 422)
+        );
+    }
 }

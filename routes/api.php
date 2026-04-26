@@ -1,14 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\AssetController;
-use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GajiKaryawanController;
 use App\Http\Controllers\Api\KaryawanController;
 use App\Http\Controllers\Api\KasPerusahaanController;
-use App\Http\Controllers\Api\LemburKaryawanController;
+use App\Http\Controllers\Api\KomponenGajiController;
 use App\Http\Controllers\Api\PangkalanController;
-use App\Http\Controllers\Api\PendapatanController;
-use App\Http\Controllers\Api\PotonganController;
 use App\Http\Controllers\Api\SumberKasController;
 use App\Http\Controllers\Api\TabungController;
 use App\Http\Controllers\Api\TransaksiOperasionalController;
@@ -92,41 +89,15 @@ Route::middleware(['auth:api'])->group(function () {
         });
     });
 
-    // Routes Lembur Karyawan
-    Route::prefix('lembur-karyawan')->group(function () {
+    // Komponen Gaji Routes
+    Route::prefix('komponen-gaji')->group(function () {
         Route::middleware(['role:admin|super_admin'])->group(function () {
-            Route::get('/', [LemburKaryawanController::class, 'index']);
-            Route::post('/create', [LemburKaryawanController::class, 'store']);
-            Route::get('/show/{id}', [LemburKaryawanController::class, 'show']);
-            Route::put('/update/{id}', [LemburKaryawanController::class, 'update']);
-            Route::delete('/delete/{id}', [LemburKaryawanController::class, 'destroy']);
-            Route::get('/karyawan/{karyawanId}', [LemburKaryawanController::class, 'getByKaryawan']);
-        });
-    });
-
-    // Routes Pendapatan
-    Route::prefix('pendapatan')->group(function () {
-        Route::middleware(['role:admin|super_admin'])->group(function () {
-            Route::get('/', [PendapatanController::class, 'index']);
-            Route::post('/create', [PendapatanController::class, 'store']);
-            Route::get('/show/{id}', [PendapatanController::class, 'show']);
-            Route::put('/update/{id}', [PendapatanController::class, 'update']);
-            Route::delete('/delete/{id}', [PendapatanController::class, 'destroy']);
-            Route::get('/karyawan/{karyawanId}', [PendapatanController::class, 'getByKaryawan']);
-            Route::post('/recalculate', [PendapatanController::class, 'recalculate']);
-        });
-    });
-
-    // Potongan Routes
-    Route::prefix('potongan')->group(function () {
-        Route::middleware(['role:admin|super_admin'])->group(function () {
-            Route::get('/', [PotonganController::class, 'index']);
-            Route::post('/create', [PotonganController::class, 'store']);
-            Route::get('/show/{id}', [PotonganController::class, 'show']);
-            Route::put('/update/{id}', [PotonganController::class, 'update']);
-            Route::delete('/delete/{id}', [PotonganController::class, 'destroy']);
-            Route::get('/karyawan/{karyawanId}', [PotonganController::class, 'getByKaryawan']);
-            Route::post('/recalculate', [PotonganController::class, 'recalculate']);
+            Route::get('/', [KomponenGajiController::class, 'index']);
+            Route::post('/create', [KomponenGajiController::class, 'store']);
+            Route::get('/show/{id}', [KomponenGajiController::class, 'show']);
+            Route::put('/update/{id}', [KomponenGajiController::class, 'update']);
+            Route::delete('/delete/{id}', [KomponenGajiController::class, 'destroy']);
+            Route::get('/karyawan/{karyawanId}', [KomponenGajiController::class, 'getByKaryawan']);
         });
     });
 
@@ -140,10 +111,6 @@ Route::middleware(['auth:api'])->group(function () {
             Route::delete('/delete/{id}', [GajiKaryawanController::class, 'destroy']);
             Route::get('/karyawan/{karyawanId}', [GajiKaryawanController::class, 'getByKaryawan']);
             Route::post('/recalculate', [GajiKaryawanController::class, 'recalculate']);
-            Route::prefix('pdf')->group(function () {
-                Route::get('/report', [GajiKaryawanController::class, 'generatePdfReport']);
-                Route::get('/download-correct/{filename}', [GajiKaryawanController::class, 'downloadPdfGajiKaryawanReport']);
-            });
         });
     });
 
@@ -160,6 +127,8 @@ Route::middleware(['auth:api'])->group(function () {
                 Route::get('/report', [TransaksiOperasionalController::class, 'generatePdfReport']);
                 Route::get('/pangkalan/{pangkalanId}', [TransaksiOperasionalController::class, 'generatePdfPangkalan']);
                 Route::get('/download-correct/{filename}', [TransaksiOperasionalController::class, 'downloadPdfCorrect']);
+                Route::get('/preview-correct/{filename}', [TransaksiOperasionalController::class, 'previewPdfCorrect']);
+                Route::get('/list', [TransaksiOperasionalController::class, 'listPdfFiles']);
             });
         });
     });
@@ -185,10 +154,6 @@ Route::middleware(['auth:api'])->group(function () {
             Route::put('/update/{id}', [KasPerusahaanController::class, 'update']);
             Route::delete('/delete/{id}', [KasPerusahaanController::class, 'destroy']);
             Route::get('/saldo-per-sumber-kas', [KasPerusahaanController::class, 'getSaldoPerSumberKas']);
-            Route::prefix('pdf')->group(function () {
-                Route::get('/report', [KasPerusahaanController::class, 'generatePdfReport']);
-                Route::get('/download-correct/{filename}', [KasPerusahaanController::class, 'downloadPdfKasPerusahaan']);
-            });
         });
     });
     Route::prefix('sumber-kas')->group(function () {
@@ -203,15 +168,6 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/cash', [SumberKasController::class, 'getCash']);
             Route::get('/active', [SumberKasController::class, 'getActiveSumberKas']);
             Route::get('/saldo-summary', [SumberKasController::class, 'getSaldoSummary']);
-        });
-    });
-
-    // Dashboard Routes
-    Route::prefix('dashboard')->group(function () {
-        Route::middleware(['role:admin|super_admin'])->group(function () {
-            Route::get('/', [DashboardController::class, 'index']);
-            Route::get('/summary', [DashboardController::class, 'summary']);
-            Route::get('/charts', [DashboardController::class, 'charts']);
         });
     });
 });

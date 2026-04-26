@@ -19,17 +19,33 @@ class GajiKaryawanController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_aktif', 'search']);
+            $withRelations = $request->boolean('with_relations', true);
 
-            $result = $this->service->getAllGaji($filters, $perPage);
+            $filters = $request->only([
+                'status', 'karyawan_aktif', 'search', 'start_date', 'end_date',
+            ]);
+
+            // Ubah format periode jika ada
+            if ($request->has('periode')) {
+                $periode = explode('-', $request->periode);
+                if (count($periode) == 2) {
+                    $filters['bulan'] = (int) $periode[1];
+                    $filters['tahun'] = (int) $periode[0];
+                }
+            }
+
+            $result = $this->service->getAllGaji($filters, $perPage, $withRelations);
             $responseData = $result->toArray();
 
             return response()->json([
                 'success' => true,
+                'message' => 'Data gaji karyawan berhasil diambil',
                 'data' => $responseData['data'],
                 'meta' => $responseData['meta'],
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error retrieving gaji karyawan: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil data gaji karyawan',
@@ -41,9 +57,10 @@ class GajiKaryawanController extends Controller
     public function show(string $id): JsonResponse
     {
         try {
-            $gajiKaryawan = $this->service->getGajiById($id);
+            $withRelations = request()->boolean('with_relations', true);
+            $gaji = $this->service->getGajiById($id, $withRelations);
 
-            if (! $gajiKaryawan) {
+            if (! $gaji) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data gaji karyawan tidak ditemukan',
@@ -53,9 +70,12 @@ class GajiKaryawanController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $gajiKaryawan->toArray(),
+                'message' => 'Data gaji karyawan berhasil diambil',
+                'data' => $gaji->toArray(),
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error retrieving gaji karyawan: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil data gaji karyawan',
@@ -68,12 +88,12 @@ class GajiKaryawanController extends Controller
     {
         try {
             $validated = $request->validated();
-            $gajiKaryawan = $this->service->createGaji($validated);
+            $gaji = $this->service->createGaji($validated);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data gaji karyawan berhasil dibuat',
-                'data' => $gajiKaryawan->toArray(),
+                'data' => $gaji->toArray(),
             ], 201);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
@@ -82,6 +102,8 @@ class GajiKaryawanController extends Controller
                 'data' => null,
             ], 422);
         } catch (\Exception $e) {
+            Log::error('Error creating gaji karyawan: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal membuat data gaji karyawan',
@@ -94,9 +116,9 @@ class GajiKaryawanController extends Controller
     {
         try {
             $validated = $request->validated();
-            $gajiKaryawan = $this->service->updateGaji($id, $validated);
+            $gaji = $this->service->updateGaji($id, $validated);
 
-            if (! $gajiKaryawan) {
+            if (! $gaji) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data gaji karyawan tidak ditemukan',
@@ -107,7 +129,7 @@ class GajiKaryawanController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Data gaji karyawan berhasil diupdate',
-                'data' => $gajiKaryawan->toArray(),
+                'data' => $gaji->toArray(),
             ], 200);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
@@ -116,6 +138,8 @@ class GajiKaryawanController extends Controller
                 'data' => null,
             ], 422);
         } catch (\Exception $e) {
+            Log::error('Error updating gaji karyawan: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengupdate data gaji karyawan',
@@ -141,6 +165,8 @@ class GajiKaryawanController extends Controller
                 'message' => 'Data gaji karyawan berhasil dihapus',
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error deleting gaji karyawan: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus data gaji karyawan',
@@ -151,18 +177,22 @@ class GajiKaryawanController extends Controller
     public function getByKaryawan(Request $request, string $karyawanId): JsonResponse
     {
         try {
-            $filters = $request->only(['start_periode', 'end_periode']);
+            $filters = $request->only(['start_date', 'end_date', 'tahun']);
             $perPage = $request->input('per_page', 10);
+            $filters['per_page'] = $perPage;
 
-            $result = $this->service->getGajiByKaryawan($karyawanId, array_merge($filters, ['per_page' => $perPage]));
+            $result = $this->service->getGajiByKaryawan($karyawanId, $filters);
             $responseData = $result->toArray();
 
             return response()->json([
                 'success' => true,
+                'message' => 'Data gaji karyawan berhasil diambil',
                 'data' => $responseData['data'],
                 'meta' => $responseData['meta'],
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error retrieving gaji by karyawan: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil data gaji karyawan',
@@ -174,14 +204,19 @@ class GajiKaryawanController extends Controller
     public function getSummaryByPeriode(Request $request): JsonResponse
     {
         try {
-            $periode = $request->input('periode', date('Y-m-d'));
-            $summary = $this->service->getSummaryByPeriode($periode);
+            $bulan = $request->input('bulan', date('n'));
+            $tahun = $request->input('tahun', date('Y'));
+
+            $summary = $this->service->getSummaryByPeriode((int) $bulan, (int) $tahun);
 
             return response()->json([
                 'success' => true,
-                'data' => array_merge(['periode' => $periode], $summary),
+                'message' => 'Summary gaji berhasil diambil',
+                'data' => array_merge(['bulan' => $bulan, 'tahun' => $tahun], $summary),
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error retrieving summary gaji: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil summary gaji',
@@ -190,53 +225,85 @@ class GajiKaryawanController extends Controller
         }
     }
 
-    public function recalculate(Request $request): JsonResponse
+    public function generateMassGaji(Request $request): JsonResponse
     {
         try {
-            $periode = $request->input('periode');
-            $pendapatanId = $request->input('pendapatan_id');
-            $potonganId = $request->input('potongan_id');
+            $bulan = $request->input('bulan', date('n'));
+            $tahun = $request->input('tahun', date('Y'));
+            $potonganLainnya = $request->input('potongan_lainnya', 0);
+            $pph21 = $request->input('pph21', 0);
 
-            if ($periode) {
-                $this->service->recalculateGaji($periode);
-                $message = 'Data gaji berhasil dihitung ulang untuk periode '.$periode;
-            } elseif ($pendapatanId) {
-                $this->service->recalculateGajiByPendapatan($pendapatanId);
-                $message = 'Data gaji berhasil dihitung ulang untuk pendapatan';
-            } elseif ($potonganId) {
-                $this->service->recalculateGajiByPotongan($potonganId);
-                $message = 'Data gaji berhasil dihitung ulang untuk potongan';
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Periode, pendapatan_id, atau potongan_id harus diisi',
-                    'data' => null,
-                ], 422);
-            }
+            $result = $this->service->generateGajiForAllKaryawan(
+                (int) $bulan,
+                (int) $tahun,
+                (float) $potonganLainnya,
+                (float) $pph21
+            );
 
             return response()->json([
                 'success' => true,
-                'message' => $message,
-                'data' => null,
+                'message' => "Berhasil memproses gaji untuk {$result['success_count']} karyawan",
+                'data' => $result,
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error generating mass gaji: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghitung ulang data gaji',
+                'message' => 'Gagal memproses gaji massal',
                 'data' => null,
             ], 500);
         }
     }
 
+    public function updateStatus(Request $request, string $id): JsonResponse
+    {
+        try {
+            $status = $request->input('status');
+
+            if (! in_array($status, ['DRAFT', 'PROCESSED', 'PAID', 'APPROVED'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Status tidak valid',
+                    'data' => null,
+                ], 422);
+            }
+
+            $gaji = $this->service->updateStatus($id, $status);
+
+            if (! $gaji) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data gaji karyawan tidak ditemukan',
+                    'data' => null,
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status gaji berhasil diupdate',
+                'data' => $gaji->toArray(),
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error updating gaji status: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupdate status gaji',
+                'data' => null,
+            ], 500);
+        }
+    }
+
+    // PDF Methods (dibiarkan seperti sebelumnya)
     public function generatePdfReport(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['periode', 'start_periode', 'end_periode', 'karyawan_aktif']);
+            $filters = $request->only(['bulan', 'tahun', 'karyawan_id', 'status']);
             $pdfService = app(PdfServiceGajiKaryawan::class);
             $pdfContent = $pdfService->generateSlipGajiPdf($filters);
             $filename = $pdfService->generateFilename('slip-gaji-karyawan');
             $filePath = $pdfService->savePdfToStorage($pdfContent, $filename);
-            Storage::disk('public')->put($filePath, $pdfContent);
 
             return response()->json([
                 'success' => true,
@@ -249,6 +316,7 @@ class GajiKaryawanController extends Controller
             ], 200);
         } catch (\Exception $e) {
             Log::error('Error generating PDF gaji karyawan report: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal membuat laporan PDF gaji karyawan',
@@ -260,23 +328,23 @@ class GajiKaryawanController extends Controller
     public function downloadPdfGajiKaryawanReport(string $filename)
     {
         try {
-            $path = 'pdf-slip-gaji-karyawan/' . $filename;
+            $path = 'pdf-slip-gaji-karyawan/'.$filename;
 
-            //cek apakah file ada distorage
-            if (!Storage::disk('public')->exists($path)) {
+            if (! Storage::disk('public')->exists($path)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File PDF tidak ditemukan',
                     'data' => null,
                 ], 404);
             }
-            
+
             return Storage::download($path, $filename, [
                 'Content-Type' => Storage::mimeType($path),
                 'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ]);
         } catch (\Exception $e) {
             Log::error('Error downloading PDF gaji karyawan report: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengunduh laporan PDF gaji karyawan',

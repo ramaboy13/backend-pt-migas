@@ -1,18 +1,18 @@
 <?php
 
-namespace App\DTO\GajiKaryawan;
+namespace App\DTO\KomponenGaji;
 
-class GajiKaryawanCollectionDTO
+class KomponenGajiCollectionDTO
 {
     public function __construct(
         public readonly array $items,
         public readonly array $meta
     ) {}
 
-    public static function fromPaginator($paginator, bool $withRelations = true): self
+    public static function fromPaginator($paginator, bool $withKaryawan = true): self
     {
-        $items = collect($paginator->items())->map(function ($item) use ($withRelations) {
-            return GajiKaryawanDTO::fromModel($item, $withRelations);
+        $items = collect($paginator->items())->map(function ($item) use ($withKaryawan) {
+            return KomponenGajiDTO::fromModel($item, $withKaryawan);
         })->toArray();
 
         return new self(
