@@ -26,7 +26,7 @@ class TransaksiOperasionalController extends Controller
                 'end_date',
                 'pangkalan_id',
                 'tabung_id',
-                'is_in',
+                'is_pemasukan',
                 'search',
             ]);
 
