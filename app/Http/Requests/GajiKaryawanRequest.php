@@ -27,7 +27,7 @@ class GajiKaryawanRequest extends FormRequest
             'tanggal_gaji' => ['nullable', 'date'],
             'potongan_lainnya' => ['nullable', 'numeric', 'min:0'],
             'pph21' => ['nullable', 'numeric', 'min:0'],
-            'status' => ['nullable', Rule::in(['DRAFT', 'PROCESSED', 'PAID', 'APPROVED'])],
+            'status' => ['nullable', Rule::in(['Belum Dibayar', 'Telah Dibayar'])],
         ];
     }
 
@@ -59,7 +59,7 @@ class GajiKaryawanRequest extends FormRequest
         $this->merge([
             'potongan_lainnya' => $this->input('potongan_lainnya', 0),
             'pph21' => $this->input('pph21', 0),
-            'status' => $this->input('status', 'DRAFT'),
+            'status' => $this->input('status', 'Belum Dibayar'),
         ]);
     }
 

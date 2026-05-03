@@ -194,7 +194,7 @@ class GajiKaryawanRepository
         return $this->model->with('karyawan')
             ->where('bulan', $bulan)
             ->where('tahun', $tahun)
-            ->where('status', 'DRAFT')
+            ->where('status', 'Belum Dibayar')
             ->paginate(10);
     }
 

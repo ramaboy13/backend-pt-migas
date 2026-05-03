@@ -261,7 +261,7 @@ class GajiKaryawanController extends Controller
         try {
             $status = $request->input('status');
 
-            if (! in_array($status, ['DRAFT', 'PROCESSED', 'PAID', 'APPROVED'])) {
+            if (! in_array($status, ['Belum Dibayar', 'Telah Dibayar'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Status tidak valid',

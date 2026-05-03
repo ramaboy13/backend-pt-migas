@@ -96,10 +96,8 @@ class GajiKaryawan extends Model
     public function getStatusDisplayAttribute(): string
     {
         return match ($this->status) {
-            'DRAFT' => 'Draft',
-            'PROCESSED' => 'Diproses',
-            'PAID' => 'Dibayar',
-            'APPROVED' => 'Disetujui',
+            'Belum Dibayar' => 'Belum Dibayar',
+            'Telah Dibayar' => 'Telah Dibayar',
             default => $this->status
         };
     }
