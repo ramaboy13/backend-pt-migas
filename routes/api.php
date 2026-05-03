@@ -170,4 +170,11 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/saldo-summary', [SumberKasController::class, 'getSaldoSummary']);
         });
     });
+
+    // Dashboard Routes
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
+        Route::get('/summary', [\App\Http\Controllers\Api\DashboardController::class, 'summary']);
+        Route::get('/charts', [\App\Http\Controllers\Api\DashboardController::class, 'charts']);
+    });
 });
