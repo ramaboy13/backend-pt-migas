@@ -34,7 +34,7 @@ return new class extends Migration
             $table->decimal('gaji_bersih', 15, 2);
 
             // Status dan metadata
-            $table->enum('status', ['DRAFT', 'PAID'])->default('DRAFT');
+            $table->enum('status', ['Belum Dibayar', 'Telah Dibayar'])->default('Belum Dibayar');
             $table->string('processed_by')->nullable();
             $table->timestamp('processed_at')->nullable();
 
