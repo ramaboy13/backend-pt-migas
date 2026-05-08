@@ -33,7 +33,6 @@ class DashboardService
         $userRoleData = null;
         if ($isSuperAdmin) {
             $summaryData['totalUsers'] = $this->repository->getTotalUsers();
-            $summaryData['newUsersThisMonth'] = $this->repository->getNewUsersThisMonth();
 
             $userRoleData = [
                 'stats_by_role' => $this->repository->getUserStatsByRole(),
