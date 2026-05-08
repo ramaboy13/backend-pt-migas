@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('no_ref')->unique();
             $table->enum('jenis_transaksi', ['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_GAS', 'LAINNYA']);
             $table->string('keterangan');
-            $table->uuid('asset_id')->nullable()->unique();
+            $table->uuid('asset_id')->nullable();
 
             // Bisa NULL karena tidak semua transaksi butuh
             $table->uuid('pangkalan_id')->nullable();

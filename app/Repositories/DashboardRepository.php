@@ -1,14 +1,13 @@
 <?php
-// app/Repositories/DashboardRepository.php
 
 namespace App\Repositories;
 
+use App\Models\Asset;
+use App\Models\Karyawan;
+use App\Models\KasPerusahaan;
 use App\Models\SumberKas;
 use App\Models\TransaksiOperasional;
-use App\Models\Karyawan;
-use App\Models\Asset;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DashboardRepository
@@ -69,27 +68,27 @@ class DashboardRepository
     public function getDailyTransactions(int $days = 7): array
     {
         $result = [];
-        
+
         for ($i = $days - 1; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
             $dateString = $date->format('Y-m-d');
-            
+
             $pemasukan = (float) TransaksiOperasional::where('is_pemasukan', true)
                 ->whereDate('tanggal', $dateString)
                 ->sum('jumlah');
-                
+
             $pengeluaran = (float) TransaksiOperasional::where('is_pemasukan', false)
                 ->whereDate('tanggal', $dateString)
                 ->sum('jumlah');
-            
+
             $result[] = [
                 'date' => $date->format('d M'),
                 'pemasukan' => $pemasukan,
                 'pengeluaran' => $pengeluaran,
-                'net' => $pemasukan - $pengeluaran
+                'net' => $pemasukan - $pengeluaran,
             ];
         }
-        
+
         return $result;
     }
 
@@ -108,11 +107,11 @@ class DashboardRepository
             $total = (float) TransaksiOperasional::where('jenis_transaksi', $type)
                 ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
                 ->sum('jumlah');
-            
+
             $result[] = [
                 'type' => $type,
                 'display' => $this->getJenisDisplay($type),
-                'total' => $total
+                'total' => $total,
             ];
         }
 
@@ -130,9 +129,9 @@ class DashboardRepository
             ->map(function ($item) {
                 return [
                     'id' => $item->id,
-                    'name' => $item->tipe === 'CASH' ? 'Cash' : ($item->nama_bank ?? 'Bank') . ' - ' . ($item->nomor_rekening ?? ''),
+                    'name' => $item->tipe === 'CASH' ? 'Cash' : ($item->nama_bank ?? 'Bank').' - '.($item->nomor_rekening ?? ''),
                     'tipe' => $item->tipe,
-                    'saldo' => (float) $item->saldo_terakhir
+                    'saldo' => (float) $item->saldo_terakhir,
                 ];
             })
             ->toArray();
@@ -158,7 +157,39 @@ class DashboardRepository
                     'is_pemasukan' => $item->is_pemasukan,
                     'jumlah' => (float) $item->jumlah,
                     'sumber_kas' => $item->kasPerusahaan?->sumberKas?->nama_bank ?? 'Cash',
-                    'created_by' => $item->created_by
+                    'created_by' => $item->created_by,
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get recent kas perusahaan
+     */
+    public function getRecentKasPerusahaan(int $limit = 10): array
+    {
+        return KasPerusahaan::with('sumberKas')
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'tanggal' => $item->tanggal->format('Y-m-d'),
+                    'keterangan' => $item->keterangan,
+                    'tipe_transaksi' => $item->tipe_transaksi,
+                    'jumlah' => (float) $item->jumlah,
+                    'saldo_sebelum' => (float) $item->saldo_sebelum,
+                    'saldo_sesudah' => (float) $item->saldo_sesudah,
+                    'sumber_kas' => $item->sumberKas
+                        ? (
+                            $item->sumberKas->tipe === 'CASH'
+                                ? 'Cash'
+                                : ($item->sumberKas->nama_bank ?? 'Bank')
+                        )
+                        : '-',
+                    'created_at' => $item->created_at->format('Y-m-d H:i:s'),
                 ];
             })
             ->toArray();
@@ -180,6 +211,7 @@ class DashboardRepository
     public function getNewUsersThisMonth(): int
     {
         $startOfMonth = Carbon::now()->startOfMonth();
+
         return User::where('created_at', '>=', $startOfMonth)->count();
     }
 
@@ -189,13 +221,13 @@ class DashboardRepository
     public function getRecentUsers(int $limit = 10): array
     {
         $users = User::with('roles')->orderBy('created_at', 'desc')->limit($limit)->get();
-        
+
         $result = [];
         foreach ($users as $user) {
             // getRoleNames() returns array, not collection
             $roles = $user->getRoleNames();
-            $role = !empty($roles) ? $roles[0] : 'No role';
-            
+            $role = ! empty($roles) ? $roles[0] : 'No role';
+
             $result[] = [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -203,10 +235,10 @@ class DashboardRepository
                 'role' => $role,
                 'is_active' => (bool) $user->is_active,
                 'email_verified' => isset($user->email_verified) ? (bool) $user->email_verified : false,
-                'created_at' => $user->created_at->format('Y-m-d H:i:s')
+                'created_at' => $user->created_at->format('Y-m-d H:i:s'),
             ];
         }
-        
+
         return $result;
     }
 
@@ -221,9 +253,9 @@ class DashboardRepository
         foreach ($users as $user) {
             // getRoleNames() returns array, not collection
             $roles = $user->getRoleNames();
-            $role = !empty($roles) ? $roles[0] : 'unknown';
-            
-            if (!isset($stats[$role])) {
+            $role = ! empty($roles) ? $roles[0] : 'unknown';
+
+            if (! isset($stats[$role])) {
                 $stats[$role] = 0;
             }
             $stats[$role]++;

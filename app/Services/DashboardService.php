@@ -29,9 +29,6 @@ class DashboardService
             'totalAsset' => $this->repository->getTotalAsset(),
         ];
 
-        // Calculate net cashflow
-        $summaryData['netCashflow'] = $summaryData['totalPemasukanBulanIni'] - $summaryData['totalPengeluaranBulanIni'];
-
         // Add super admin specific data
         $userRoleData = null;
         if ($isSuperAdmin) {
@@ -60,12 +57,14 @@ class DashboardService
             recentTransactions: $recentTransactions,
             recentUsers: $recentUsers
         );
+        $recentKasPerusahaan = $this->repository->getRecentKasPerusahaan(10);
 
         return new DashboardDTO(
             summary: $summary->toArray(),
             charts: $charts->toArray(),
             recentActivities: $recentActivities->toArray(),
-            userRole: $userRoleData
+            userRole: $userRoleData,
+            recentKasPerusahaan: $recentKasPerusahaan
         );
     }
 

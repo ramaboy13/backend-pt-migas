@@ -8,7 +8,8 @@ class DashboardDTO
         public readonly array $summary,
         public readonly array $charts,
         public readonly array $recentActivities,
-        public readonly ?array $userRole = null
+        public readonly ?array $userRole,
+        public readonly array $recentKasPerusahaan,
     ) {}
 
     public function toArray(): array
@@ -16,7 +17,8 @@ class DashboardDTO
         $data = [
             'summary' => $this->summary,
             'charts' => $this->charts,
-            'recent_activities' => $this->recentActivities
+            'recent_activities' => $this->recentActivities,
+            'recent_kas_perusahaan' => $this->recentKasPerusahaan,
         ];
 
         if ($this->userRole !== null) {
