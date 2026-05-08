@@ -8,7 +8,6 @@ class DashboardSummaryDTO
         public readonly float $totalSaldoKas,
         public readonly float $totalPemasukanBulanIni,
         public readonly float $totalPengeluaranBulanIni,
-        public readonly float $netCashflow,
         public readonly int $totalKaryawan,
         public readonly int $totalAsset,
         public readonly ?int $totalUsers = null,
