@@ -8,7 +8,6 @@ class DashboardSummaryDTO
         public readonly float $totalSaldoKas,
         public readonly float $totalPemasukanBulanIni,
         public readonly float $totalPengeluaranBulanIni,
-        public readonly int $totalKaryawan,
         public readonly int $totalAsset,
         public readonly ?int $totalUsers = null,
     ) {}
@@ -19,7 +18,6 @@ class DashboardSummaryDTO
             'total_saldo_kas' => $this->totalSaldoKas,
             'total_pemasukan_bulan_ini' => $this->totalPemasukanBulanIni,
             'total_pengeluaran_bulan_ini' => $this->totalPengeluaranBulanIni,
-            'total_karyawan' => $this->totalKaryawan,
             'total_asset' => $this->totalAsset,
         ];
 

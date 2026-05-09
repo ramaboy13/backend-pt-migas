@@ -25,7 +25,6 @@ class DashboardService
             'totalSaldoKas' => $this->repository->getTotalSaldoKas(),
             'totalPemasukanBulanIni' => $this->repository->getTotalPemasukanBulanIni(),
             'totalPengeluaranBulanIni' => $this->repository->getTotalPengeluaranBulanIni(),
-            'totalKaryawan' => $this->repository->getTotalKaryawan(),
             'totalAsset' => $this->repository->getTotalAsset(),
         ];
 
