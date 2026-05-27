@@ -295,14 +295,13 @@ class GajiKaryawanController extends Controller
         }
     }
 
-    // PDF Methods (dibiarkan seperti sebelumnya)
-    public function generatePdfReport(Request $request): JsonResponse
+    public function generatePdfGajiKaryawanReport(Request $request): JsonResponse
     {
         try {
             $filters = $request->only(['bulan', 'tahun', 'karyawan_id', 'status']);
             $pdfService = app(PdfServiceGajiKaryawan::class);
-            $pdfContent = $pdfService->generateSlipGajiPdf($filters);
-            $filename = $pdfService->generateFilename('slip-gaji-karyawan');
+            $pdfContent = $pdfService->generateGajiKaryawanPdf($filters);
+            $filename = $pdfService->generateFilename('data-gaji-karyawan');
             $filePath = $pdfService->savePdfToStorage($pdfContent, $filename);
 
             return response()->json([
@@ -325,23 +324,83 @@ class GajiKaryawanController extends Controller
         }
     }
 
+    public function generateSlipGajiByKaryawanPdf(Request $request): JsonResponse
+    {
+        try {
+            $karyawanId = $request->query('karyawan_id');
+            $bulan = $request->query('bulan');
+            $tahun = $request->query('tahun');
+
+            if (! $karyawanId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Parameter karyawan_id wajib diisi',
+                    'data' => null,
+                ], 422);
+            }
+
+            $filters = [];
+            if ($bulan && $tahun) {
+                $filters['bulan'] = (int) $bulan;
+                $filters['tahun'] = (int) $tahun;
+            }
+
+            $pdfService = app(PdfServiceGajiKaryawan::class);
+            $pdfContent = $pdfService->generateSlipGajiByKaryawanPdf($karyawanId, $filters);
+            $filename = $pdfService->generateFilename('slip-gaji-'.$karyawanId);
+            $filePath = $pdfService->savePdfToStorage($pdfContent, $filename);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Slip gaji karyawan berhasil dibuat',
+                'data' => [
+                    'url' => Storage::url($filePath),
+                    'file_path' => $filePath,
+                    'filename' => $filename,
+                ],
+            ], 200);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Error generating slip gaji karyawan: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat slip gaji karyawan',
+                'data' => null,
+            ], 500);
+        }
+    }
+
     public function downloadPdfGajiKaryawanReport(string $filename)
     {
         try {
             $path = 'pdf-slip-gaji-karyawan/'.$filename;
 
-            if (! Storage::disk('public')->exists($path)) {
+            $disk = Storage::disk('public');
+
+            if (! $disk->exists($path)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File PDF tidak ditemukan',
-                    'data' => null,
+                    'data' => [
+                        'checked_path' => $disk->path($path),
+                    ],
                 ], 404);
             }
 
-            return Storage::download($path, $filename, [
-                'Content-Type' => Storage::mimeType($path),
-                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-            ]);
+            return response()->download(
+                $disk->path($path),
+                $filename,
+                [
+                    'Content-Type' => 'application/pdf',
+                ]
+            );
+
         } catch (\Exception $e) {
             Log::error('Error downloading PDF gaji karyawan report: '.$e->getMessage());
 

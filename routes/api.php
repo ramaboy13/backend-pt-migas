@@ -111,6 +111,11 @@ Route::middleware(['auth:api'])->group(function () {
             Route::delete('/delete/{id}', [GajiKaryawanController::class, 'destroy']);
             Route::get('/karyawan/{karyawanId}', [GajiKaryawanController::class, 'getByKaryawan']);
             Route::post('/recalculate', [GajiKaryawanController::class, 'recalculate']);
+            Route::prefix('pdf')->group(function () {
+                Route::get('/report', [GajiKaryawanController::class, 'generatePdfGajiKaryawanReport']);
+                Route::get('/slip-gaji', [GajiKaryawanController::class, 'generateSlipGajiByKaryawanPdf']);
+                Route::get('/download-correct/{filename}', [GajiKaryawanController::class, 'downloadPdfGajiKaryawanReport']);
+            });
         });
     });
 
