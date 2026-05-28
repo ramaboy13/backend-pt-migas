@@ -34,7 +34,18 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('me', [AuthController::class, 'me']);
     });
 
-    // Kas BCA Routes
+    // User Management
+    Route::prefix('users')->middleware(['role:super_admin'])->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::post('/create', [UserController::class, 'store']);
+        Route::get('/show/{id}', [UserController::class, 'show']);
+        Route::put('/update/{id}', [UserController::class, 'update']);
+        Route::delete('/delete/{id}', [UserController::class, 'destroy']);
+        Route::patch('/activate/{id}', [UserController::class, 'activate']);
+        Route::patch('/deactivate/{id}', [UserController::class, 'deactivate']);
+    });
+
+    // Kas Perusahaan
     Route::prefix('kas-perusahaan')->group(function () {
         Route::middleware(['role:admin|super_admin'])->group(function () {
             Route::get('/', [KasPerusahaanController::class, 'index']);
