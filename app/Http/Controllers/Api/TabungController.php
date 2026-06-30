@@ -22,14 +22,14 @@ class TabungController extends Controller
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung records retrieved successfully',
+        'message' => 'Data tabung berhasil diambil',
         'data' => $responseData['data'],
         'meta' => $responseData['meta']
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to retrieve tabung records',
+        'message' => 'Gagal mengambil data tabung',
         'data' => null
       ], 500);
     }
@@ -43,20 +43,20 @@ class TabungController extends Controller
       if (!$tabung) {
         return response()->json([
           'success' => false,
-          'message' => 'Tabung record not found',
+          'message' => 'Data tabung tidak ditemukan',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung record retrieved successfully',
+        'message' => 'Data tabung berhasil diambil',
         'data' => $tabung->toArray()
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to retrieve tabung record',
+        'message' => 'Gagal mengambil data tabung',
         'data' => null
       ], 500);
     }
@@ -69,7 +69,7 @@ class TabungController extends Controller
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung record created successfully',
+        'message' => 'Data tabung berhasil ditambahkan',
         'data' => $tabung->toArray()
       ], 201);
     } catch (\InvalidArgumentException $e) {
@@ -81,7 +81,7 @@ class TabungController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to create tabung record',
+        'message' => 'Gagal menambahkan data tabung',
         'data' => null
       ], 500);
     }
@@ -95,14 +95,14 @@ class TabungController extends Controller
       if (!$tabung) {
         return response()->json([
           'success' => false,
-          'message' => 'Tabung record not found',
+          'message' => 'Data tabung tidak ditemukan',
           'data' => null
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung record updated successfully',
+        'message' => 'Data tabung berhasil diperbarui',
         'data' => $tabung->toArray()
       ], 200);
     } catch (\InvalidArgumentException $e) {
@@ -114,7 +114,7 @@ class TabungController extends Controller
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to update tabung record',
+        'message' => 'Gagal memperbarui data tabung',
         'data' => null
       ], 500);
     }
@@ -128,18 +128,18 @@ class TabungController extends Controller
       if (!$deleted) {
         return response()->json([
           'success' => false,
-          'message' => 'Tabung record not found',
+          'message' => 'Data tabung tidak ditemukan',
         ], 404);
       }
 
       return response()->json([
         'success' => true,
-        'message' => 'Tabung record deleted successfully',
+        'message' => 'Data tabung berhasil dihapus',
       ], 200);
     } catch (\Exception $e) {
       return response()->json([
         'success' => false,
-        'message' => 'Failed to delete tabung record',
+        'message' => 'Gagal menghapus data tabung',
       ], 500);
     }
   }

@@ -24,14 +24,14 @@ class PangkalanController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pangkalan records retrieved successfully',
+                'message' => 'Data pangkalan berhasil diambil',
                 'data' => $responseData['data'],
                 'meta' => $responseData['meta'],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve pangkalan records',
+                'message' => 'Gagal mengambil data pangkalan',
                 'data' => null,
             ], 500);
         }
@@ -45,20 +45,20 @@ class PangkalanController extends Controller
             if (! $pangkalan) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Pangkalan record not found',
+                    'message' => 'Data pangkalan tidak ditemukan',
                     'data' => null,
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pangkalan record retrieved successfully',
+                'message' => 'Data pangkalan berhasil diambil',
                 'data' => $pangkalan->toArray(),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve pangkalan record',
+                'message' => 'Gagal mengambil data pangkalan',
                 'data' => null,
             ], 500);
         }
@@ -71,7 +71,7 @@ class PangkalanController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pangkalan record created successfully',
+                'message' => 'Data pangkalan berhasil ditambahkan',
                 'data' => $pangkalan->toArray(),
             ], 201);
         } catch (\InvalidArgumentException $e) {
@@ -85,7 +85,7 @@ class PangkalanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create pangkalan record',
+                'message' => 'Gagal menambahkan data pangkalan',
                 'data' => null,
             ], 500);
         }
@@ -99,14 +99,14 @@ class PangkalanController extends Controller
             if (! $pangkalan) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Pangkalan record not found',
+                    'message' => 'Data pangkalan tidak ditemukan',
                     'data' => null,
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pangkalan record updated successfully',
+                'message' => 'Data pangkalan berhasil diperbarui',
                 'data' => $pangkalan->toArray(),
             ], 200);
         } catch (\InvalidArgumentException $e) {
@@ -118,7 +118,7 @@ class PangkalanController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update pangkalan record',
+                'message' => 'Gagal memperbarui data pangkalan',
                 'data' => null,
             ], 500);
         }
@@ -132,18 +132,18 @@ class PangkalanController extends Controller
             if (! $deleted) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Pangkalan record not found',
+                    'message' => 'Data pangkalan tidak ditemukan',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pangkalan record deleted successfully',
+                'message' => 'Data pangkalan berhasil dihapus',
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete pangkalan record',
+                'message' => 'Gagal menghapus data pangkalan',
             ], 500);
         }
     }

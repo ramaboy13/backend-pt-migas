@@ -22,7 +22,7 @@ class AssetController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Assets retrieved successfully',
+                'message' => 'Data aset berhasil diambil',
                 'data' => $assets->items(),
                 'meta' => [
                     'current_page' => $assets->currentPage(),
@@ -34,7 +34,7 @@ class AssetController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve assets: '.$e->getMessage(),
+                'message' => 'Gagal mengambil data aset: '.$e->getMessage(),
                 'data' => null,
                 'meta' => null,
             ], 500);
@@ -49,20 +49,20 @@ class AssetController extends Controller
             if (! $asset) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Asset not found',
+                    'message' => 'Data aset tidak ditemukan',
                     'data' => null,
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Asset retrieved successfully',
+                'message' => 'Data aset berhasil diambil',
                 'data' => $asset,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve asset',
+                'message' => 'Gagal mengambil data aset',
                 'data' => null,
             ], 500);
         }
@@ -76,13 +76,13 @@ class AssetController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Asset created successfully',
+                'message' => 'Data aset berhasil ditambahkan',
                 'data' => $asset,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create asset',
+                'message' => 'Gagal menambahkan data aset',
                 'data' => null,
             ], 500);
         }
@@ -97,20 +97,20 @@ class AssetController extends Controller
             if (! $asset) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Asset not found',
+                    'message' => 'Data aset tidak ditemukan',
                     'data' => null,
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Asset updated successfully',
+                'message' => 'Data aset berhasil diperbarui',
                 'data' => $asset,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update asset',
+                'message' => 'Gagal memperbarui data aset',
                 'data' => null,
             ], 500);
         }
@@ -124,18 +124,18 @@ class AssetController extends Controller
             if (! $deleted) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Asset not found',
+                    'message' => 'Data aset tidak ditemukan',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Asset deleted successfully',
+                'message' => 'Data aset berhasil dihapus',
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete asset',
+                'message' => 'Gagal menghapus data aset',
             ], 500);
         }
     }

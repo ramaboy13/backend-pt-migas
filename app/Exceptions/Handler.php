@@ -78,7 +78,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Resource not found',
+                'message' => 'Sumber daya tidak ditemukan',
                 'data' => null
             ], 404);
         }
@@ -96,7 +96,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Endpoint not found',
+                'message' => 'Endpoint tidak ditemukan',
                 'data' => null
             ], 404);
         }

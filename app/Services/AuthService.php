@@ -28,7 +28,7 @@ class AuthService
         $user = Auth::user();
 
         if (! $user->is_active) {
-            throw new AuthenticationException('Account is deactivated');
+            throw new AuthenticationException('Akun tidak aktif', 401);
         }
 
         $refreshToken = $this->generateRefreshToken($user->id);
@@ -49,7 +49,7 @@ class AuthService
         try {
             $user->assignRole($data['role']);
         } catch (\Exception $e) {
-            throw new AuthenticationException('Role not found');
+            throw new AuthenticationException('Role tidak ditemukan');
         }
 
         $token = JWTAuth::fromUser($user);
@@ -86,13 +86,13 @@ class AuthService
                 ->first();
 
             if (! $storedToken) {
-                throw new AuthenticationException('Invalid or expired refresh token');
+                throw new AuthenticationException('Refresh token tidak valid atau sudah kedaluwarsa');
             }
 
             $user = User::find($storedToken->user_id);
 
             if (! $user || ! $user->is_active) {
-                throw new AuthenticationException('User not found or inactive');
+                throw new AuthenticationException('Pengguna tidak ditemukan atau tidak aktif');
             }
 
             // Generate new access token
@@ -108,7 +108,7 @@ class AuthService
         } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
             throw new AuthenticationException('Token has expired');
         } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-            throw new AuthenticationException('Token is invalid');
+            throw new AuthenticationException('Token tidak valid');
         } catch (\Exception $e) {
             throw new AuthenticationException('Could not refresh token');
         }
@@ -119,7 +119,7 @@ class AuthService
         $user = Auth::user();
 
         if (! $user) {
-            throw new AuthenticationException('User not found');
+            throw new AuthenticationException('Pengguna tidak ditemukan');
         }
 
         $userWithRoles = User::with('roles')->find($user->id);

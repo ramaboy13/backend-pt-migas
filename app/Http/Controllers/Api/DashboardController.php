@@ -25,7 +25,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Dashboard data retrieved successfully',
+                'message' => 'Data dashboard berhasil diambil',
                 'data' => $dashboard->toArray()
             ], 200);
 
@@ -36,7 +36,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve dashboard data',
+                'message' => 'Gagal mengambil data dashboard',
                 'data' => null
             ], 500);
         }
@@ -52,7 +52,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Dashboard summary retrieved successfully',
+                'message' => 'Ringkasan dashboard berhasil diambil',
                 'data' => $summary
             ], 200);
 
@@ -61,7 +61,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve dashboard summary',
+                'message' => 'Gagal mengambil ringkasan dashboard',
                 'data' => null
             ], 500);
         }
@@ -77,7 +77,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Dashboard charts retrieved successfully',
+                'message' => 'Grafik dashboard berhasil diambil',
                 'data' => $charts
             ], 200);
 
@@ -86,7 +86,7 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve dashboard charts',
+                'message' => 'Gagal mengambil grafik dashboard',
                 'data' => null
             ], 500);
         }

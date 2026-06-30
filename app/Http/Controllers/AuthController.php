@@ -16,6 +16,7 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): JsonResponse
     {
+        
         try {
             $data = $this->authService->login(
                 $request->email,
@@ -24,7 +25,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Login successful',
+                'message' => 'Login Berhasil',
                 'data' => $data
             ], 200);
         } catch (\App\Exceptions\AuthenticationException $e) {
@@ -52,7 +53,7 @@ class AuthController extends Controller
         if (!$user->hasRole('super_admin')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Only super admin can register new users',
+                'message' => 'Hanya Super Admin yang dapat membuat user baru',
                 'data' => null
             ], 403);
         }
@@ -78,7 +79,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Logout failed: ' . $e->getMessage(),
+                'message' => 'Gagal melakukan logout: ' . $e->getMessage(),
                 'data' => null
             ], 403);
         }
@@ -90,7 +91,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Token refreshed successfully',
+            'message' => 'Token berhasil diperbarui',
             'data' => $data
         ], 200);
     }
@@ -101,7 +102,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'User data retrieved',
+            'message' => 'Data pengguna berhasil diambil',
             'data' => [
                 'user' => $user
             ]
