@@ -14,10 +14,15 @@ class AuthService
 {
     public function login(string $email, string $password): array
     {
+        $userCheck = User::where('email', $email)->first();
+        if (! $userCheck) {
+            throw new AuthenticationException('Email tidak terdaftar', 404);
+        }
+
         $credentials = ['email' => $email, 'password' => $password];
 
         if (! $token = JWTAuth::attempt($credentials)) {
-            throw new AuthenticationException('Invalid credentials');
+            throw new AuthenticationException('Kata sandi yang Anda masukkan salah', 401);
         }
 
         $user = Auth::user();

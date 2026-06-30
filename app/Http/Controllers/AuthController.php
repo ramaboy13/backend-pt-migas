@@ -16,16 +16,24 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $data = $this->authService->login(
-            $request->email,
-            $request->password
-        );
+        try {
+            $data = $this->authService->login(
+                $request->email,
+                $request->password
+            );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful',
-            'data' => $data
-        ], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful',
+                'data' => $data
+            ], 200);
+        } catch (\App\Exceptions\AuthenticationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ], $e->getCode());
+        }
     }
 
     public function register(RegisterRequest $request): JsonResponse

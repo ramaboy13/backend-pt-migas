@@ -23,6 +23,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'email.required' => 'Email wajib diisi',
+            'email.email' => 'Format email tidak valid',
             'password.required' => 'Kata sandi wajib diisi',
             'password.min' => 'Kata sandi minimal terdiri dari 6 karakter',
         ];
