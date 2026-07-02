@@ -16,7 +16,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2' # Anda bisa menyesuaikan versi PHP ini jika cPanel Anda menggunakan versi berbeda
+          php-version: '8.3' # Anda bisa menyesuaikan versi PHP ini jika cPanel Anda menggunakan versi berbeda
           extensions: mbstring, xml, ctype, iconv, intl, pdo, bcmath, bz2, calendar, exif, fileinfo, gd, json, tokenizer, xmlwriter, zip
           coverage: none
 
