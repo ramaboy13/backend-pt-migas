@@ -1,0 +1,45 @@
+name: Backend PT Mentaya Sinergi Perkasa
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  web-deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # Anda bisa menyesuaikan versi PHP ini jika cPanel Anda menggunakan versi berbeda
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, bcmath, bz2, calendar, exif, fileinfo, gd, json, tokenizer, xmlwriter, zip
+          coverage: none
+
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Sync files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # Uncomment dan sesuaikan server-dir di bawah jika ingin mengarah ke folder spesifik (misal /public_html/ atau /subdomain/)
+          # server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            README.md
+            phpunit.xml
+            .env*
+            docker-compose.yml
+            dockerfile
+            .editorconfig
+            .dockerignore
