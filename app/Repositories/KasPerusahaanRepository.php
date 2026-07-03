@@ -131,7 +131,7 @@ class KasPerusahaanRepository
             ->orderBy('created_at', 'desc')
             ->first();
     }
-    public function getAllAfterDate(string $sumberKasId, string $tanggal, string $createdAt): Collection
+    public function getAllAfterDateQuery(string $sumberKasId, string $tanggal, string $createdAt): \Illuminate\Database\Eloquent\Builder
     {
         return $this->model
             ->where('sumber_kas_id', $sumberKasId)
@@ -143,7 +143,6 @@ class KasPerusahaanRepository
                     });
             })
             ->orderBy('tanggal', 'asc')
-            ->orderBy('created_at', 'asc')
-            ->get();
+            ->orderBy('created_at', 'asc');
     }
 }

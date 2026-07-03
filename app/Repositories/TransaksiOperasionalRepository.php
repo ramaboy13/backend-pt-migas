@@ -111,23 +111,30 @@ class TransaksiOperasionalRepository
 
     public function getSummaryByPeriode(string $startDate, string $endDate): array
     {
-        $transactions = $this->model->whereBetween('tanggal', [$startDate, $endDate])->get();
+        $baseQuery = $this->model->whereBetween('tanggal', [$startDate, $endDate]);
 
-        $totalPemasukan = $transactions->where('is_pemasukan', true)->sum('jumlah');
-        $totalPengeluaran = $transactions->where('is_pemasukan', false)->sum('jumlah');
+        $totalPemasukan = (clone $baseQuery)->where('is_pemasukan', true)->sum('jumlah');
+        $totalPengeluaran = (clone $baseQuery)->where('is_pemasukan', false)->sum('jumlah');
         $netBalance = $totalPemasukan - $totalPengeluaran;
 
+        $summaryByJenis = (clone $baseQuery)
+            ->selectRaw('jenis_transaksi, count(*) as count, sum(jumlah) as total')
+            ->groupBy('jenis_transaksi')
+            ->get()
+            ->keyBy('jenis_transaksi')
+            ->map(function ($item) {
+                return [
+                    'count' => $item->count,
+                    'total' => (float) $item->total,
+                ];
+            })->toArray();
+
         return [
-            'total_transaksi' => $transactions->count(),
+            'total_transaksi' => (clone $baseQuery)->count(),
             'total_pemasukan' => (float) $totalPemasukan,
             'total_pengeluaran' => (float) $totalPengeluaran,
             'net_balance' => (float) $netBalance,
-            'summary_by_jenis' => $transactions->groupBy('jenis_transaksi')->map(function ($group) {
-                return [
-                    'count' => $group->count(),
-                    'total' => (float) $group->sum('jumlah'),
-                ];
-            })->toArray(),
+            'summary_by_jenis' => $summaryByJenis,
         ];
     }
 

@@ -102,4 +102,9 @@ class UserRepository
   {
     return $this->model->where('id', $id)->update(['is_active' => true]);
   }
+
+  public function getForDropdown(): \Illuminate\Support\Collection
+  {
+      return $this->model->where('is_active', true)->pluck('name', 'id');
+  }
 }

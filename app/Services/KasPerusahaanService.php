@@ -156,7 +156,7 @@ class KasPerusahaanService
                 return false;
             }
 
-            $laterRecords = $this->repository->getAllAfterDate(
+            $laterRecordsQuery = $this->repository->getAllAfterDateQuery(
                 $kasToDelete->sumber_kas_id,
                 $kasToDelete->tanggal,
                 $kasToDelete->created_at
@@ -165,18 +165,20 @@ class KasPerusahaanService
             $currentSaldo = $kasToDelete->saldo_sebelum;
 
             if ($this->repository->delete($id)) {
-                foreach ($laterRecords as $record) {
-                    if ($record->tipe_transaksi === 'DEBIT') {
-                        $record->saldo_sebelum = $currentSaldo;
-                        $record->saldo_sesudah = $currentSaldo + $record->jumlah;
-                    } else {
-                        $record->saldo_sebelum = $currentSaldo;
-                        $record->saldo_sesudah = $currentSaldo - $record->jumlah;
-                    }
+                $laterRecordsQuery->chunk(100, function ($records) use (&$currentSaldo) {
+                    foreach ($records as $record) {
+                        if ($record->tipe_transaksi === 'DEBIT') {
+                            $record->saldo_sebelum = $currentSaldo;
+                            $record->saldo_sesudah = $currentSaldo + $record->jumlah;
+                        } else {
+                            $record->saldo_sebelum = $currentSaldo;
+                            $record->saldo_sesudah = $currentSaldo - $record->jumlah;
+                        }
 
-                    $currentSaldo = $record->saldo_sesudah;
-                    $record->save();
-                }
+                        $currentSaldo = $record->saldo_sesudah;
+                        $record->save();
+                    }
+                });
 
                 $sumberKas->saldo_terakhir = $currentSaldo;
                 $sumberKas->save();

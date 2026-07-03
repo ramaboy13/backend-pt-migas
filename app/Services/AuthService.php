@@ -122,7 +122,9 @@ class AuthService
             throw new AuthenticationException('Pengguna tidak ditemukan');
         }
 
-        $userWithRoles = User::with('roles')->find($user->id);
+        $userWithRoles = \Illuminate\Support\Facades\Cache::remember('user_roles_' . $user->id, 300, function () use ($user) {
+            return User::with('roles')->find($user->id);
+        });
 
         return [
             'id' => $userWithRoles->id,

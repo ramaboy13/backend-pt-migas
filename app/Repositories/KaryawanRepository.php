@@ -60,4 +60,9 @@ class KaryawanRepository
     {
         return $this->model->where('id', $id)->delete();
     }
+
+    public function getForDropdown(): \Illuminate\Support\Collection
+    {
+        return $this->model->where('aktif', true)->pluck('nama', 'id');
+    }
 }

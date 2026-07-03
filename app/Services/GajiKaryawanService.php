@@ -149,65 +149,65 @@ class GajiKaryawanService
      */
     public function generateGajiForAllKaryawan(int $bulan, int $tahun, float $potonganLainnya = 0, float $pph21 = 0): array
     {
-        return DB::transaction(function () use ($bulan, $tahun, $potonganLainnya, $pph21) {
-            $karyawanList = \App\Models\Karyawan::where('is_active', true)->get();
+        // Execute in transaction but chunking might have issues with long transactions, however we keep it for consistency or we can do transaction per chunk.
+        // Doing transaction per chunk is safer for memory and locking.
+        
+        $totalKaryawan = \App\Models\Karyawan::where('aktif', true)->count(); // based on KaryawanRepository the field might be aktif
+        
+        $results = [];
+        $successCount = 0;
+        $failedCount = 0;
+        $errors = [];
 
-            $results = [];
-            $successCount = 0;
-            $failedCount = 0;
-            $errors = [];
+        \App\Models\Karyawan::where('aktif', true)->chunk(100, function ($karyawanList) use ($bulan, $tahun, $potonganLainnya, $pph21, &$results, &$successCount, &$failedCount, &$errors) {
+            DB::transaction(function () use ($karyawanList, $bulan, $tahun, $potonganLainnya, $pph21, &$results, &$successCount, &$failedCount, &$errors) {
+                foreach ($karyawanList as $karyawan) {
+                    try {
+                        $existing = $this->repository->findByKaryawanAndPeriode($karyawan->id, $bulan, $tahun);
 
-            foreach ($karyawanList as $karyawan) {
-                try {
-                    // Cek apakah sudah ada
-                    $existing = $this->repository->findByKaryawanAndPeriode($karyawan->id, $bulan, $tahun);
+                        if ($existing) {
+                            $calculation = $this->payrollService->processGajiKaryawanCalculation(
+                                $karyawan->id,
+                                $bulan,
+                                $tahun,
+                                $potonganLainnya,
+                                $pph21
+                            );
+                            $existing->update($calculation);
+                            $results[] = ['karyawan' => $karyawan->nama, 'status' => 'updated'];
+                            $successCount++;
+                        } else {
+                            $calculation = $this->payrollService->processGajiKaryawanCalculation(
+                                $karyawan->id,
+                                $bulan,
+                                $tahun,
+                                $potonganLainnya,
+                                $pph21
+                            );
+                            $calculation['tanggal_gaji'] = now();
+                            $calculation['status'] = 'PROCESSED';
+                            $calculation['processed_at'] = now();
 
-                    if ($existing) {
-                        // Update existing
-                        $calculation = $this->payrollService->processGajiKaryawanCalculation(
-                            $karyawan->id,
-                            $bulan,
-                            $tahun,
-                            $potonganLainnya,
-                            $pph21
-                        );
-
-                        $existing->update($calculation);
-                        $results[] = ['karyawan' => $karyawan->nama, 'status' => 'updated'];
-                        $successCount++;
-                    } else {
-                        // Create new
-                        $calculation = $this->payrollService->processGajiKaryawanCalculation(
-                            $karyawan->id,
-                            $bulan,
-                            $tahun,
-                            $potonganLainnya,
-                            $pph21
-                        );
-
-                        $calculation['tanggal_gaji'] = now();
-                        $calculation['status'] = 'PROCESSED';
-                        $calculation['processed_at'] = now();
-
-                        $this->repository->create($calculation);
-                        $results[] = ['karyawan' => $karyawan->nama, 'status' => 'created'];
-                        $successCount++;
+                            $this->repository->create($calculation);
+                            $results[] = ['karyawan' => $karyawan->nama, 'status' => 'created'];
+                            $successCount++;
+                        }
+                    } catch (\Exception $e) {
+                        $failedCount++;
+                        $errors[] = ['karyawan' => $karyawan->nama, 'error' => $e->getMessage()];
                     }
-                } catch (\Exception $e) {
-                    $failedCount++;
-                    $errors[] = ['karyawan' => $karyawan->nama, 'error' => $e->getMessage()];
                 }
-            }
-
-            return [
-                'success' => true,
-                'total_karyawan' => $karyawanList->count(),
-                'success_count' => $successCount,
-                'failed_count' => $failedCount,
-                'results' => $results,
-                'errors' => $errors,
-            ];
+            });
         });
+
+        return [
+            'success' => true,
+            'total_karyawan' => $totalKaryawan,
+            'success_count' => $successCount,
+            'failed_count' => $failedCount,
+            'results' => $results,
+            'errors' => $errors,
+        ];
     }
 
     /**
