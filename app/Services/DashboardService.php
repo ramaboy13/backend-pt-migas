@@ -82,4 +82,29 @@ class DashboardService
         );
     }
 
+    public function clearCache(): void
+    {
+        $keys = [
+            'dashboard_summary_current',
+            'dashboard_charts_current',
+            'dashboard_recent_trans_current',
+            'dashboard_recent_kas_current',
+            'dashboard_total_users_current',
+            'dashboard_user_role_stats_current',
+        ];
+        
+        $month = date('m');
+        $year = date('Y');
+        
+        $keys[] = "dashboard_summary_{$month}_{$year}";
+        $keys[] = "dashboard_charts_{$month}_{$year}";
+        $keys[] = "dashboard_recent_trans_{$month}_{$year}";
+        $keys[] = "dashboard_recent_kas_{$month}_{$year}";
+        $keys[] = "dashboard_total_users_{$month}_{$year}";
+        $keys[] = "dashboard_user_role_stats_{$month}_{$year}";
+
+        foreach ($keys as $key) {
+            Cache::forget($key);
+        }
+    }
 }

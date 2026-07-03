@@ -99,7 +99,7 @@ class TransaksiOperasional extends Model
         return match ($this->jenis_transaksi) {
             'PEMBELIAN_GAS' => 'Pembelian Gas',
             'MAINTENANCE' => 'Maintenance',
-            'PENJUALAN_PANGKALAN' => 'Penjualan Pangkalan',
+            'PENJUALAN_GAS' => 'Penjualan Gas',
             'LAINNYA' => 'Lainnya',
             default => $this->jenis_transaksi
         };

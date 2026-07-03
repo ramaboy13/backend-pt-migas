@@ -97,7 +97,7 @@ class DashboardRepository
         $startOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->startOfMonth() : Carbon::now()->startOfMonth();
         $endOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->endOfMonth() : Carbon::now()->endOfMonth();
 
-        $types = ['PEMBELIAN_GAS', 'PENJUALAN_PANGKALAN', 'PENJUALAN_GAS', 'MAINTENANCE', 'LAINNYA'];
+        $types = ['PEMBELIAN_GAS', 'PENJUALAN_GAS', 'MAINTENANCE', 'LAINNYA'];
         $result = [];
 
         foreach ($types as $type) {
@@ -256,7 +256,6 @@ class DashboardRepository
         return match ($jenis) {
             'PEMBELIAN_GAS' => 'Pembelian Gas',
             'PENJUALAN_GAS' => 'Penjualan Gas',
-            'PENJUALAN_PANGKALAN' => 'Penjualan Pangkalan',
             'MAINTENANCE' => 'Maintenance',
             'LAINNYA' => 'Lainnya',
             default => $jenis

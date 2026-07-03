@@ -13,7 +13,8 @@ class TransaksiOperasionalService
 {
     public function __construct(
         private TransaksiOperasionalRepository $repository,
-        private KasPerusahaanService $kasPerusahaanService
+        private KasPerusahaanService $kasPerusahaanService,
+        private DashboardService $dashboardService
     ) {}
 
     public function getAllTransaksi(
@@ -43,6 +44,8 @@ class TransaksiOperasionalService
             $data['kas_perusahaan_id'] = $kasPerusahaan->id;
 
             $transaksi = $this->repository->create($data);
+
+            $this->dashboardService->clearCache();
 
             return TransaksiOperasionalDTO::fromModel($transaksi);
         });
@@ -81,6 +84,8 @@ class TransaksiOperasionalService
                 return null;
             }
 
+            $this->dashboardService->clearCache();
+
             return $this->getTransaksiById($id);
         });
     }
@@ -109,6 +114,8 @@ class TransaksiOperasionalService
                     );
                 }
             }
+
+            $this->dashboardService->clearCache();
 
             return true;
         });

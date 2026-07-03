@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Log;
 class KasPerusahaanService
 {
     public function __construct(
-        private KasPerusahaanRepository $repository
+        private KasPerusahaanRepository $repository,
+        private DashboardService $dashboardService
     ) {}
 
     public function getAllKasPerusahaan(
@@ -69,6 +70,8 @@ class KasPerusahaanService
 
             $sumberKas->saldo_terakhir = $saldoSesudah;
             $sumberKas->save();
+
+            $this->dashboardService->clearCache();
 
             return KasPerusahaanDTO::fromModel($kasPerusahaan);
         });
@@ -135,6 +138,8 @@ class KasPerusahaanService
                 return null;
             }
 
+            $this->dashboardService->clearCache();
+
             return $this->getKasPerusahaanById($id);
         });
     }
@@ -182,6 +187,8 @@ class KasPerusahaanService
 
                 $sumberKas->saldo_terakhir = $currentSaldo;
                 $sumberKas->save();
+
+                $this->dashboardService->clearCache();
 
                 return true;
             }
