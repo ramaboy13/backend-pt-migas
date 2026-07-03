@@ -189,15 +189,6 @@ class GajiKaryawanRepository
         ];
     }
 
-    public function getGajiBelumDiprosesByPeriode(int $bulan, int $tahun): LengthAwarePaginator
-    {
-        return $this->model->with('karyawan')
-            ->where('bulan', $bulan)
-            ->where('tahun', $tahun)
-            ->where('status', 'Belum Dibayar')
-            ->paginate(10);
-    }
-
     /**
      * Get all gaji for PDF export
      */

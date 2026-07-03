@@ -228,15 +228,4 @@ class PayrollCalculationService
         ];
     }
 
-    /**
-     * Process transaksi operasional calculation
-     */
-    public function processTransaksiCalculation(array $data): array
-    {
-        return DB::transaction(function () use ($data) {
-            $calculation = $this->calculateTransaksiOperasional($data);
-
-            return array_merge($data, $calculation);
-        });
     }
-}

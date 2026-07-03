@@ -92,8 +92,4 @@ class KomponenGajiService
         return KomponenGajiCollectionDTO::fromPaginator($komponen, true);
     }
 
-    public function getTotalPerPeriode(string $karyawanId, string $tipe, int $bulan, int $tahun): float
-    {
-        return $this->repository->getTotalByPeriode($karyawanId, $tipe, $bulan, $tahun);
     }
-}

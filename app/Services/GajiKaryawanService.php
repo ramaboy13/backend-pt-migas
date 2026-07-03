@@ -59,6 +59,11 @@ class GajiKaryawanService
             $processedData = array_merge($data, $calculation);
             $processedData['tanggal_gaji'] = $data['tanggal_gaji'] ?? now();
 
+            if (isset($processedData['status']) && $processedData['status'] === 'Telah Dibayar') {
+                $processedData['processed_by'] = \Illuminate\Support\Facades\Auth::user()?->name ?? 'System';
+                $processedData['processed_at'] = now();
+            }
+
             // Create gaji karyawan
             $gaji = $this->repository->create($processedData);
 
@@ -113,6 +118,18 @@ class GajiKaryawanService
                 );
 
                 $data = array_merge($data, $calculation);
+            }
+
+            if (isset($data['status']) && $data['status'] === 'Telah Dibayar') {
+                if (!isset($data['processed_by'])) {
+                    $data['processed_by'] = \Illuminate\Support\Facades\Auth::user()?->name ?? 'System';
+                }
+                if (!isset($data['processed_at'])) {
+                    $data['processed_at'] = now();
+                }
+            } elseif (isset($data['status']) && $data['status'] === 'Belum Dibayar') {
+                $data['processed_by'] = null;
+                $data['processed_at'] = null;
             }
 
             $updated = $this->repository->update($id, $data);
@@ -215,10 +232,16 @@ class GajiKaryawanService
      */
     public function updateStatus(string $id, string $status): ?GajiKaryawanDTO
     {
-        $updated = $this->repository->update($id, [
+        $updateData = [
             'status' => $status,
             'processed_at' => now(),
-        ]);
+        ];
+
+        if ($status === 'Telah Dibayar') {
+            $updateData['processed_by'] = \Illuminate\Support\Facades\Auth::user()?->name ?? 'System';
+        }
+
+        $updated = $this->repository->update($id, $updateData);
 
         if (! $updated) {
             return null;

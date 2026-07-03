@@ -55,8 +55,4 @@ class AssetRepository
         return $asset ? $asset->delete() : false;
     }
 
-    public function getForDropdown(): \Illuminate\Support\Collection
-    {
-        return $this->model->where('status', 'Tersedia')->pluck('nama', 'id');
     }
-}

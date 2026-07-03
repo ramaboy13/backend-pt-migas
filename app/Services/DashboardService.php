@@ -16,17 +16,19 @@ class DashboardService
         private DashboardRepository $repository
     ) {}
 
-    public function getDashboard(): DashboardDTO
+    public function getDashboard(?string $bulan = null, ?string $tahun = null): DashboardDTO
     {
         $user = Auth::user();
         $isSuperAdmin = $user && $user->hasRole('super_admin');
 
+        $cacheKeySuffix = $bulan && $tahun ? "_{$bulan}_{$tahun}" : '_current';
+
         // Cache summary data for 10 minutes
-        $summaryData = Cache::remember('dashboard_summary', 600, function () {
+        $summaryData = Cache::remember("dashboard_summary{$cacheKeySuffix}", 600, function () use ($bulan, $tahun) {
             return [
                 'totalSaldoKas' => $this->repository->getTotalSaldoKas(),
-                'totalPemasukanBulanIni' => $this->repository->getTotalPemasukanBulanIni(),
-                'totalPengeluaranBulanIni' => $this->repository->getTotalPengeluaranBulanIni(),
+                'totalPemasukanBulanIni' => $this->repository->getTotalPemasukanBulanIni($bulan, $tahun),
+                'totalPengeluaranBulanIni' => $this->repository->getTotalPengeluaranBulanIni($bulan, $tahun),
                 'totalAsset' => $this->repository->getTotalAsset(),
             ];
         });
@@ -34,9 +36,9 @@ class DashboardService
         // Add super admin specific data
         $userRoleData = null;
         if ($isSuperAdmin) {
-            $summaryData['totalUsers'] = Cache::remember('dashboard_total_users', 600, fn() => $this->repository->getTotalUsers());
+            $summaryData['totalUsers'] = Cache::remember("dashboard_total_users{$cacheKeySuffix}", 600, fn() => $this->repository->getTotalUsers());
 
-            $userRoleData = Cache::remember('dashboard_user_role_stats', 600, function () {
+            $userRoleData = Cache::remember("dashboard_user_role_stats{$cacheKeySuffix}", 600, function () {
                 return [
                     'stats_by_role' => $this->repository->getUserStatsByRole(),
                 ];
@@ -46,10 +48,10 @@ class DashboardService
         $summary = new DashboardSummaryDTO(...$summaryData);
 
         // Get chart data, cache for 10 minutes
-        $chartsData = Cache::remember('dashboard_charts', 600, function () {
+        $chartsData = Cache::remember("dashboard_charts{$cacheKeySuffix}", 600, function () use ($bulan, $tahun) {
             return [
-                'dailyTransactions' => $this->repository->getDailyTransactions(7),
-                'transactionByType' => $this->repository->getTransactionByType(),
+                'dailyTransactions' => $this->repository->getDailyTransactions($bulan, $tahun, 7),
+                'transactionByType' => $this->repository->getTransactionByType($bulan, $tahun),
                 'saldoPerSumberKas' => $this->repository->getSaldoPerSumberKas()
             ];
         });
@@ -60,16 +62,16 @@ class DashboardService
             saldoPerSumberKas: $chartsData['saldoPerSumberKas']
         );
 
-        // Get recent activities (maybe shorter cache, e.g. 1 minute, or no cache)
-        $recentTransactions = Cache::remember('dashboard_recent_trans', 60, fn() => $this->repository->getRecentTransactions(10));
-        $recentUsers = $isSuperAdmin ? Cache::remember('dashboard_recent_users', 60, fn() => $this->repository->getRecentUsers(10)) : null;
+        // Get recent activities (maybe shorter cache, e.g. 1 minute, or no cache). Limit to 5
+        $recentTransactions = Cache::remember("dashboard_recent_trans{$cacheKeySuffix}", 60, fn() => $this->repository->getRecentTransactions(5));
+        $recentUsers = $isSuperAdmin ? Cache::remember("dashboard_recent_users{$cacheKeySuffix}", 60, fn() => $this->repository->getRecentUsers(5)) : null;
 
         $recentActivities = new RecentActivityDTO(
             recentTransactions: $recentTransactions,
             recentUsers: $recentUsers
         );
         
-        $recentKasPerusahaan = Cache::remember('dashboard_recent_kas', 60, fn() => $this->repository->getRecentKasPerusahaan(10));
+        $recentKasPerusahaan = Cache::remember("dashboard_recent_kas{$cacheKeySuffix}", 60, fn() => $this->repository->getRecentKasPerusahaan(5));
 
         return new DashboardDTO(
             summary: $summary->toArray(),
@@ -80,47 +82,4 @@ class DashboardService
         );
     }
 
-    /**
-     * Get summary only (for widget refresh)
-     */
-    public function getDashboardSummary(): array
-    {
-        $user = Auth::user();
-        $isSuperAdmin = $user && $user->hasRole('super_admin');
-
-        $summaryData = Cache::remember('dashboard_summary_widget', 600, function () {
-            $pemasukan = $this->repository->getTotalPemasukanBulanIni();
-            $pengeluaran = $this->repository->getTotalPengeluaranBulanIni();
-            
-            return [
-                'total_saldo_kas' => $this->repository->getTotalSaldoKas(),
-                'total_pemasukan_bulan_ini' => $pemasukan,
-                'total_pengeluaran_bulan_ini' => $pengeluaran,
-                'net_cashflow' => $pemasukan - $pengeluaran,
-                'total_karyawan' => $this->repository->getTotalKaryawan(),
-                'total_asset' => $this->repository->getTotalAsset(),
-            ];
-        });
-
-        if ($isSuperAdmin) {
-            $summaryData['total_users'] = Cache::remember('dashboard_total_users', 600, fn() => $this->repository->getTotalUsers());
-            $summaryData['new_users_this_month'] = Cache::remember('dashboard_new_users', 600, fn() => $this->repository->getNewUsersThisMonth());
-        }
-
-        return $summaryData;
-    }
-
-    /**
-     * Get chart data only (for chart refresh)
-     */
-    public function getDashboardCharts(): array
-    {
-        return Cache::remember('dashboard_charts_widget', 600, function () {
-            return [
-                'daily_transactions' => $this->repository->getDailyTransactions(7),
-                'transaction_by_type' => $this->repository->getTransactionByType(),
-                'saldo_per_sumber_kas' => $this->repository->getSaldoPerSumberKas(),
-            ];
-        });
-    }
 }

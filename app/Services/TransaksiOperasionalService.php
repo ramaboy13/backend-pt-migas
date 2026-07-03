@@ -218,8 +218,4 @@ class TransaksiOperasionalService
         ];
     }
 
-    public function validateSumberKasActive(string $sumberKasId): bool
-    {
-        return true;
     }
-}

@@ -144,10 +144,4 @@ class SumberKasService
         }
     }
 
-    public function validateSumberKasActive(string $id): bool
-    {
-        $sumberKas = $this->repository->findById($id);
-
-        return $sumberKas && $sumberKas->aktif;
     }
-}

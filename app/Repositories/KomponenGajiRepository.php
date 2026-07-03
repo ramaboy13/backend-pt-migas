@@ -150,24 +150,4 @@ class KomponenGajiRepository
             ->sum('nominal');
     }
 
-    public function getKaryawanInfo(string $karyawanId): array
-    {
-        $karyawan = $this->karyawanModel->find($karyawanId);
-
-        if (! $karyawan) {
-            throw new ModelNotFoundException("Karyawan dengan ID {$karyawanId} tidak ditemukan");
-        }
-
-        return [
-            'id' => $karyawan->id,
-            'nik' => $karyawan->nik,  // PERBAIKAN: lowercase nik
-            'nama' => $karyawan->nama,
-            'is_active' => $karyawan->aktif,  // PERBAIKAN: aktif
-            'tgl_masuk' => $karyawan->tgl_masuk,
-            'jabatan' => $karyawan->jabatan,
-            'gapok' => $karyawan->gaji_pokok,  // PERBAIKAN: gaji_pokok
-            'bpjs_kesehatan' => $karyawan->bpjs_kesehatan,
-            'bpjs_tenagakerja' => $karyawan->bpjs_tenagakerja,
-        ];
     }
-}

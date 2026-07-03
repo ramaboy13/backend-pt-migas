@@ -65,11 +65,6 @@ class KasPerusahaanRepository
         return $query->find($id);
     }
 
-    public function findByTransaksiOperasionalId(string $transaksiOperasionalId): ?KasPerusahaan
-    {
-        return $this->model->where('transaksi_operasional_id', $transaksiOperasionalId)->first();
-    }
-
     public function create(array $data): KasPerusahaan
     {
         return $this->model->create($data);
@@ -97,40 +92,6 @@ class KasPerusahaanRepository
         return $kasPerusahaan->delete();
     }
 
-    public function getSaldoSebelum(string $sumberKasId, string $tanggal): float
-    {
-        // Cari record terakhir sebelum tanggal yang diberikan
-        $lastRecord = $this->model
-            ->where('sumber_kas_id', $sumberKasId)
-            ->whereDate('tanggal', '<', $tanggal)
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if ($lastRecord) {
-            return (float) $lastRecord->saldo_sesudah;
-        }
-
-        // Jika tidak ada record sebelumnya, ambil saldo_terakhir dari sumber kas
-        $sumberKas = SumberKas::find($sumberKasId);
-
-        return $sumberKas ? (float) $sumberKas->saldo_terakhir : 0;
-    }
-
-    public function updateSaldoTerakhirSumberKas(string $sumberKasId, float $saldoBaru): bool
-    {
-        return SumberKas::where('id', $sumberKasId)
-            ->update(['saldo_terakhir' => $saldoBaru]);
-    }
-
-    public function findLatestBySumberKas(string $sumberKasId): ?KasPerusahaan
-    {
-        return $this->model
-            ->where('sumber_kas_id', $sumberKasId)
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->first();
-    }
     public function getAllAfterDateQuery(string $sumberKasId, string $tanggal, string $createdAt): \Illuminate\Database\Eloquent\Builder
     {
         return $this->model

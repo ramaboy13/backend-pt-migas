@@ -60,11 +60,6 @@ class TransaksiOperasionalRepository
         return $query->find($id);
     }
 
-    public function findByNoRef(string $noRef): ?TransaksiOperasional
-    {
-        return $this->model->where('no_ref', $noRef)->first();
-    }
-
     public function create(array $data): TransaksiOperasional
     {
         return $this->model->create($data);
@@ -138,8 +133,4 @@ class TransaksiOperasionalRepository
         ];
     }
 
-    public function getByKasPerusahaan(string $kasPerusahaanId): ?TransaksiOperasional
-    {
-        return $this->model->where('kas_perusahaan_id', $kasPerusahaanId)->first();
     }
-}

@@ -23,12 +23,12 @@ class DashboardRepository
     /**
      * Get total pemasukan bulan ini
      */
-    public function getTotalPemasukanBulanIni(): float
+    public function getTotalPemasukanBulanIni(?string $bulan = null, ?string $tahun = null): float
     {
-        $startOfMonth = Carbon::now()->startOfMonth();
-        $endOfMonth = Carbon::now()->endOfMonth();
+        $startOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->startOfMonth() : Carbon::now()->startOfMonth();
+        $endOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->endOfMonth() : Carbon::now()->endOfMonth();
 
-        return (float) TransaksiOperasional::where('is_pemasukan', true)
+        return (float) KasPerusahaan::where('tipe_transaksi', 'DEBIT')
             ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
             ->sum('jumlah');
     }
@@ -36,22 +36,14 @@ class DashboardRepository
     /**
      * Get total pengeluaran bulan ini
      */
-    public function getTotalPengeluaranBulanIni(): float
+    public function getTotalPengeluaranBulanIni(?string $bulan = null, ?string $tahun = null): float
     {
-        $startOfMonth = Carbon::now()->startOfMonth();
-        $endOfMonth = Carbon::now()->endOfMonth();
+        $startOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->startOfMonth() : Carbon::now()->startOfMonth();
+        $endOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->endOfMonth() : Carbon::now()->endOfMonth();
 
-        return (float) TransaksiOperasional::where('is_pemasukan', false)
+        return (float) KasPerusahaan::where('tipe_transaksi', 'KREDIT')
             ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
             ->sum('jumlah');
-    }
-
-    /**
-     * Get total karyawan aktif
-     */
-    public function getTotalKaryawan(): int
-    {
-        return Karyawan::where('aktif', true)->count();
     }
 
     /**
@@ -63,21 +55,26 @@ class DashboardRepository
     }
 
     /**
-     * Get daily transactions for last 7 days
+     * Get daily transactions for last 7 days from selected month/year or now
      */
-    public function getDailyTransactions(int $days = 7): array
+    public function getDailyTransactions(?string $bulan = null, ?string $tahun = null, int $days = 7): array
     {
         $result = [];
+        
+        $baseDate = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->endOfMonth() : Carbon::now();
+        if ($baseDate->isFuture()) {
+            $baseDate = Carbon::now(); // Don't show future days if current month
+        }
 
         for ($i = $days - 1; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
+            $date = $baseDate->copy()->subDays($i);
             $dateString = $date->format('Y-m-d');
 
-            $pemasukan = (float) TransaksiOperasional::where('is_pemasukan', true)
+            $pemasukan = (float) KasPerusahaan::where('tipe_transaksi', 'DEBIT')
                 ->whereDate('tanggal', $dateString)
                 ->sum('jumlah');
 
-            $pengeluaran = (float) TransaksiOperasional::where('is_pemasukan', false)
+            $pengeluaran = (float) KasPerusahaan::where('tipe_transaksi', 'KREDIT')
                 ->whereDate('tanggal', $dateString)
                 ->sum('jumlah');
 
@@ -93,14 +90,14 @@ class DashboardRepository
     }
 
     /**
-     * Get transaction summary by type for current month
+     * Get transaction summary by type for selected month/year
      */
-    public function getTransactionByType(): array
+    public function getTransactionByType(?string $bulan = null, ?string $tahun = null): array
     {
-        $startOfMonth = Carbon::now()->startOfMonth();
-        $endOfMonth = Carbon::now()->endOfMonth();
+        $startOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->startOfMonth() : Carbon::now()->startOfMonth();
+        $endOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->endOfMonth() : Carbon::now()->endOfMonth();
 
-        $types = ['PEMBELIAN_GAS', 'PENJUALAN_PANGKALAN', 'MAINTENANCE', 'LAINNYA'];
+        $types = ['PEMBELIAN_GAS', 'PENJUALAN_PANGKALAN', 'PENJUALAN_GAS', 'MAINTENANCE', 'LAINNYA'];
         $result = [];
 
         foreach ($types as $type) {
@@ -206,16 +203,6 @@ class DashboardRepository
     }
 
     /**
-     * Get new users this month
-     */
-    public function getNewUsersThisMonth(): int
-    {
-        $startOfMonth = Carbon::now()->startOfMonth();
-
-        return User::where('created_at', '>=', $startOfMonth)->count();
-    }
-
-    /**
      * Get recent users (last 10)
      */
     public function getRecentUsers(int $limit = 10): array
@@ -268,6 +255,7 @@ class DashboardRepository
     {
         return match ($jenis) {
             'PEMBELIAN_GAS' => 'Pembelian Gas',
+            'PENJUALAN_GAS' => 'Penjualan Gas',
             'PENJUALAN_PANGKALAN' => 'Penjualan Pangkalan',
             'MAINTENANCE' => 'Maintenance',
             'LAINNYA' => 'Lainnya',

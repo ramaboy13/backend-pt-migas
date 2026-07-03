@@ -41,11 +41,6 @@ class KaryawanRepository
         return $this->model->find($id);
     }
 
-    public function findByNIK(string $nik): ?Karyawan
-    {
-        return $this->model->where('NIK', $nik)->first();
-    }
-
     public function create(array $data): Karyawan
     {
         return $this->model->create($data);
@@ -61,8 +56,4 @@ class KaryawanRepository
         return $this->model->where('id', $id)->delete();
     }
 
-    public function getForDropdown(): \Illuminate\Support\Collection
-    {
-        return $this->model->where('aktif', true)->pluck('nama', 'id');
     }
-}
