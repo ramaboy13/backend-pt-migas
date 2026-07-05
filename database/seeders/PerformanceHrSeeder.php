@@ -31,8 +31,8 @@ class PerformanceHrSeeder extends Seeder
                 $karyawanId = Str::uuid()->toString();
                 
                 // Random date between 2020 and 2026 for Karyawan
-                $tglMasuk = $faker->dateTimeBetween('2020-01-01', '2026-06-30')->format('Y-m-d');
-                $gapok = $faker->randomElement([4000000, 5000000, 6000000, 7000000, 8000000]);
+                $tglMasuk = date('Y-m-d', rand(strtotime('2020-01-01'), strtotime('2026-06-30')));
+                $gapok = [4000000, 5000000, 6000000, 7000000, 8000000][rand(0, 4)];
 
                 $karyawanChunk[] = [
                     'id' => $karyawanId,
