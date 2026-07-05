@@ -89,9 +89,9 @@ class PerformanceHrSeeder extends Seeder
                 $gajiKaryawanChunk[] = [
                     'id' => $gajiKaryawanId,
                     'karyawan_id' => $karyawanId,
-                    'bulan' => (int) $tanggalKomponen->format('m'),
-                    'tahun' => (int) $tanggalKomponen->format('Y'),
-                    'tanggal_gaji' => $tanggalKomponen->format('Y-m-25'),
+                    'bulan' => (int) date('m', $timestamp),
+                    'tahun' => (int) date('Y', $timestamp),
+                    'tanggal_gaji' => date('Y-m-25', $timestamp),
                     'gapok' => $gapok,
                     'total_lembur' => $totalLembur,
                     'total_tunjangan' => $totalTunjangan,
