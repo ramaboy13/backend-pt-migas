@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Faker\Factory as Faker;
 use Carbon\Carbon;
 
 class PerformanceHrSeeder extends Seeder
@@ -15,10 +14,11 @@ class PerformanceHrSeeder extends Seeder
         ini_set('memory_limit', '1024M');
         DB::disableQueryLog();
 
-        $faker = Faker::create('id_ID');
         $totalRecords = 100000;
         $chunkSize = 2000;
         $batches = ceil($totalRecords / $chunkSize);
+
+        $jabatans = ['Staff', 'Manager', 'Supervisor', 'Operator', 'Teknisi', 'Admin', 'Direktur'];
 
         $this->command->info("Memulai pembuatan {$totalRecords} data Karyawan, Komponen Gaji, dan Gaji Karyawan...");
 
@@ -36,32 +36,34 @@ class PerformanceHrSeeder extends Seeder
 
                 $karyawanChunk[] = [
                     'id' => $karyawanId,
-                    'nik' => $faker->numerify('################'),
-                    'nama' => $faker->name,
-                    'jabatan' => $faker->jobTitle,
+                    'nik' => (string) rand(1000000000000000, 9999999999999999),
+                    'nama' => 'Karyawan ' . Str::random(8),
+                    'jabatan' => $jabatans[array_rand($jabatans)],
                     'gaji_pokok' => $gapok,
                     'bpjs_kesehatan' => 1, // 1%
                     'bpjs_tenagakerja' => 2, // 2%
                     'tgl_masuk' => $tglMasuk,
                     'aktif' => true,
-                    'alamat' => $faker->address,
+                    'alamat' => 'Jalan ' . Str::random(10) . ' No. ' . rand(1, 999),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
 
                 // Generate 1 Komponen Gaji per karyawan for the same month/year
                 $komponenGajiId = Str::uuid()->toString();
-                $tanggalKomponen = $faker->dateTimeBetween('2020-01-01', '2026-06-30');
-                $tipe = $faker->randomElement(['LEMBUR', 'TUNJANGAN']);
+                // Random date between 2020 and 2026
+                $timestamp = rand(strtotime('2020-01-01'), strtotime('2026-06-30'));
+                $tanggalKomponen = date('Y-m-d', $timestamp);
+                $tipe = rand(0, 1) === 0 ? 'LEMBUR' : 'TUNJANGAN';
                 $jamLembur = $tipe === 'LEMBUR' ? rand(1, 10) : 0;
                 $upahPerjam = $tipe === 'LEMBUR' ? 25000 : 0;
-                $nominalKomponen = $tipe === 'LEMBUR' ? ($jamLembur * $upahPerjam) : $faker->randomElement([100000, 200000, 300000]);
+                $nominalKomponen = $tipe === 'LEMBUR' ? ($jamLembur * $upahPerjam) : [100000, 200000, 300000][rand(0,2)];
 
                 $komponenGajiChunk[] = [
                     'id' => $komponenGajiId,
                     'tipe' => $tipe,
                     'karyawan_id' => $karyawanId,
-                    'tanggal' => $tanggalKomponen->format('Y-m-d'),
+                    'tanggal' => $tanggalKomponen,
                     'jam_lembur' => $jamLembur,
                     'total_jam_lembur' => $jamLembur,
                     'upah_perjam' => $upahPerjam,

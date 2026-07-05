@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Faker\Factory as Faker;
 use Carbon\Carbon;
 use App\Models\SumberKas;
 use App\Models\Tabung;
@@ -26,7 +25,6 @@ class PerformanceOpsSeeder extends Seeder
         DB::table('tb_sumber_kas')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $faker = Faker::create('id_ID');
         $totalRecords = 100000;
         $chunkSize = 2000;
         $batches = ceil($totalRecords / $chunkSize);
@@ -37,8 +35,8 @@ class PerformanceOpsSeeder extends Seeder
         for ($i = 0; $i < 10; $i++) {
             $sumberKas = SumberKas::create([
                 'tipe' => 'BANK',
-                'nama_bank' => 'Bank ' . $faker->company,
-                'nomor_rekening' => $faker->bankAccountNumber,
+                'nama_bank' => 'Bank ' . Str::random(5),
+                'nomor_rekening' => (string) rand(1000000000, 9999999999),
                 'atas_nama' => 'PT MIGAS ' . $i,
                 'saldo_awal' => 100000000,
                 'saldo_terakhir' => 100000000,
@@ -51,8 +49,8 @@ class PerformanceOpsSeeder extends Seeder
         $tabungIds = [];
         for ($i = 0; $i < 10; $i++) {
             $tabung = Tabung::create([
-                'nama' => 'Tabung Gas ' . $faker->randomElement(['3KG', '5KG', '12KG']),
-                'berat' => $faker->randomFloat(2, 3, 12),
+                'nama' => 'Tabung Gas ' . ['3KG', '5KG', '12KG'][rand(0, 2)],
+                'berat' => rand(300, 1200) / 100,
             ]);
             $tabungIds[] = $tabung->id;
         }
@@ -70,8 +68,8 @@ class PerformanceOpsSeeder extends Seeder
                 $assetId = Str::uuid()->toString();
                 $assetChunk[] = [
                     'id' => $assetId,
-                    'nama' => 'Kendaraan ' . $faker->word,
-                    'identitas' => 'B ' . rand(1000, 9999) . ' ' . strtoupper($faker->lexify('??')),
+                    'nama' => 'Kendaraan ' . Str::random(5),
+                    'identitas' => 'B ' . rand(1000, 9999) . ' ' . chr(rand(65, 90)) . chr(rand(65, 90)),
                     'jumlah' => 1,
                     'catatan' => 'Baik',
                     'status' => true,
@@ -84,9 +82,9 @@ class PerformanceOpsSeeder extends Seeder
                 $pangkalanChunk[] = [
                     'id' => $pangkalanId,
                     'regist_id' => (int) ($batch . str_pad($i, 5, '0', STR_PAD_LEFT)),
-                    'nama' => 'Pangkalan ' . $faker->company,
+                    'nama' => 'Pangkalan ' . Str::random(6),
                     'no_ktp' => (int) ('32' . str_pad($batch, 4, '0', STR_PAD_LEFT) . str_pad($i, 5, '0', STR_PAD_LEFT)),
-                    'alamat' => $faker->address,
+                    'alamat' => 'Jalan ' . Str::random(10) . ' No ' . rand(1, 100),
                     'harga_satuan' => 15000,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -96,8 +94,10 @@ class PerformanceOpsSeeder extends Seeder
                 $transaksiId = Str::uuid()->toString();
                 $kasId = Str::uuid()->toString();
                 
-                $tanggal = $faker->dateTimeBetween('2020-01-01', '2026-06-30')->format('Y-m-d');
-                $jenisTransaksi = $faker->randomElement(['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_GAS', 'LAINNYA']);
+                $timestamp = rand(strtotime('2020-01-01'), strtotime('2026-06-30'));
+                $tanggal = date('Y-m-d', $timestamp);
+                $jenisTransaksiArray = ['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_GAS', 'LAINNYA'];
+                $jenisTransaksi = $jenisTransaksiArray[array_rand($jenisTransaksiArray)];
                 
                 $isPemasukan = $jenisTransaksi === 'PENJUALAN_GAS' ? true : false;
                 $prefix = $isPemasukan ? 'IN' : 'OUT';
@@ -106,8 +106,8 @@ class PerformanceOpsSeeder extends Seeder
                 $qty = rand(10, 100);
                 $hargaSatuan = 15000;
                 $jumlah = $qty * $hargaSatuan;
-                $sumberKasId = $faker->randomElement($sumberKasIds);
-                $tabungId = $faker->randomElement($tabungIds);
+                $sumberKasId = $sumberKasIds[array_rand($sumberKasIds)];
+                $tabungId = $tabungIds[array_rand($tabungIds)];
 
                 $transaksiChunk[] = [
                     'id' => $transaksiId,
