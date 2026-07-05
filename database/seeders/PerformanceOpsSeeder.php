@@ -94,7 +94,7 @@ class PerformanceOpsSeeder extends Seeder
                 $transaksiId = Str::uuid()->toString();
                 $kasId = Str::uuid()->toString();
                 
-                $timestamp = rand(strtotime('2020-01-01'), strtotime('2026-06-30'));
+                $timestamp = rand(strtotime('2020-01-01'), strtotime('2026-07-30'));
                 $tanggal = date('Y-m-d', $timestamp);
                 $jenisTransaksiArray = ['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_GAS', 'LAINNYA'];
                 $jenisTransaksi = $jenisTransaksiArray[array_rand($jenisTransaksiArray)];

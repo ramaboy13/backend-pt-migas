@@ -52,7 +52,7 @@ class PerformanceHrSeeder extends Seeder
                 // Generate 1 Komponen Gaji per karyawan for the same month/year
                 $komponenGajiId = Str::uuid()->toString();
                 // Random date between 2020 and 2026
-                $timestamp = rand(strtotime('2020-01-01'), strtotime('2026-06-30'));
+                $timestamp = rand(strtotime('2020-01-01'), strtotime('2026-07-30'));
                 $tanggalKomponen = date('Y-m-d', $timestamp);
                 $tipe = rand(0, 1) === 0 ? 'LEMBUR' : 'TUNJANGAN';
                 $jamLembur = $tipe === 'LEMBUR' ? rand(1, 10) : 0;
