@@ -1,5 +1,4 @@
 <?php
-// app/Services/PangkalanService.php
 
 namespace App\Services;
 

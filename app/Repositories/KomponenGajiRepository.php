@@ -18,38 +18,38 @@ class KomponenGajiRepository
     {
         $query = $this->model->newQuery();
 
-        // Load relations
+        // Memuat relasi dengan karyawan
         if ($withKaryawan) {
             $query->with('karyawan');
         }
 
-        // Filter by tipe
+        // Filter berdasarkan tipe
         if (! empty($filters['tipe'])) {
             $query->where('tipe', $filters['tipe']);
         }
 
-        // Filter by tanggal
+        // Filter berdasarkan tanggal
         if (! empty($filters['tanggal'])) {
             $query->where('tanggal', $filters['tanggal']);
         }
 
-        // Filter by range tanggal
+        // Filter berdasarkan rentang tanggal
         if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
             $query->whereBetween('tanggal', [$filters['start_date'], $filters['end_date']]);
         }
 
-        // Filter by periode (bulan/tahun)
+        // Filter berdasarkan periode (bulan/tahun)
         if (! empty($filters['bulan']) && ! empty($filters['tahun'])) {
             $query->whereYear('tanggal', $filters['tahun'])
                 ->whereMonth('tanggal', $filters['bulan']);
         }
 
-        // Filter by karyawan_id
+        // Filter berdasarkan karyawan_id
         if (! empty($filters['karyawan_id'])) {
             $query->where('karyawan_id', $filters['karyawan_id']);
         }
 
-        // Search by karyawan name or keterangan
+        // Pencarian berdasarkan nama atau keterangan karyawan
         if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
@@ -61,7 +61,7 @@ class KomponenGajiRepository
             });
         }
 
-        // Order by
+        // Pengurutan berdasarkan tanggal dan tanggal pembuatan
         $query->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc');
 

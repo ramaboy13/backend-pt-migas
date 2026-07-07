@@ -15,7 +15,7 @@ class KasPerusahaanRepository
     {
         $query = $this->model->newQuery();
 
-        // // Load relations if needed
+        // Memuat relasi dengan sumber kas dan transaksi operasional
         if ($withRelations) {
             $query->with([
                 'sumberKas',
@@ -25,7 +25,7 @@ class KasPerusahaanRepository
             ]);
         }
 
-        // Apply filters
+        // Filter tanggal
         if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
             $query->whereBetween('tanggal', [$filters['start_date'], $filters['end_date']]);
         }

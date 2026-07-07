@@ -11,9 +11,7 @@ class TransaksiOperasionalCollectionDTO
     public array $meta
   ) {}
 
-  /**
-   * Convert from Paginator to Collection DTO
-   */
+  // Method mengkonvert LengthAwarePaginator ke Collection DTO
   public static function fromPaginator(LengthAwarePaginator $paginator): self
   {
     $transaksiDTOs = [];
@@ -33,9 +31,7 @@ class TransaksiOperasionalCollectionDTO
     );
   }
 
-  /**
-   * Convert to array
-   */
+  // Method mengkonvert ke array
   public function toArray(): array
   {
     return [

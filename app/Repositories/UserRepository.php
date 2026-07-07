@@ -14,7 +14,6 @@ class UserRepository
   {
     $query = $this->model->with('roles');
 
-    // Filter multiple column
     if(!empty($filters['search'])) {
         $search = $filters['search'];
         $query->where(function ($q) use ($search) {
@@ -23,14 +22,12 @@ class UserRepository
         });
     }
 
-    // Filter by role
     if (!empty($filters['role'])) {
       $query->whereHas('roles', function ($q) use ($filters) {
         $q->where('name', $filters['role']);
       });
     }
 
-    // Filter by status aktif
     if (isset($filters['is_active'])) {
       $query->where('is_active', $filters['is_active']);
     }

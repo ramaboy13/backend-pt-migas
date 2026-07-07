@@ -13,7 +13,7 @@ class KaryawanRepository
     {
         $query = $this->model->newQuery();
 
-        // filter multiple collumn
+        // Filter untuk multiple column
         if(!empty($filters['search'])) {
            $search = $filters['search'];
            $query->where(function ($q) use ($search) {
@@ -36,6 +36,7 @@ class KaryawanRepository
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
+    // Mencari karyawan berdasarkan id
     public function findById(string $id): ?Karyawan
     {
         return $this->model->find($id);

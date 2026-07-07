@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class PayrollCalculationService
 {
-    /**
-     * Calculate total jam lembur berdasarkan rules
-     */
+    // Menghitung total jam lembur berdasarkan aturan
     public function calculateTotalJamLembur(float $jamLembur): float
     {
         // RUMUS:
@@ -31,18 +29,14 @@ class PayrollCalculationService
         return $jamLembur;
     }
 
-    /**
-     * Calculate upah lembur per jam
-     */
+    // Menghitung upah lembur per jam
     public function calculateUpahLemburPerJam(float $gajiPokok): float
     {
         // RUMUS: gaji_pokok / 173
         return $gajiPokok / 173;
     }
 
-    /**
-     * Calculate rupiah lembur
-     */
+    // Menghitung rupiah lembur
     public function calculateRupiahLembur(float $gajiPokok, float $jamLembur): array
     {
         $totalJamLembur = $this->calculateTotalJamLembur($jamLembur);
@@ -56,17 +50,12 @@ class PayrollCalculationService
         ];
     }
 
-    /**
-     * Process komponen gaji calculation (untuk lembur)
-     */
+    // Memproses komponen gaji calculation (untuk lembur)
     public function processKomponenGajiCalculation(array $data): array
     {
         if ($data['tipe'] === 'LEMBUR') {
             $karyawan = Karyawan::findOrFail($data['karyawan_id']);
-
-            // PERBAIKAN: Gunakan gaji_pokok, bukan gapok
             $calculation = $this->calculateRupiahLembur($karyawan->gaji_pokok, $data['jam_lembur']);
-
             return array_merge($data, $calculation);
         }
 
@@ -74,9 +63,7 @@ class PayrollCalculationService
         return $data;
     }
 
-    /**
-     * Calculate total lembur per periode
-     */
+    // Menghitung total lembur per periode
     public function calculateTotalLemburPerPeriode(string $karyawanId, int $bulan, int $tahun): float
     {
         return KomponenGaji::where('karyawan_id', $karyawanId)
@@ -86,9 +73,7 @@ class PayrollCalculationService
             ->sum('nominal');
     }
 
-    /**
-     * Calculate total tunjangan per periode
-     */
+    // Menghitung total tunjangan per periode
     public function calculateTotalTunjanganPerPeriode(string $karyawanId, int $bulan, int $tahun): float
     {
         return KomponenGaji::where('karyawan_id', $karyawanId)
@@ -98,49 +83,37 @@ class PayrollCalculationService
             ->sum('nominal');
     }
 
-    /**
-     * Calculate potongan BPJS Kesehatan
-     */
+    // Menghitung potongan BPJS Kesehatan
     public function calculatePotonganBpjsKesehatan(float $gajiPokok, float $persenBpjsKesehatan): float
     {
         return round(($gajiPokok * $persenBpjsKesehatan) / 100, 2);
     }
 
-    /**
-     * Calculate potongan BPJS Tenagakerja
-     */
+    // Menghitung potongan BPJS Tenagakerja
     public function calculatePotonganBpjsTenagakerja(float $gajiPokok, float $persenBpjsTenagakerja): float
     {
         return round(($gajiPokok * $persenBpjsTenagakerja) / 100, 2);
     }
 
-    /**
-     * Calculate total potongan
-     */
+    // Menghitung total potongan
     public function calculateTotalPotongan(float $bpjsKesehatan, float $bpjsTenagakerja, float $potonganLainnya = 0): float
     {
         return round($bpjsKesehatan + $bpjsTenagakerja + $potonganLainnya, 2);
     }
 
-    /**
-     * Calculate total pendapatan
-     */
+    // Menghitung total pendapatan
     public function calculateTotalPendapatan(float $gajiPokok, float $totalLembur, float $totalTunjangan): float
     {
         return round($gajiPokok + $totalLembur + $totalTunjangan, 2);
     }
 
-    /**
-     * Calculate gaji bersih
-     */
+    // Menghitung gaji bersih
     public function calculateGajiBersih(float $totalPendapatan, float $totalPotongan, float $pph21 = 0): float
     {
         return round($totalPendapatan - $totalPotongan - $pph21, 2);
     }
 
-    /**
-     * Process complete payroll calculation for a karyawan
-     */
+    // Memproses perhitungan gaji karyawan berdasarkan komponen gaji 
     public function processGajiKaryawanCalculation(string $karyawanId, int $bulan, int $tahun, float $potonganLainnya = 0, float $pph21 = 0): array
     {
         // 1. Ambil data karyawan
@@ -152,14 +125,14 @@ class PayrollCalculationService
         // 3. Hitung total tunjangan dari tb_komponen_gaji
         $totalTunjangan = $this->calculateTotalTunjanganPerPeriode($karyawanId, $bulan, $tahun);
 
-        // 4. Hitung total pendapatan - PERBAIKAN: Gunakan gaji_pokok
+        // 4. Hitung total pendapatan 
         $totalPendapatan = $this->calculateTotalPendapatan(
             $karyawan->gaji_pokok,
             $totalLembur,
             $totalTunjangan
         );
 
-        // 5. Hitung potongan BPJS - PERBAIKAN: Gunakan gaji_pokok
+        // 5. Hitung potongan BPJS
         $potonganKesehatan = $this->calculatePotonganBpjsKesehatan(
             $karyawan->gaji_pokok,
             $karyawan->bpjs_kesehatan
@@ -201,9 +174,7 @@ class PayrollCalculationService
         ];
     }
 
-    /**
-     * Calculate transaksi operasional total based on pangkalan harga_satuan
-     */
+    // Menghitung total transaksi operasional berdasarkan harga_satuan pangkalan
     public function calculateTransaksiOperasional(array $data): array
     {
         // Ambil harga_satuan dari pangkalan
@@ -212,7 +183,7 @@ class PayrollCalculationService
         $hargaSatuan = $pangkalan->harga_satuan;
         $total = $data['qty'] * $hargaSatuan;
 
-        // Hitung debit/credit berdasarkan is_in
+        // Hitung debit/credit berdasarkan is_in (pemasukan atau pengeluaran)
         if ($data['is_in']) {
             $debit = $total;
             $credit = 0;

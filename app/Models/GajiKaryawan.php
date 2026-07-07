@@ -63,7 +63,7 @@ class GajiKaryawan extends Model
         return $this->belongsTo(Karyawan::class, 'karyawan_id');
     }
 
-    // Relationship dengan KomponenGaji (opsional, untuk detail)
+    // Relationship dengan KomponenGaji untuk lembur
     public function komponenGajiLembur()
     {
         return $this->hasMany(KomponenGaji::class, 'karyawan_id', 'karyawan_id')
@@ -72,6 +72,7 @@ class GajiKaryawan extends Model
             ->whereMonth('tanggal', $this->bulan);
     }
 
+    // Relationship dengan KomponenGaji untuk tunjangan
     public function komponenGajiTunjangan()
     {
         return $this->hasMany(KomponenGaji::class, 'karyawan_id', 'karyawan_id')
@@ -80,7 +81,7 @@ class GajiKaryawan extends Model
             ->whereMonth('tanggal', $this->bulan);
     }
 
-    // Accessor untuk nama bulan
+    // accessor untuk nama bulan
     public function getNamaBulanAttribute(): string
     {
         $bulanIndo = [
@@ -92,7 +93,7 @@ class GajiKaryawan extends Model
         return $bulanIndo[$this->bulan] ?? 'Unknown';
     }
 
-    // Accessor untuk status display
+    // accessor untuk status display
     public function getStatusDisplayAttribute(): string
     {
         return match ($this->status) {
@@ -102,7 +103,7 @@ class GajiKaryawan extends Model
         };
     }
 
-    // Boot method
+    // boot method untuk generate id dan tanggal gaji otomatis
     protected static function boot()
     {
         parent::boot();

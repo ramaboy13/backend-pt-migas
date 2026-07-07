@@ -12,17 +12,13 @@ use Carbon\Carbon;
 
 class DashboardRepository
 {
-    /**
-     * Get total saldo from all sumber kas
-     */
+    // mengambil total saldo dari semua sumber kas yang aktif
     public function getTotalSaldoKas(): float
     {
         return (float) SumberKas::where('aktif', true)->sum('saldo_terakhir');
     }
 
-    /**
-     * Get total pemasukan bulan ini
-     */
+    // mengambil total pemasukan bulan ini
     public function getTotalPemasukanBulanIni(?string $bulan = null, ?string $tahun = null): float
     {
         $startOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->startOfMonth() : Carbon::now()->startOfMonth();
@@ -33,9 +29,7 @@ class DashboardRepository
             ->sum('jumlah');
     }
 
-    /**
-     * Get total pengeluaran bulan ini
-     */
+    // mengambil total pengeluaran bulan ini
     public function getTotalPengeluaranBulanIni(?string $bulan = null, ?string $tahun = null): float
     {
         $startOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->startOfMonth() : Carbon::now()->startOfMonth();
@@ -46,24 +40,20 @@ class DashboardRepository
             ->sum('jumlah');
     }
 
-    /**
-     * Get total asset
-     */
+    // mengambil total asset
     public function getTotalAsset(): int
     {
         return Asset::count();
     }
 
-    /**
-     * Get daily transactions for last 7 days from selected month/year or now
-     */
+    // mengambil data transaksi harian untuk 7 hari terakhir dari bulan/tahun yang dipilih atau sekarang
     public function getDailyTransactions(?string $bulan = null, ?string $tahun = null, int $days = 7): array
     {
         $result = [];
         
         $baseDate = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->endOfMonth() : Carbon::now();
         if ($baseDate->isFuture()) {
-            $baseDate = Carbon::now(); // Don't show future days if current month
+            $baseDate = Carbon::now();
         }
 
         for ($i = $days - 1; $i >= 0; $i--) {
@@ -89,9 +79,7 @@ class DashboardRepository
         return $result;
     }
 
-    /**
-     * Get transaction summary by type for selected month/year
-     */
+    // mengambil data transaksi berdasarkan jenis transaksi untuk bulan/tahun yang dipilih
     public function getTransactionByType(?string $bulan = null, ?string $tahun = null): array
     {
         $startOfMonth = $bulan && $tahun ? Carbon::create($tahun, $bulan, 1)->startOfMonth() : Carbon::now()->startOfMonth();
@@ -115,9 +103,7 @@ class DashboardRepository
         return $result;
     }
 
-    /**
-     * Get saldo per sumber kas
-     */
+    // mengambil saldo per sumber kas
     public function getSaldoPerSumberKas(): array
     {
         return SumberKas::where('aktif', true)
@@ -134,9 +120,7 @@ class DashboardRepository
             ->toArray();
     }
 
-    /**
-     * Get recent transactions (last 10)
-     */
+    // mengambil transaksi terakhir (10 terakhir)
     public function getRecentTransactions(int $limit = 10): array
     {
         return TransaksiOperasional::with(['pangkalan', 'tabung', 'asset', 'kasPerusahaan.sumberKas'])
@@ -160,9 +144,7 @@ class DashboardRepository
             ->toArray();
     }
 
-    /**
-     * Get recent kas perusahaan
-     */
+    // mengambil transaksi kas perusahaan terakhir (10 terakhir)
     public function getRecentKasPerusahaan(int $limit = 10): array
     {
         return KasPerusahaan::with('sumberKas')
@@ -194,24 +176,20 @@ class DashboardRepository
 
     // ============ SUPER ADMIN ONLY METHODS ============
 
-    /**
-     * Get total users
-     */
+    // mengambil total user
     public function getTotalUsers(): int
     {
         return User::count();
     }
 
-    /**
-     * Get recent users (last 10)
-     */
+    // mengambil user terakhir (10 terakhir)
     public function getRecentUsers(int $limit = 10): array
     {
         $users = User::with('roles')->orderBy('created_at', 'desc')->limit($limit)->get();
 
         $result = [];
         foreach ($users as $user) {
-            // getRoleNames() returns array, not collection
+            // getRoleNames() mengembalikan array, bukan collection
             $roles = $user->getRoleNames();
             $role = ! empty($roles) ? $roles[0] : 'No role';
 
@@ -229,16 +207,14 @@ class DashboardRepository
         return $result;
     }
 
-    /**
-     * Get user statistics by role
-     */
+    // mengambil statistik user berdasarkan role
     public function getUserStatsByRole(): array
     {
         $users = User::with('roles')->get();
         $stats = [];
 
         foreach ($users as $user) {
-            // getRoleNames() returns array, not collection
+            // getRoleNames() mengembalikan array, bukan collection
             $roles = $user->getRoleNames();
             $role = ! empty($roles) ? $roles[0] : 'unknown';
 

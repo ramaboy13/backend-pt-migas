@@ -85,7 +85,7 @@ class KomponenGajiRequest extends FormRequest
                 );
             }
 
-            // Validasi: Pastikan tanggal tidak sebelum tanggal masuk karyawan
+            // memastikan tanggal tidak sebelum tanggal masuk karyawan
             if ($this->has('karyawan_id') && $this->has('tanggal')) {
                 $karyawan = \App\Models\Karyawan::find($this->karyawan_id);
                 if ($karyawan && $karyawan->tgl_masuk) {

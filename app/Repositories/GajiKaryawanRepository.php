@@ -1,7 +1,5 @@
 <?php
 
-// app/Repositories/GajiKaryawanRepository.php
-
 namespace App\Repositories;
 
 use App\Models\GajiKaryawan;
@@ -21,40 +19,40 @@ class GajiKaryawanRepository
     {
         $query = $this->model->newQuery();
 
-        // Load relations
+        // Memuat Relasi dengan karyawan
         if ($withRelations) {
             $query->with(['karyawan']);
         }
 
-        // Filter by periode (bulan + tahun)
+        // Filter berdasarkan periode (bulan dan tahun)
         if (! empty($filters['periode'])) {
             $query->where('bulan', $filters['periode']['bulan'])
                 ->where('tahun', $filters['periode']['tahun']);
         }
 
-        // Filter by range tanggal gaji
+        // Filter berdasarkan rentang tanggal gaji
         if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
             $query->whereBetween('tanggal_gaji', [$filters['start_date'], $filters['end_date']]);
         }
 
-        // Filter by karyawan_id
+        // Filter karyawan berdasarkan karyawan_id
         if (! empty($filters['karyawan_id'])) {
             $query->where('karyawan_id', $filters['karyawan_id']);
         }
 
-        // Filter by status
+        // Filter berdasarkan status
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        // Filter by status aktif karyawan
+        // Filter berdasarkan status aktif karyawan
         if (isset($filters['karyawan_aktif'])) {
             $query->whereHas('karyawan', function ($q) use ($filters) {
                 $q->where('aktif', filter_var($filters['karyawan_aktif'], FILTER_VALIDATE_BOOLEAN));
             });
         }
 
-        // Search by karyawan name or NIK
+        // Pencarian berdasarkan nama atau NIK karyawan
         if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->whereHas('karyawan', function ($q) use ($search) {
@@ -63,7 +61,7 @@ class GajiKaryawanRepository
             });
         }
 
-        // Order by
+        // Pengurutan berdasarkan tahun, bulan, dan tanggal pembuatan (akan mengambil data terbaru)
         $query->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'desc')
             ->orderBy('created_at', 'desc');
@@ -71,10 +69,12 @@ class GajiKaryawanRepository
         return $query->paginate($perPage);
     }
 
+    // Mencari gaji berdasarkan id
     public function findById(string $id, bool $withRelations = true): ?GajiKaryawan
     {
         $query = $this->model->newQuery();
 
+        // Memuat relasi dengan karyawan dan komponen gaji
         if ($withRelations) {
             $query->with(['karyawan', 'komponenGajiLembur', 'komponenGajiTunjangan']);
         }
@@ -189,20 +189,18 @@ class GajiKaryawanRepository
         ];
     }
 
-    /**
-     * Get all gaji for PDF export
-     */
+    // Mengambil semua gaji untuk export PDF
     public function getAllForPdf(array $filters = [])
     {
         $query = $this->model->with(['karyawan']);
 
-        // Filter by periode (bulan + tahun)
+        // Filter berdasarkan periode (bulan + tahun)
         if (! empty($filters['bulan']) && ! empty($filters['tahun'])) {
             $query->where('bulan', $filters['bulan'])
                 ->where('tahun', $filters['tahun']);
         }
 
-        // Filter by range bulan/tahun
+        // Filter berdasarkan rentang bulan/tahun
         if (! empty($filters['start_bulan']) && ! empty($filters['start_tahun']) &&
             ! empty($filters['end_bulan']) && ! empty($filters['end_tahun'])) {
 
@@ -212,11 +210,12 @@ class GajiKaryawanRepository
             $query->whereBetween('tanggal_gaji', [$startDate, $endDate]);
         }
 
-        // Filter by karyawan_id
+        // Filter berdasarkan karyawan_id
         if (! empty($filters['karyawan_id'])) {
             $query->where('karyawan_id', $filters['karyawan_id']);
         }
 
+        // Pengurutan berdasarkan tahun, bulan, dan tanggal pembuatan (akan mengambil data terbaru)
         return $query->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'desc')
             ->orderBy('tanggal_gaji', 'desc')

@@ -87,7 +87,7 @@ class SumberKas extends Model
         return $this->save();
     }
 
-    // Boot method
+    // Boot method untuk generate id dan saldo_terakhir otomatis
     protected static function boot()
     {
         parent::boot();

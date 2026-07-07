@@ -1,5 +1,4 @@
 <?php
-// app/DTO/Pangkalan/PangkalanCollectionDTO.php
 
 namespace App\DTO\Pangkalan;
 
@@ -12,9 +11,7 @@ class PangkalanCollectionDTO
     public array $meta
   ) {}
 
-  /**
-   * Convert from Paginator to Collection DTO
-   */
+  // Method mengkonvert LengthAwarePaginator ke Collection DTO
   public static function fromPaginator(LengthAwarePaginator $paginator): self
   {
     $pangkalanDTOs = [];
@@ -34,9 +31,7 @@ class PangkalanCollectionDTO
     );
   }
 
-  /**
-   * Convert to array
-   */
+  // Method mengkonvert ke array
   public function toArray(): array
   {
     return [

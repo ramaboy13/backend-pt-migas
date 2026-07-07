@@ -55,7 +55,7 @@ class GajiKaryawanService
                 $data['pph21'] ?? 0
             );
 
-            // Merge data
+            // Menggabungkan data dari input dan hasil perhitungan
             $processedData = array_merge($data, $calculation);
             $processedData['tanggal_gaji'] = $data['tanggal_gaji'] ?? now();
 
@@ -166,10 +166,7 @@ class GajiKaryawanService
      */
     public function generateGajiForAllKaryawan(int $bulan, int $tahun, float $potonganLainnya = 0, float $pph21 = 0): array
     {
-        // Execute in transaction but chunking might have issues with long transactions, however we keep it for consistency or we can do transaction per chunk.
-        // Doing transaction per chunk is safer for memory and locking.
-        
-        $totalKaryawan = \App\Models\Karyawan::where('aktif', true)->count(); // based on KaryawanRepository the field might be aktif
+        $totalKaryawan = \App\Models\Karyawan::where('aktif', true)->count();
         
         $results = [];
         $successCount = 0;

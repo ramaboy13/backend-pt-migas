@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Api/DashboardController.php
 
 namespace App\Http\Controllers\Api;
 
@@ -15,9 +14,7 @@ class DashboardController extends Controller
         private DashboardService $dashboardService
     ) {}
 
-    /**
-     * Get complete dashboard data
-     */
+    // Mengambil data dashboard
     public function index(Request $request): JsonResponse
     {
         try {

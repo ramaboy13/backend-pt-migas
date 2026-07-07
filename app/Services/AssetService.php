@@ -11,7 +11,6 @@ class AssetService
 
     public function getAllAssets(array $filters = [], int $perPage = 10): LengthAwarePaginator
     {
-        // Clean filters
         if (isset($filters['its_rfu'])) {
             $filters['its_rfu'] = filter_var($filters['its_rfu'], FILTER_VALIDATE_BOOLEAN);
         }

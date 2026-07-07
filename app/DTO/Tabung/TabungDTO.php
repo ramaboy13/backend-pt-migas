@@ -14,9 +14,7 @@ class TabungDTO
     public string $updated_at
   ) {}
 
-  /**
-   * Convert from Model to DTO
-   */
+  // Method mengkonvert dari Model ke DTO
   public static function fromModel(object $tabung): self
   {
     return new self(
@@ -28,9 +26,7 @@ class TabungDTO
     );
   }
 
-  /**
-   * Convert DTO to array
-   */
+  // Method mengkonvert dari DTO ke array
   public function toArray(): array
   {
     return [

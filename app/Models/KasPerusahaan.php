@@ -52,7 +52,7 @@ class KasPerusahaan extends Model
         return $this->belongsTo(TransaksiOperasional::class, 'transaksi_operasional_id');
     }
 
-    // Scope untuk filter
+    // Scope untuk filter 
     public function scopeFilterByDate($query, $startDate, $endDate)
     {
         return $query->whereBetween('tanggal', [$startDate, $endDate]);
@@ -68,7 +68,7 @@ class KasPerusahaan extends Model
         return $query->where('tipe_transaksi', $tipe);
     }
 
-    // Boot method
+    // boot method untuk generate id dan created_by otomatis
     protected static function boot()
     {
         parent::boot();

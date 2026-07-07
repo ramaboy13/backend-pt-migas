@@ -11,9 +11,7 @@ class TabungCollectionDTO
     public array $meta
   ) {}
 
-  /**
-   * Convert from Paginator to Collection DTO
-   */
+  // Method mengkonvert LengthAwarePaginator ke Collection DTO
   public static function fromPaginator(LengthAwarePaginator $paginator): self
   {
     $tabungDTOs = [];
@@ -33,9 +31,7 @@ class TabungCollectionDTO
     );
   }
 
-  /**
-   * Convert to array
-   */
+  // Method mengkonvert ke array
   public function toArray(): array
   {
     return [

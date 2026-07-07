@@ -20,7 +20,7 @@ class TransaksiOperasionalRequest extends FormRequest
         $isCreate = $this->isMethod('POST');
         $transaksiId = $this->route('id');
 
-        // Get jenis_transaksi from request data
+        // get jenis_transaksi from request data
         $jenisTransaksi = $this->jenis_transaksi ?? null;
 
         $rules = [
@@ -35,41 +35,41 @@ class TransaksiOperasionalRequest extends FormRequest
             'created_by' => ['nullable', 'string'],
         ];
 
-        // Conditional rules based on jenis_transaksi
+        // conditional rules based on jenis_transaksi
         switch ($jenisTransaksi) {
             case 'PENJUALAN_GAS':
-                // JUAL ke pangkalan: butuh pangkalan, tabung, qty, harga
+                // jual ke pangkalan: butuh pangkalan, tabung, qty, harga
                 $rules['pangkalan_id'] = ['required', 'string', 'exists:tb_pangkalan,id'];
                 $rules['tabung_id'] = ['required', 'string', 'exists:tb_tabung,id'];
                 $rules['qty'] = ['required', 'integer', 'min:1'];
                 $rules['unit'] = ['required', 'string', 'max:20'];
                 $rules['harga_satuan'] = ['required', 'numeric', 'min:0.01'];
-                $rules['jumlah'] = ['sometimes', 'numeric', 'min:0.01']; // optional, auto-calculated
+                $rules['jumlah'] = ['sometimes', 'numeric', 'min:0.01']; 
                 break;
 
             case 'PEMBELIAN_GAS':
-                // BELI dari supplier: butuh tabung, qty, harga (TIDAK butuh pangkalan)
+                // beli dari supplier: butuh tabung, qty, harga (TIDAK butuh pangkalan)
                 $rules['tabung_id'] = ['required', 'string', 'exists:tb_tabung,id'];
                 $rules['qty'] = ['required', 'integer', 'min:1'];
                 $rules['unit'] = ['required', 'string', 'max:20'];
                 $rules['harga_satuan'] = ['required', 'numeric', 'min:0.01'];
-                $rules['jumlah'] = ['sometimes', 'numeric', 'min:0.01']; // optional, auto-calculated
-                $rules['pangkalan_id'] = ['nullable', 'string', 'exists:tb_pangkalan,id']; // optional
+                $rules['jumlah'] = ['sometimes', 'numeric', 'min:0.01'];
+                $rules['pangkalan_id'] = ['nullable', 'string', 'exists:tb_pangkalan,id']; 
                 break;
 
             case 'MAINTENANCE':
-                // Maintenance: butuh jumlah (asset_id optional karena Anda buang)
+                // maintenance: butuh jumlah, asset_id optional karena maintenance tidak selalu berkaitan dengan asset
                 $rules['jumlah'] = ['required', 'numeric', 'min:0.01'];
-                $rules['asset_id'] = ['nullable', 'string', 'exists:tb_asset,id']; // optional
+                $rules['asset_id'] = ['nullable', 'string', 'exists:tb_asset,id']; 
                 break;
 
             case 'LAINNYA':
-                // Transaksi lainnya: butuh jumlah saja
+                // transaksi lainnya: butuh jumlah saja
                 $rules['jumlah'] = ['required', 'numeric', 'min:0.01'];
                 break;
         }
 
-        // For update, ignore current record for no_ref
+        // kondisi untuk update dan create untuk no_ref apabila create maka unique, apabila update maka where id != $transaksiId untuk menghindari duplikasi data 
         if ($isCreate) {
             $rules['no_ref'] = ['sometimes', 'string', 'max:50', 'unique:tb_transaksi_operasional,no_ref'];
         } else {
@@ -119,7 +119,7 @@ class TransaksiOperasionalRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        // Auto-generate no_ref jika kosong dan create
+        // auto-generate no_ref apabila kosong dan create
         if ($this->isMethod('POST') && empty($this->no_ref)) {
             $prefix = $this->boolean('is_pemasukan', false) ? 'IN' : 'OUT';
             $date = date('Ymd');
@@ -129,7 +129,7 @@ class TransaksiOperasionalRequest extends FormRequest
             ]);
         }
 
-        // Set created_by dari auth user
+        // set created_by dari auth user
         if (empty($this->created_by)) {
             $this->merge([
                 'created_by' => Auth::user()->name ?? 'system',

@@ -64,7 +64,7 @@ class KomponenGajiDTO
             'updated_at' => $this->updatedAt,
         ];
 
-        // Tambahkan field lembur hanya jika tipe LEMBUR
+        // Field lembur akan muncul jika tipe LEMBUR
         if ($this->tipe === 'LEMBUR') {
             $data['jam_lembur'] = $this->jamLembur;
             $data['total_jam_lembur'] = $this->totalJamLembur;

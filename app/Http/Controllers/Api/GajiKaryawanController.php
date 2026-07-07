@@ -25,7 +25,7 @@ class GajiKaryawanController extends Controller
                 'status', 'karyawan_aktif', 'search', 'start_date', 'end_date',
             ]);
 
-            // Ubah format periode jika ada
+            // Mengubah format periode jika ada
             if ($request->has('periode')) {
                 $periode = explode('-', $request->periode);
                 if (count($periode) == 2) {

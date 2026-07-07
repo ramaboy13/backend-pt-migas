@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         
         $middleware->redirectTo(guests: function ($request) {
-            // Fallback untuk API
+
             if ($request->is('api/*')) {
                 return null;
             }
@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Tetap tambahkan exception handling untuk JSON response
+            
         $exceptions->render(function (Illuminate\Auth\AuthenticationException $e, Illuminate\Http\Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([

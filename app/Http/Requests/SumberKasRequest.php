@@ -29,14 +29,14 @@ class SumberKasRequest extends FormRequest
             'keterangan' => ['nullable', 'string', 'max:500'],
         ];
 
-        // Conditional validation for BANK type
+        // validasi untuk tipe bank
         if ($this->input('tipe') === 'BANK' || ($isCreate && ! $this->has('tipe'))) {
             $rules['nama_bank'] = ['required', 'string', 'max:100'];
             $rules['nomor_rekening'] = ['required', 'string', 'max:50'];
             $rules['atas_nama'] = ['required', 'string', 'max:100'];
         }
 
-        // Unique constraint for bank accounts (only for BANK type)
+        // validasi nomor rekening untuk tipe bank
         if ($isCreate) {
             $rules['nomor_rekening'] = array_merge(
                 $rules['nomor_rekening'] ?? ['nullable'],
@@ -73,13 +73,13 @@ class SumberKasRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        // Set default values
+        // set default value
         $this->merge([
             'aktif' => $this->boolean('aktif', true),
             'saldo_awal' => $this->input('saldo_awal', 0),
         ]);
 
-        // If CASH type, clear bank-related fields
+        // untuk tipe cash, clear bank related
         if ($this->input('tipe') === 'CASH') {
             $this->merge([
                 'nama_bank' => null,

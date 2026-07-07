@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/KomponenGaji.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

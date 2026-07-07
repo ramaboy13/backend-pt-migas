@@ -11,7 +11,7 @@ class Handler extends ExceptionHandler
 {
     public function render($request, Throwable $exception)
     {
-        // Handle API routes specifically (baik expectsJson maupun routes /api/*)
+        // Route API khusus untuk mengarahkan exception
         if ($request->expectsJson() || $request->is('api/*')) {
             return $this->handleJsonException($exception, $request);
         }
@@ -21,11 +21,11 @@ class Handler extends ExceptionHandler
 
     private function handleJsonException(Throwable $exception, $request = null)
     {
-        // Handle Authentication Exception - INI YANG HARUS DIPERBAIKI
+        // Handle Authentication Exception 
         if ($exception instanceof AuthenticationException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated. Please login first.',
+                'message' => 'Autentikasi gagal. Silakan login terlebih dahulu.',
                 'data' => null
             ], 401);
         }
@@ -34,7 +34,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof ValidationException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed',
+                'message' => 'Validasi gagal',
                 'data' => null,
                 'errors' => $exception->errors()
             ], 422);
@@ -44,7 +44,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Tymon\JWTAuth\Exceptions\TokenInvalidException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Token is invalid',
+                'message' => 'Token tidak valid',
                 'data' => null
             ], 401);
         }
@@ -52,7 +52,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Token has expired',
+                'message' => 'Token telah kedaluwarsa',
                 'data' => null
             ], 401);
         }
@@ -60,7 +60,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Tymon\JWTAuth\Exceptions\JWTException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Token error',
+                'message' => 'Terjadi kesalahan pada token',
                 'data' => null
             ], 401);
         }
@@ -69,7 +69,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Symfony\Component\Routing\Exception\RouteNotFoundException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Authentication required',
+                'message' => 'Autentikasi diperlukan',
                 'data' => null
             ], 401);
         }
@@ -87,7 +87,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Method not allowed',
+                'message' => 'Metode HTTP tidak diizinkan',
                 'data' => null
             ], 405);
         }
@@ -105,7 +105,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Illuminate\Auth\Access\AuthorizationException) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized action',
+                'message' => 'Tindakan tidak diizinkan',
                 'data' => null
             ], 403);
         }
@@ -142,13 +142,14 @@ class Handler extends ExceptionHandler
     private function getExceptionMessage(Throwable $exception, int $statusCode): string
     {
         if ($exception instanceof \Symfony\Component\Routing\Exception\RouteNotFoundException) {
-            return 'Authentication required';
+            return 'Autentikasi diperlukan';
         }
 
+        //Apabila mode production maka message akan dikembalikan secara umum atau tidak didetailkan
         if (config('app.env') === 'production' && $statusCode === 500) {
-            return 'Internal Server Error';
+            return 'Terjadi kesalahan pada server';
         }
 
-        return $exception->getMessage() ?: 'An error occurred';
+        return $exception->getMessage() ?: 'Terjadi kesalahan';
     }
 }
