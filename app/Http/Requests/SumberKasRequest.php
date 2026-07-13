@@ -73,11 +73,16 @@ class SumberKasRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        // set default value
-        $this->merge([
-            'aktif' => $this->boolean('aktif', true),
-            'saldo_awal' => $this->input('saldo_awal', 0),
-        ]);
+        if ($this->isMethod('POST')) {
+            $this->merge([
+                'aktif' => $this->has('aktif') ? $this->boolean('aktif') : true,
+                'saldo_awal' => $this->has('saldo_awal') ? $this->input('saldo_awal') : 0,
+            ]);
+        } elseif ($this->has('aktif')) {
+            $this->merge([
+                'aktif' => $this->boolean('aktif'),
+            ]);
+        }
 
         // untuk tipe cash, clear bank related
         if ($this->input('tipe') === 'CASH') {
