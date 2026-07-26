@@ -72,4 +72,14 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->roles->pluck('name')->toArray();
     }
+
+    public function mencatat()
+    {
+        return $this->hasMany(TransaksiOperasional::class, 'user_id');
+    }
+
+    public function menerbitkan()
+    {
+        return $this->hasMany(GajiKaryawan::class, 'user_id');
+    }
 }

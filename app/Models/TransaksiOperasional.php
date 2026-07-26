@@ -33,6 +33,7 @@ class TransaksiOperasional extends Model
         'jumlah',
         'kas_perusahaan_id',
         'created_by',
+        'user_id',
     ];
 
     protected $casts = [
@@ -68,6 +69,12 @@ class TransaksiOperasional extends Model
     public function kasPerusahaan()
     {
         return $this->belongsTo(KasPerusahaan::class, 'kas_perusahaan_id');
+    }
+
+    // Relationship dengan User (Pencatat)
+    public function pencatat()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // Scope untuk filter
@@ -119,6 +126,9 @@ class TransaksiOperasional extends Model
             }
             if (empty($model->created_by)) {
                 $model->created_by = Auth::user()->name ?? 'system';
+            }
+            if (empty($model->user_id) && Auth::check()) {
+                $model->user_id = Auth::id();
             }
             if (empty($model->no_ref)) {
                 $prefix = $model->is_pemasukan ? 'IN' : 'OUT';

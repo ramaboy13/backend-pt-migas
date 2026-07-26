@@ -34,6 +34,7 @@ class GajiKaryawan extends Model
         'gaji_bersih',
         'status',
         'processed_by',
+        'user_id',
         'processed_at',
     ];
 
@@ -61,6 +62,12 @@ class GajiKaryawan extends Model
     public function karyawan()
     {
         return $this->belongsTo(Karyawan::class, 'karyawan_id');
+    }
+
+    // Relationship dengan User (Penerbit)
+    public function penerbit()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // Relationship dengan KomponenGaji untuk lembur
@@ -114,6 +121,9 @@ class GajiKaryawan extends Model
             }
             if (empty($model->tanggal_gaji)) {
                 $model->tanggal_gaji = now();
+            }
+            if (empty($model->user_id) && \Illuminate\Support\Facades\Auth::check()) {
+                $model->user_id = \Illuminate\Support\Facades\Auth::id();
             }
         });
     }

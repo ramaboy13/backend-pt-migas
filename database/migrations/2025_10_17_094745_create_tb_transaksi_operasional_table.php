@@ -34,14 +34,16 @@ return new class extends Migration
             // Link ke kas
             $table->uuid('kas_perusahaan_id')->nullable();
             $table->string('created_by')->nullable();
+            $table->uuid('user_id')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
 
-            // Foreign keys
+            // Foreign keys (nullable)
             $table->foreign('pangkalan_id')->references('id')->on('tb_pangkalan')->onDelete('set null');
             $table->foreign('tabung_id')->references('id')->on('tb_tabung')->onDelete('set null');
             $table->foreign('kas_perusahaan_id')->references('id')->on('tb_kas_perusahaan')->onDelete('set null');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('asset_id', 'transaksi_operasional_asset_fk')->references('id')->on('tb_asset')->onDelete('cascade');
 
             // Indexes

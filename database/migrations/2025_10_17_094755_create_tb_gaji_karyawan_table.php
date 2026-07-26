@@ -36,6 +36,7 @@ return new class extends Migration
             // Status dan metadata
             $table->enum('status', ['Belum Dibayar', 'Telah Dibayar'])->default('Belum Dibayar');
             $table->string('processed_by')->nullable();
+            $table->uuid('user_id')->nullable();
             $table->timestamp('processed_at')->nullable();
 
             $table->timestamps();
@@ -46,6 +47,11 @@ return new class extends Migration
                 ->references('id')
                 ->on('tb_karyawan')
                 ->onDelete('cascade');
+
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('set null');
 
             // Unique constraint
             $table->unique(['karyawan_id', 'bulan', 'tahun'], 'unique_gaji_per_periode');
