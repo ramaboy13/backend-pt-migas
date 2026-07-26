@@ -14,20 +14,22 @@ return new class extends Migration
             $table->string('no_ref')->unique();
             $table->enum('jenis_transaksi', ['PEMBELIAN_GAS', 'MAINTENANCE', 'PENJUALAN_GAS', 'LAINNYA']);
             $table->string('keterangan');
-            $table->uuid('asset_id')->nullable();
+
 
             // Bisa NULL karena tidak semua transaksi butuh
             $table->uuid('pangkalan_id')->nullable();
             $table->uuid('tabung_id')->nullable();
+            $table->uuid('asset_id')->nullable();
 
-            // Boolean untuk arah transaksi
+
+            // Boolean untuk tipe transaksi
             $table->boolean('is_pemasukan')->default(false);
 
             // Detail transaksi
-            $table->integer('qty')->nullable()->default(0); // Hanya untuk transaksi barang
-            $table->string('unit')->nullable(); // Hanya untuk transaksi barang
+            $table->integer('qty')->nullable()->default(0);
+            $table->string('unit')->nullable();
             $table->decimal('harga_satuan', 15, 2)->nullable()->default(0);
-            $table->decimal('jumlah', 15, 2); // Jumlah uang
+            $table->decimal('jumlah', 15, 2); // Jumlah uang transaksi
 
             // Link ke kas
             $table->uuid('kas_perusahaan_id')->nullable();
@@ -36,10 +38,11 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            // Foreign keys (nullable)
+            // Foreign keys
             $table->foreign('pangkalan_id')->references('id')->on('tb_pangkalan')->onDelete('set null');
             $table->foreign('tabung_id')->references('id')->on('tb_tabung')->onDelete('set null');
             $table->foreign('kas_perusahaan_id')->references('id')->on('tb_kas_perusahaan')->onDelete('set null');
+            $table->foreign('asset_id', 'transaksi_operasional_asset_fk')->references('id')->on('tb_asset')->onDelete('cascade');
 
             // Indexes
             $table->index('jenis_transaksi');

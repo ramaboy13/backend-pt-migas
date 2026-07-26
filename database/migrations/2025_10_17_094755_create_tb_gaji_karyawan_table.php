@@ -25,7 +25,7 @@ return new class extends Migration
             $table->decimal('potongan_bpjs_kesehatan', 15, 2)->default(0);
             $table->decimal('potongan_bpjs_tenagakerja', 15, 2)->default(0);
             $table->decimal('potongan_lainnya', 15, 2)->default(0);
-            $table->decimal('total_potongan', 15, 2); // sum of all potongan
+            $table->decimal('total_potongan', 15, 2);
 
             // PPH21 (jika ada)
             $table->decimal('pph21', 15, 2)->default(0);
